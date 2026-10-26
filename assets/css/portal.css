@@ -5,3 +5,21 @@ body{background:#f4f7fb}.portal-shell{max-width:1200px;margin:auto;padding:22px}
 /* Keep the signed-out login entirely within the desktop viewport. */
 @media(min-width:851px){html:has(body.management-app:not(.signed-in)){height:100%;overflow:hidden}body.management-app:not(.signed-in){height:100dvh;overflow:hidden}.management-app:not(.signed-in) .management-layout{height:calc(100dvh - 86px);min-height:0}.management-app:not(.signed-in) .login-intro{padding:clamp(28px,4vw,72px)}.management-app:not(.signed-in) .login-intro h1{font-size:clamp(40px,4.2vw,68px);margin:20px 0}.management-app:not(.signed-in) .intro-rule{margin:28px 0 16px}.management-app:not(.signed-in) .login-side{min-height:0;padding:18px}.management-app:not(.signed-in) .login-card{padding:clamp(22px,2.7vw,38px)}.management-app:not(.signed-in) .login-symbol{margin-bottom:14px}.management-app:not(.signed-in) .login-card h2{margin:8px 0}.management-app:not(.signed-in) .login-subtitle{margin-bottom:14px}.management-app:not(.signed-in) .login-footer{margin-top:14px;padding-top:14px}}
 @media(max-width:850px){body.management-app{overflow-x:hidden}}
+
+/* Signed-in management workspace */
+.management-app.signed-in{background:#f2f5fa;color:#112943}
+.management-app.signed-in .management-layout{max-width:1420px;padding:30px clamp(20px,4vw,64px)}
+.management-app.signed-in .dashboard-wrap{font-family:Inter,ui-sans-serif,system-ui,sans-serif}
+.management-app.signed-in .tabs{display:flex;flex-wrap:wrap;gap:9px;padding:16px;background:#fff;border:1px solid #e2e9f1;border-radius:16px;margin:0 0 24px}
+.management-app.signed-in .tabs button{font:inherit;font-size:13px;font-weight:750;color:#2a4566;background:#f4f7fc;border:1px solid #e0e8f2;border-radius:10px;padding:12px 16px;cursor:pointer}
+.management-app.signed-in .tabs button:hover,.management-app.signed-in .tabs button:focus-visible{background:#e5efff;color:#1544a3}
+.management-app.signed-in #items,.management-app.signed-in #editor,.management-app.signed-in #draft-preview,.management-app.signed-in .dashboard-wrap section.item{display:block;background:#fff;border:1px solid #e0e8f2;border-radius:18px;padding:clamp(20px,3vw,34px);margin-bottom:25px;box-shadow:0 10px 35px #10243e09}
+.management-app.signed-in #items h2,.management-app.signed-in #editor-title{font-size:24px;text-transform:capitalize;letter-spacing:-.025em;color:#10243e}
+.management-app.signed-in #items>.item{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap;padding:15px 0;border-bottom:1px solid #e9eef5;color:#213b5d}
+.management-app.signed-in #items button,.management-app.signed-in #editor button{background:#1d4ed8;color:white;border:0;border-radius:9px;padding:10px 16px;font:inherit;font-size:13px;font-weight:750;cursor:pointer}
+.management-app.signed-in #editor label{display:block;font-weight:750;font-size:13px;text-transform:capitalize;color:#334c6b;margin:15px 0}
+.management-app.signed-in #editor textarea{min-height:150px;resize:vertical}
+.management-app.signed-in #editor input,.management-app.signed-in #editor select,.management-app.signed-in #editor textarea{display:block;width:100%;border:1px solid #cbd8e8;border-radius:10px;padding:12px;font:inherit;font-size:15px;margin-top:7px;color:#112943}
+.management-app.signed-in #editor input[type=checkbox]{width:auto}
+.management-app.signed-in #dashboard[hidden],.management-app.signed-in #draft-preview[hidden]{display:none!important}
+@media(max-width:650px){.management-app.signed-in .management-layout{padding:15px}.management-app.signed-in .tabs{gap:6px}.management-app.signed-in .tabs button{padding:10px}}
