@@ -23,3 +23,14 @@ body{background:#f4f7fb}.portal-shell{max-width:1200px;margin:auto;padding:22px}
 .management-app.signed-in #editor input[type=checkbox]{width:auto}
 .management-app.signed-in #dashboard[hidden],.management-app.signed-in #draft-preview[hidden]{display:none!important}
 @media(max-width:650px){.management-app.signed-in .management-layout{padding:15px}.management-app.signed-in .tabs{gap:6px}.management-app.signed-in .tabs button{padding:10px}}
+
+/* Management workspace refinements */
+.management-app.signed-in .management-layout{max-width:1500px}
+.workspace-heading{margin:10px 0 28px}.workspace-heading h1{font-size:clamp(30px,3.5vw,48px);letter-spacing:-.05em;margin:8px 0}.workspace-heading p{color:#64748b;line-height:1.5}
+.workspace-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(350px,1fr);gap:24px;align-items:start}.workspace-grid #items,.workspace-grid .edit-panel{min-width:0}
+.management-app.signed-in .workspace-grid #items{margin:0}.management-app.signed-in .edit-panel{background:white;border:1px solid #e0e8f2;border-radius:18px;padding:clamp(20px,3vw,34px);box-shadow:0 10px 35px #10243e09}
+.management-app.signed-in .edit-panel #editor{box-shadow:none;border:0;padding:0;margin:0}.management-app.signed-in .edit-panel #draft-preview{white-space:pre-wrap;word-break:break-word}
+.management-app.signed-in .document-section{margin-top:24px;padding:25px;background:white;border-radius:18px}.document-section label{display:block;margin:14px 0;font-size:13px;font-weight:700}.document-section input{display:block;width:100%;padding:12px;border-radius:9px;border:1px solid #cbd8e8;margin-top:6px}.document-section button{background:#1d4ed8;color:white;border:0;padding:12px 18px;border-radius:10px;cursor:pointer}
+.portal-status{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);max-width:min(600px,calc(100% - 32px));background:#0b1f3a;color:#fff;border-radius:12px;padding:12px 20px;box-shadow:0 10px 40px #0003;font-size:13px;z-index:10}.portal-status:empty{display:none}
+.management-app:not(.signed-in) #signout[hidden]{display:none}.management-app.signed-in .login-side,.management-app.signed-in .login-intro{display:none}
+@media(max-width:980px){.workspace-grid{grid-template-columns:1fr}}
