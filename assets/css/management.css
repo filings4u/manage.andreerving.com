@@ -65,3 +65,20 @@ html,body,#app{height:100%;max-height:100%;overflow:hidden}
 .activity-grid span{font-size:12px;color:#718097}
 @media(max-width:1080px){.destination-grid{grid-template-columns:1fr}.workspace-intro{align-items:flex-start;flex-direction:column}}
 @media(max-width:720px){.topbar{height:auto;min-height:58px;padding:12px 16px;align-items:flex-start}.top-actions{justify-content:flex-end}.top-actions a{display:none}.workspace-intro{padding:25px 20px}.destination-head{flex-direction:column}.activity-grid{grid-template-columns:1fr}.destination-actions{grid-template-columns:1fr}}
+
+/* Student operations: support inbox and enrollment workflow */
+.support-grid{display:grid;grid-template-columns:minmax(260px,.8fr) minmax(0,1.4fr);gap:20px}
+.support-ticket{display:block;width:100%;text-align:left;border:1px solid #e5ebf3;background:#f8fafd;padding:15px;border-radius:11px;margin:8px 0;color:#1e3758}
+.support-ticket.selected{border-color:#6688b3;background:#eaf2fd}
+.support-ticket strong,.support-ticket small{display:block}
+.support-ticket small{font-size:11px;color:#718199;margin-top:6px}
+.support-header{display:flex;justify-content:space-between;align-items:start;gap:15px}
+.support-header .field{min-width:155px}
+.support-messages{max-height:400px;overflow-y:auto;background:#f5f8fc;border-radius:12px;padding:15px;margin:18px 0}
+.support-message{border:1px solid #e0e7f1;background:#fff;border-radius:12px;padding:12px 15px;margin:10px 0;width:fit-content;max-width:85%}
+.support-message.staff{margin-left:auto;background:#eaf1fb}
+.support-message p{margin:0 0 5px;white-space:pre-wrap;overflow-wrap:anywhere}
+.support-message small{font-size:11px;color:#8090a4}
+#support-reply textarea{display:block;width:100%;min-height:95px;border:1px solid #d3deeb;padding:12px;border-radius:10px;margin:8px 0 15px}
+@media(max-width:1020px){.support-grid{grid-template-columns:1fr}}
+@media(max-width:720px){.support-header{display:block}.support-message{max-width:100%}}
