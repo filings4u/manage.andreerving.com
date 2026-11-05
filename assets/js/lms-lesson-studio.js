@@ -149,7 +149,9 @@ export function createLessonStudio({root,course,modules,lesson=null,lessons=[],m
  $("ae-add-chapter").onclick=()=>{if($("ae-studio-status").textContent==="Unsaved changes"&&!confirm("Discard unsaved lesson changes?"))return;clearURL();onAddChapter?.()};
  $("ae-add-lesson").onclick=()=>{if($("ae-studio-status").textContent==="Unsaved changes"&&!confirm("Discard unsaved lesson changes?"))return;clearURL();onAddLesson?.($("ae-module").value)};
  root.querySelectorAll("[data-studio-lesson]").forEach(btn=>btn.onclick=()=>{if(btn.dataset.studioLesson===lesson?.id)return;if($("ae-studio-status").textContent==="Unsaved changes"&&!confirm("Discard unsaved lesson changes?"))return;clearURL();onOpenLesson?.(btn.dataset.studioLesson)});
- $("ae-top-preview").onclick=openStudentPreview;
+ // Defer preview callback lookup until the user clicks it. The handler is
+ // initialized below; resolving it eagerly prevented render() from ever running.
+ $("ae-top-preview").onclick=()=>$("ae-open-preview").click();
  $("ae-studio-publish").onclick=()=>{
    if($("ae-studio-status").textContent==="Unsaved changes")return notify("Save the lesson before publishing the course.",true);
    if(!confirm("Publish this course so enrolled students can access its lessons?"))return;
@@ -173,7 +175,11 @@ export function createLessonStudio({root,course,modules,lesson=null,lessons=[],m
    window.location.assign(url);
  };
  $("ae-open-preview").onclick=openStudentPreview;
- $("ae-studio-save").onclick=async()=>{capture();const title=$("ae-title").value.trim();if(!title)return notify("Enter a lesson title.",true);
+ $("ae-studio-save").onclick=async()=>{
+   if(active==="text"&&!$("ae-rich")){
+     return notify("Lesson content is not ready. Refresh the editor before saving; your existing content is safe.",true);
+   }
+   capture();const title=$("ae-title").value.trim();if(!title)return notify("Enter a lesson title.",true);
    if(mediaBusy)return notify("Finish uploading media before saving.",true);
    if(active==="quiz"&&questions.some(q=>!q.prompt.trim()||q.options.some(v=>!v.trim())))return notify("Complete each quiz question and answer before saving.",true);
    const validURL=v=>{if(!v)return null;try{const u=new URL(v);if(u.protocol!=="https:")throw Error();return u.href}catch{throw new Error("Resource URL must use HTTPS.")}};
