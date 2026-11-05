@@ -76,23 +76,48 @@ export function createLMS({db,root,notify,safe,isCurrent}){
     if(s.tab==="settings")body.innerHTML=renderSettings(c,enrollments);
     if(s.tab==="preview")body.innerHTML=renderPreview(c,modules,lessons);
     wireTab();
+    if(s.tab==="preview")void hydratePreviewMedia();
   }
   const safePreviewHtml=value=>{
     const doc=new DOMParser().parseFromString(String(value||""),"text/html");
-    const allow=new Set(["P","BR","STRONG","B","EM","I","U","H2","H3","H4","UL","OL","LI","BLOCKQUOTE"]);
+    const allow=new Set(["P","BR","STRONG","B","EM","I","U","H2","H3","H4","UL","OL","LI","BLOCKQUOTE","FIGURE","A"]);
+    const blocked=new Set(["SCRIPT","STYLE","IFRAME","SVG","OBJECT","FORM","IMG","AUDIO","VIDEO","SOURCE"]);
     const clean=node=>{for(const child of [...node.childNodes]){
       if(child.nodeType===3)continue;
       if(child.nodeType!==1){child.remove();continue}
       if(!allow.has(child.tagName)){
-        if(["SCRIPT","STYLE","IFRAME","SVG","OBJECT","FORM","IMG"].includes(child.tagName)){child.remove();continue}
-        while(child.firstChild)node.insertBefore(child.firstChild,child);
-        child.remove();clean(node);continue;
+        if(blocked.has(child.tagName)){child.remove();continue}
+        while(child.firstChild)node.insertBefore(child.firstChild,child);child.remove();clean(node);continue;
       }
-      for(const attr of [...child.attributes])child.removeAttribute(attr.name);
+      if(child.tagName==="FIGURE"){
+        const type=child.getAttribute("data-ae-media"),path=child.getAttribute("data-ae-path")||"",label=child.getAttribute("data-ae-label")||"";
+        if(!["image","audio"].includes(type)||!/^[-a-zA-Z0-9_./]+$/.test(path)||path.includes("..")||!path.startsWith(s.courseId+"/")){child.remove();continue}
+        for(const attr of [...child.attributes])child.removeAttribute(attr.name);
+        child.setAttribute("data-ae-media",type);child.setAttribute("data-ae-path",path);child.setAttribute("data-ae-label",label.slice(0,160));child.className="ae-media-block";
+        child.textContent="Loading media…";continue;
+      }
+      if(child.tagName==="A"){
+        const href=child.getAttribute("href")||"";for(const attr of [...child.attributes])child.removeAttribute(attr.name);
+        try{const u=new URL(href);if(["https:","mailto:"].includes(u.protocol)){child.href=u.href;child.rel="noopener noreferrer";child.target="_blank"}}catch{}
+      }else for(const attr of [...child.attributes])child.removeAttribute(attr.name);
       clean(child);
     }};
     clean(doc.body);return doc.body.innerHTML;
   };
+  async function hydratePreviewMedia(){
+    const figures=all(".ae-preview-stage-body figure[data-ae-media][data-ae-path]");
+    await Promise.all(figures.map(async fig=>{
+      const path=fig.dataset.aePath,type=fig.dataset.aeMedia,label=fig.dataset.aeLabel||"Lesson media";
+      try{
+        const {data,error}=await db.storage.from("andreerving-lms-resources").createSignedUrl(path,3600);
+        if(error||!data?.signedUrl)throw error||Error("No signed URL");
+        if(!fig.isConnected)return;
+        const media=document.createElement(type==="audio"?"audio":"img");media.src=data.signedUrl;
+        if(type==="audio"){media.controls=true;media.preload="metadata"}else{media.loading="lazy";media.alt=label}
+        const caption=document.createElement("figcaption");caption.textContent=label;fig.replaceChildren(media,caption);
+      }catch{if(fig.isConnected)fig.textContent="Unable to display "+label+". Check storage permissions."}
+    }));
+  }
   function renderPreview(c,modules,lessons){
     const ordered=[...modules].sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
     const items=ordered.flatMap(m=>lessons.filter(l=>l.module_id===m.id).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0)));
@@ -496,6 +521,26 @@ export function createLMS({db,root,notify,safe,isCurrent}){
         });
         onProgress(100);
         return data.uid;
+      },
+      onMediaURL:async(path)=>{
+        if(!path.startsWith(course.id+"/")||path.includes(".."))throw Error("Invalid course media path.");
+        const {data,error}=await db.storage.from("andreerving-lms-resources").createSignedUrl(path,3600);
+        if(error||!data?.signedUrl)throw Error("Could not access lesson media: "+(error?.message||"Unknown error"));
+        return data.signedUrl;
+      },
+      onMediaUpload:async(file,type)=>{
+        const mime=type==="image"?{
+          "image/png":"png","image/jpeg":"jpg","image/webp":"webp"
+        }:{"audio/mpeg":"mp3","audio/mp4":"m4a","audio/x-m4a":"m4a","audio/wav":"wav","audio/x-wav":"wav","audio/wave":"wav","audio/ogg":"ogg"};
+        const ext=file.name.split(".").pop()?.toLowerCase();
+        const canonical=type==="image"?{"jpeg":"jpg","jpg":"jpg","png":"png","webp":"webp"}:{"mp3":"mp3","m4a":"m4a","wav":"wav","ogg":"ogg"};
+        if(!canonical[ext]||!file.size||file.size>(type==="image"?10:50)*1048576||
+          (file.type&&mime[file.type]!==canonical[ext]))throw Error("Unsupported "+type+" type or file size.");
+        const path=course.id+"/lesson-media/"+crypto.randomUUID()+"."+canonical[ext];
+        const contentType=type==="image"?{"jpg":"image/jpeg","png":"image/png","webp":"image/webp"}[canonical[ext]]:{"mp3":"audio/mpeg","m4a":"audio/mp4","wav":"audio/wav","ogg":"audio/ogg"}[canonical[ext]];
+        const {error}=await db.storage.from("andreerving-lms-resources").upload(path,file,{contentType,upsert:false});
+        if(error)throw Error("Unable to upload lesson media: "+error.message);
+        return path;
       },
       onResourceUpload:async(file)=>{
         const allowedTypes=new Set(["application/pdf","image/png","image/jpeg","text/plain","application/msword","application/vnd.openxmlformats-officedocument.wordprocessingml.document","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet","application/vnd.openxmlformats-officedocument.presentationml.presentation"]);

@@ -1,5 +1,5 @@
 /* Andre Erving learning studio - full-page visual lesson authoring */
-export function createLessonStudio({root,course,modules,lesson=null,kind="text",escape,notify,onSave,onCancel,onUpload,onResourceUpload}){
+export function createLessonStudio({root,course,modules,lesson=null,kind="text",escape,notify,onSave,onCancel,onUpload,onResourceUpload,onMediaUpload,onMediaURL}){
  const e=escape,$=id=>root.querySelector("#"+id),mode=lesson?.lesson_type||kind;
  const initial={kind:mode,content:String(lesson?.content_html||""),video:String(lesson?.video_url||""),resource:String(lesson?.resource_url||"")};
  let active=initial.kind,questions=[];
@@ -13,13 +13,45 @@ export function createLessonStudio({root,course,modules,lesson=null,kind="text",
  '<aside class="ae-studio-sidebar"><section class="ae-studio-card"><h3>Lesson settings</h3><label>Course section<select id="ae-module">'+modules.map(m=>'<option value="'+e(m.id)+'" '+(m.id===(lesson?.module_id||modules[0]?.id)?'selected':'')+'>'+e(m.title)+'</option>').join("")+'</select></label><label>Duration (minutes)<input type="number" id="ae-duration" min="0" max="10000" value="'+e(lesson?.duration_minutes||0)+'"></label><label class="ae-studio-toggle"><input type="checkbox" id="ae-preview" '+(lesson?.is_preview?"checked":"")+'> Allow preview</label></section><section class="ae-studio-card"><h3>Student preview</h3><p>Preview your content before saving.</p><button id="ae-open-preview" class="btn secondary" type="button">Preview lesson</button></section></aside></div></div>';
  root.innerHTML=layout;
  const safeHtml=v=>{
-  const parsed=new DOMParser().parseFromString(String(v||""),"text/html"),allow=new Set(["P","BR","H2","H3","H4","B","STRONG","I","EM","U","UL","OL","LI","BLOCKQUOTE"]);
-  function clean(node){for(const child of [...node.childNodes]){if(child.nodeType===3)continue;if(child.nodeType!==1){child.remove();continue}if(!allow.has(child.tagName)){if(["SCRIPT","STYLE","SVG","IFRAME","OBJECT","IMG","FORM"].includes(child.tagName)){child.remove();continue}while(child.firstChild)node.insertBefore(child.firstChild,child);child.remove();clean(node);continue}for(const a of [...child.attributes])child.removeAttribute(a.name);clean(child)}}
+  const parsed=new DOMParser().parseFromString(String(v||""),"text/html");
+  const allowed=new Set(["P","BR","H2","H3","H4","B","STRONG","I","EM","U","UL","OL","LI","BLOCKQUOTE","A","FIGURE","FIGCAPTION"]);
+  const blocked=new Set(["SCRIPT","STYLE","SVG","IFRAME","OBJECT","IMG","AUDIO","VIDEO","SOURCE","FORM","INPUT","BUTTON"]);
+  function clean(node){for(const child of [...node.childNodes]){
+   if(child.nodeType===3)continue;
+   if(child.nodeType!==1){child.remove();continue}
+   if(!allowed.has(child.tagName)){if(blocked.has(child.tagName)){child.remove();continue}while(child.firstChild)node.insertBefore(child.firstChild,child);child.remove();clean(node);continue}
+   if(child.tagName==="FIGURE"){
+    const type=child.getAttribute("data-ae-media"),path=child.getAttribute("data-ae-path")||"";
+    if(!["audio","image"].includes(type)||!/^[-a-zA-Z0-9_./]+$/.test(path)||path.includes("..")||!path.startsWith(course.id+"/")){child.remove();continue}
+    const label=child.getAttribute("data-ae-label")||"";
+    child.replaceChildren();for(const attr of [...child.attributes])child.removeAttribute(attr.name);
+    child.setAttribute("data-ae-media",type);child.setAttribute("data-ae-path",path);child.setAttribute("data-ae-label",label.slice(0,160));
+    child.className="ae-media-block";child.contentEditable="false";
+    child.textContent=(type==="audio"?"♫ Audio: ":"▧ Image: ")+label.slice(0,160);continue;
+   }
+   if(child.tagName==="A"){
+    const href=child.getAttribute("href")||"";for(const attr of [...child.attributes])child.removeAttribute(attr.name);
+    try{const url=new URL(href);if(["https:","mailto:"].includes(url.protocol)){child.setAttribute("href",url.href);child.setAttribute("rel","noopener noreferrer");child.setAttribute("target","_blank")}}catch{}
+   }else for(const attr of [...child.attributes])child.removeAttribute(attr.name);
+   clean(child);
+  }}
   clean(parsed.body);return parsed.body.innerHTML;
+ };
+ const hydrateMedia=async(container)=>{
+  const figures=[...container.querySelectorAll("figure[data-ae-media][data-ae-path]")];
+  await Promise.all(figures.map(async figure=>{
+   const type=figure.dataset.aeMedia,path=figure.dataset.aePath,label=figure.dataset.aeLabel||"Lesson media";
+   figure.className="ae-media-block";figure.contentEditable="false";figure.textContent="Loading "+label+"…";
+   try{const url=await onMediaURL(path);if(!figure.isConnected)return;
+    const el=document.createElement(type==="audio"?"audio":"img");el.src=url;
+    if(type==="audio"){el.controls=true;el.preload="metadata"}else{el.alt=label;el.loading="lazy"}
+    figure.replaceChildren(el);const cap=document.createElement("figcaption");cap.textContent=label;figure.append(cap);
+   }catch{figure.textContent="Unable to load "+label+". Check storage access."}
+  }));
  };
  let article=active==="text"?safeHtml(initial.content):"",notes=active==="video"||active==="download"?safeHtml(initial.content):"";
  let uploadedUID=/^cfstream:[0-9a-f]{32}$/i.test(initial.video)?initial.video.slice(9):null;
- let file=null,resourceFile=null,resourceName="",blobURL=null;
+ let file=null,resourceFile=null,resourceName="",blobURL=null,mediaBusy=false;
  const changed=()=>{$("ae-studio-status").textContent="Unsaved changes"};
  const clearURL=()=>{if(blobURL){URL.revokeObjectURL(blobURL);blobURL=null}};
  const capture=()=>{
@@ -42,9 +74,38 @@ export function createLessonStudio({root,course,modules,lesson=null,kind="text",
  function render(){
   root.querySelectorAll("[data-kind]").forEach(btn=>btn.classList.toggle("active",btn.dataset.kind===active));
   if(active==="text"){
-   $("ae-studio-content").innerHTML='<section class="ae-studio-card"><span class="eyebrow">ARTICLE EDITOR</span><h2>Lesson content</h2><div class="ae-formatbar" role="toolbar"><button data-format="formatBlock" data-value="h2" type="button">H2</button><button data-format="formatBlock" data-value="h3" type="button">H3</button><button data-format="bold" type="button"><strong>B</strong></button><button data-format="italic" type="button"><em>I</em></button><button data-format="insertUnorderedList" type="button">• List</button><button data-format="insertOrderedList" type="button">1. List</button><button data-format="formatBlock" data-value="blockquote" type="button">Quote</button></div><div id="ae-rich" class="ae-rich" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Start writing your lesson...">'+article+'</div></section>';
+   $("ae-studio-content").innerHTML='<section class="ae-studio-card"><span class="eyebrow">ARTICLE EDITOR</span><h2>Lesson content</h2><div class="ae-formatbar" role="toolbar"><button data-format="formatBlock" data-value="h2" type="button">H2</button><button data-format="formatBlock" data-value="h3" type="button">H3</button><button data-format="bold" type="button"><strong>B</strong></button><button data-format="italic" type="button"><em>I</em></button><button data-format="insertUnorderedList" type="button">• List</button><button data-format="insertOrderedList" type="button">1. List</button><button data-format="formatBlock" data-value="blockquote" type="button">Quote</button><span class="ae-toolbar-separator"></span><button type="button" id="ae-insert-image">▧ Add image</button><button type="button" id="ae-insert-audio">♫ Add audio</button><button type="button" id="ae-insert-link">↗ Link</button></div><div class="ae-lesson-help">Build a complete lesson with paragraphs, images and playable audio. Place your cursor where the media belongs.</div><input type="file" id="ae-image-file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" hidden><input type="file" id="ae-audio-file" accept="audio/mpeg,audio/mp4,audio/x-m4a,audio/wav,audio/x-wav,audio/ogg,.mp3,.m4a,.wav,.ogg" hidden><div id="ae-rich" class="ae-rich" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Start writing your lesson...">'+article+'</div></section>';
    $("ae-rich").addEventListener("input",changed);
    root.querySelectorAll("[data-format]").forEach(b=>b.onclick=()=>{$("ae-rich").focus();document.execCommand(b.dataset.format,false,b.dataset.value||null);changed()});
+   void hydrateMedia($("ae-rich"));
+   let lastRange=null;
+   $("ae-rich").addEventListener("mouseup",()=>{const sel=window.getSelection();if(sel.rangeCount&&$("ae-rich").contains(sel.anchorNode))lastRange=sel.getRangeAt(0).cloneRange()});
+   $("ae-rich").addEventListener("keyup",()=>{const sel=window.getSelection();if(sel.rangeCount&&$("ae-rich").contains(sel.anchorNode))lastRange=sel.getRangeAt(0).cloneRange()});
+   const insertFigure=(type,path,label)=>{
+    const el=document.createElement("figure");el.className="ae-media-block";el.dataset.aeMedia=type;el.dataset.aePath=path;el.dataset.aeLabel=label;el.contentEditable="false";
+    const sel=window.getSelection();if(lastRange&&$("ae-rich").contains(lastRange.commonAncestorContainer)){sel.removeAllRanges();sel.addRange(lastRange)}else{$("ae-rich").focus();sel.selectAllChildren($("ae-rich"));sel.collapseToEnd()}
+    const range=sel.getRangeAt(0);range.deleteContents();range.insertNode(el);
+    const para=document.createElement("p");para.append(document.createElement("br"));el.after(para);
+    range.setStart(para,0);range.collapse(true);sel.removeAllRanges();sel.addRange(range);
+    lastRange=null;changed();void hydrateMedia($("ae-rich"));
+   };
+   const upload=async(type,selected)=>{
+    if(!selected||mediaBusy)return;
+    const accepted=type==="image"?/\.(png|jpe?g|webp)$/i:/\.(mp3|m4a|wav|ogg)$/i;
+    const max=type==="image"?10:50;
+    if(!accepted.test(selected.name)||selected.size===0||selected.size>max*1048576)return notify("Choose a "+type+" file under "+max+" MB.",true);
+    mediaBusy=true;$("ae-insert-image").disabled=$("ae-insert-audio").disabled=true;
+    $("ae-studio-status").textContent="Uploading "+type+"…";
+    try{const path=await onMediaUpload(selected,type);insertFigure(type,path,selected.name);$("ae-studio-status").textContent="Media uploaded · Save your lesson"}
+    catch(err){notify(err.message||String(err),true);$("ae-studio-status").textContent="Upload failed"}
+    finally{mediaBusy=false;$("ae-insert-image").disabled=$("ae-insert-audio").disabled=false}
+   };
+   $("ae-insert-image").onclick=()=>$("ae-image-file").click();
+   $("ae-insert-audio").onclick=()=>$("ae-audio-file").click();
+   $("ae-image-file").onchange=ev=>{void upload("image",ev.target.files?.[0]);ev.target.value=""};
+   $("ae-audio-file").onchange=ev=>{void upload("audio",ev.target.files?.[0]);ev.target.value=""};
+   $("ae-insert-link").onclick=()=>{const value=prompt("Enter an HTTPS URL");if(!value)return;try{const url=new URL(value);if(url.protocol!=="https:")throw Error();$("ae-rich").focus();document.execCommand("createLink",false,url.href);changed()}catch{notify("Use a valid HTTPS link.",true)}};
+
   }else if(active==="video"){
    $("ae-studio-content").innerHTML='<section class="ae-studio-card"><span class="eyebrow">CLOUDFLARE STREAM</span><h2>Upload your video</h2><p>Upload a video file from your computer. Cloudflare Stream handles encoding and delivery to students.</p><label class="ae-upload-drop" id="ae-drop"><span class="ae-upload-glyph">↑</span><strong>Choose video file or drop it here</strong><small>MP4, WebM or MOV · Maximum 200 MB</small><input type="file" id="ae-video-file" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov"></label><div id="ae-video-name">'+(uploadedUID?"Cloudflare Stream video already attached":"No video selected")+'</div><progress id="ae-upload-progress" max="100" value="0" hidden></progress><div class="ae-video-sample" id="ae-video-sample"></div></section><section class="ae-studio-card"><h2>Instructor notes</h2><div id="ae-notes" class="ae-rich ae-rich-short" contenteditable="true" role="textbox" data-placeholder="Add a lesson summary or transcript notes...">'+notes+'</div></section>';
    const input=$("ae-video-file"),drop=$("ae-drop");
@@ -65,9 +126,10 @@ export function createLessonStudio({root,course,modules,lesson=null,kind="text",
  $("ae-duration").addEventListener("input",changed);
  $("ae-preview").addEventListener("change",changed);
  $("ae-open-preview").onclick=()=>{capture();if(active==="quiz"){notify("Quiz preview is available in the student player after saving.");return}
-   const body=active==="text"?article:active==="video"?(blobURL?'<video controls src="'+blobURL+'"></video>':"<p>Video will appear after Cloudflare is configured.</p>"):active==="download"?'<p>Attached resource: '+e(resourceName||initial.resource||"No resource selected")+'</p>'+notes:notes;
-   const layer=document.createElement("div");layer.className="lms-confirm-backdrop";layer.innerHTML='<section class="ae-studio-preview" role="dialog" aria-modal="true"><div class="ae-studio-card-head"><h2>'+e($("ae-title").value||"Untitled lesson")+'</h2><button type="button" class="btn secondary" id="close-studio-preview">Close</button></div><div class="ae-preview-content">'+body+'</div></section>';document.body.append(layer);layer.querySelector("#close-studio-preview").onclick=()=>layer.remove()};
+   const body=active==="text"?safeHtml(article):active==="video"?(blobURL?'<video controls src="'+blobURL+'"></video>':"<p>Video will appear after Cloudflare is configured.</p>"):active==="download"?'<p>Attached resource: '+e(resourceName||initial.resource||"No resource selected")+'</p>'+notes:notes;
+   const layer=document.createElement("div");layer.className="lms-confirm-backdrop";layer.innerHTML='<section class="ae-studio-preview" role="dialog" aria-modal="true"><div class="ae-studio-card-head"><h2>'+e($("ae-title").value||"Untitled lesson")+'</h2><button type="button" class="btn secondary" id="close-studio-preview">Close</button></div><div class="ae-preview-content">'+body+'</div></section>';document.body.append(layer);void hydrateMedia(layer);layer.querySelector("#close-studio-preview").onclick=()=>layer.remove()};
  $("ae-studio-save").onclick=async()=>{capture();const title=$("ae-title").value.trim();if(!title)return notify("Enter a lesson title.",true);
+   if(mediaBusy)return notify("Finish uploading media before saving.",true);
    if(active==="quiz"&&questions.some(q=>!q.prompt.trim()||q.options.some(v=>!v.trim())))return notify("Complete each quiz question and answer before saving.",true);
    const validURL=v=>{if(!v)return null;try{const u=new URL(v);if(u.protocol!=="https:")throw Error();return u.href}catch{throw new Error("Resource URL must use HTTPS.")}};
    const button=$("ae-studio-save");button.disabled=true;$("ae-studio-status").textContent="Saving...";
