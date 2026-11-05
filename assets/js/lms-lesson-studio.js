@@ -52,7 +52,7 @@ export function createLessonStudio({root,course,modules,lesson=null,lessons=[],m
    figure.className="ae-media-block";figure.contentEditable="false";figure.textContent="Loading "+label+"…";
    try{const url=await onMediaURL(path);if(!figure.isConnected)return;
     const el=document.createElement(type==="audio"?"audio":"img");el.src=url;
-    if(type==="audio"){el.controls=true;el.preload="metadata";el.controlsList="nodownload noplaybackrate";el.setAttribute("controlsList","nodownload noplaybackrate");el.setAttribute("disablepictureinpicture","");el.addEventListener("contextmenu",event=>event.preventDefault())}
+    if(type==="audio"){el.controls=true;el.preload="metadata";el.setAttribute("controlsList","nodownload noplaybackrate");el.setAttribute("disablepictureinpicture","");el.addEventListener("contextmenu",event=>event.preventDefault())}
     else{el.alt=label;el.loading="lazy"}
     figure.replaceChildren(el);const cap=document.createElement("figcaption");cap.textContent=label;figure.append(cap);
     if(type==="audio")attachAudioActions(figure);
