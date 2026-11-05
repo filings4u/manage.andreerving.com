@@ -179,6 +179,14 @@ async function init(){
  if(res.some(x=>x.error)){message('Unable to load this course. Please refresh.');return}
  $('course-title').textContent=res[0].data.title;modules=res[1].data||[];const rows=res[2].data||[];progress=res[3].data||[];
  lessons=modules.flatMap(m=>rows.filter(l=>l.module_id===m.id));
+ // Return directly to the administrator lesson editor rather than a generic catalog.
+ const requestedLesson=rows.find(l=>l.id===params.get("lesson"));
+ const backRoute=requestedLesson
+  ?"#/lms/edit/lesson/"+encodeURIComponent(requestedLesson.id)+"/"+encodeURIComponent(courseId)+"/"+encodeURIComponent(requestedLesson.module_id)
+  :"#/lms/course/"+encodeURIComponent(courseId)+"/curriculum";
+ document.querySelectorAll(".ae-player-back,.ae-player-exit").forEach(link=>{
+   link.href="./"+backRoute;
+ });
  if(!lessons.length){message('No lessons have been added to this course yet.');renderOutline();return}
  $('lesson-prev').onclick=()=>showLesson(position-1);$('lesson-next').onclick=()=>showLesson(position+1);$('lesson-complete').onclick=complete;
  const desired=params.get('lesson'),start=Math.max(0,lessons.findIndex(l=>l.id===desired));await showLesson(start);
