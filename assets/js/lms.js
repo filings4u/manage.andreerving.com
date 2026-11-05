@@ -1,4 +1,4 @@
-import {createLessonStudio} from './lms-lesson-studio.js?v=r2-worker-20261105-1';
+import {createLessonStudio} from './lms-lesson-studio.js?v=student-preview-20261105-v3';
 
 /* Andre Erving LMS studio. Auth and authorization are supplied by the management app;
    Supabase RLS is the server-side enforcement for every operation. */
