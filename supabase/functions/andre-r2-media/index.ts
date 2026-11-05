@@ -32,16 +32,12 @@ Deno.serve(async req=>{
   const token=(req.headers.get("authorization")||"").match(/^Bearer (.+)$/i)?.[1];
   if(!token)return respond({error:"Authentication required"},401);
   try{
-    const client=createClient(requireEnv("SUPABASE_URL"),requireEnv("SUPABASE_ANON_KEY"),{
-      auth:{persistSession:false,autoRefreshToken:false}
-    });
-    const {data:{user},error:authError}=await client.auth.getUser(token);
-    if(authError||!user)return respond({error:"Invalid session"},401);
-    // Only staff may request editor media URLs. Customer playback gets a separate
-    // enrollment-aware integration when the customer portal is developed.
     const db=createClient(requireEnv("SUPABASE_URL"),requireEnv("SUPABASE_SERVICE_ROLE_KEY"),{
       auth:{persistSession:false,autoRefreshToken:false}
     });
+    const {data:{user},error:authError}=await db.auth.getUser(token);
+    if(authError||!user)return respond({error:"Invalid session"},401);
+    // Restrict editor media signing to active staff. Learner access is separate.
     const {data:staff,error:staffError}=await db.from("admin_profiles").select("active").eq("id",user.id).maybeSingle();
     if(staffError||!staff?.active)return respond({error:"Staff access required"},403);
 
