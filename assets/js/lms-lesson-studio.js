@@ -30,7 +30,7 @@ export function createLessonStudio({root,course,modules,lesson=null,lessons=[],m
    if(!allowed.has(child.tagName)){if(blocked.has(child.tagName)){child.remove();continue}while(child.firstChild)node.insertBefore(child.firstChild,child);child.remove();clean(node);continue}
    if(child.tagName==="FIGURE"){
     const type=child.getAttribute("data-ae-media"),path=child.getAttribute("data-ae-path")||"";
-    if(!["audio","image"].includes(type)||!/^[-a-zA-Z0-9_./]+$/.test(path)||path.includes("..")||!path.startsWith(course.id+"/")){child.remove();continue}
+    if(!["audio","image"].includes(type)||!/^[-a-zA-Z0-9_./:]+$/.test(path)||path.includes("..")||!(path.startsWith(course.id+"/")||path.startsWith("r2:"+course.id+"/lesson-media/"))){child.remove();continue}
     const label=child.getAttribute("data-ae-label")||"";
     child.replaceChildren();for(const attr of [...child.attributes])child.removeAttribute(attr.name);
     child.setAttribute("data-ae-media",type);child.setAttribute("data-ae-path",path);child.setAttribute("data-ae-label",label.slice(0,160));
