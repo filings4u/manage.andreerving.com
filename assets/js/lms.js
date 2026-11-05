@@ -440,19 +440,99 @@ export function createLMS({db,root,notify,safe,isCurrent}){
   function renderEditor(){
     if(!s.editor)return render();
     const e=s.editor;
-    root.innerHTML='<div class="lms-back"><button id="lms-editor-back" type="button">← Back to '+esc(s.courseId?"course":"course library")+'</button></div>'+
-      '<div class="lms-studio-head"><div><div class="eyebrow">ANDRE ERVING / COURSE MANAGEMENT</div><h1>'+esc(e.title)+'</h1><p class="muted">Edit details on this dedicated page. Changes are saved to your connected LMS.</p></div></div>'+
-      '<section class="panel lms-fullpage-editor"><form id="lms-form">'+e.markup+'<div class="form-actions"><button class="btn" type="submit">Save changes</button><button class="btn secondary" type="button" id="lms-cancel">Cancel</button></div><p class="notice error hidden" id="lms-form-error" role="alert"></p></form></section>';
+    const isCourse=s.nextEditRoute?.startsWith("course/")===true;
+    root.innerHTML='<div class="ae-editor-workspace '+(isCourse?'ae-course-workspace':'ae-compact-workspace')+'">'+
+      '<div class="ae-editor-topline"><button id="lms-editor-back" type="button" class="ae-editor-back">← Courses & Programs</button><span class="ae-editor-toptrail">/ '+esc(isCourse?'Course setup':'Management')+'</span></div>'+
+      '<div class="ae-editor-hero"><div><span class="ae-editor-eyebrow">ANDRE ERVING / LEARNING MANAGEMENT</span><h1>'+esc(isCourse?(e.title==="Create new course"?"Create a course":e.title):e.title)+'</h1><p>'+(isCourse?'Build your course in a few organized steps. Save it as a draft, then add lessons and publish when ready.':'Update this part of your learning program without leaving the management workspace.')+'</p></div><span class="ae-editor-state">● &nbsp; '+(e.title.toLowerCase().includes("create")?'New':'Editing')+'</span></div>'+
+      '<div class="ae-editor-body"><aside class="ae-editor-guide" id="ae-editor-guide"></aside><section class="ae-editor-formcard"><form id="lms-form"><div class="form-grid" id="ae-original-fields">'+e.markup+'</div><div class="ae-editor-footer"><span class="ae-editor-save-note" id="ae-editor-step-note">Changes are saved only when you select Save</span><div class="ae-editor-footer-buttons"><button class="btn secondary" type="button" id="ae-prev-step" hidden>← Previous</button><button class="btn" type="button" id="ae-next-step" hidden>Continue →</button><button class="btn ae-editor-submit" id="ae-final-save" type="submit">'+(isCourse?'Save course':'Save changes')+'</button><button class="btn secondary" type="button" id="lms-cancel">Cancel</button></div></div><p class="notice error hidden" id="lms-form-error" role="alert"></p></form></section></div></div>';
     const close=()=>{s.editor=null;openRoute(s.courseId?"course/"+s.courseId+"/"+s.tab:"courses");render()};
     by("lms-editor-back").onclick=close;by("lms-cancel").onclick=close;
-    const form=by("lms-form");form.onsubmit=async ev=>{
+    const form=by("lms-form");
+    const source=by("ae-original-fields");
+    const groupNames=isCourse?[
+      {name:"Essentials",summary:"Name, category and introduction",fields:["title","slug","category","short_description"],icon:"01"},
+      {name:"Course content",summary:"Description and cover image",fields:["description","featured_image_url"],icon:"02"},
+      {name:"Pricing & access",summary:"Price, checkout and access rules",fields:["price","compare_at_price","purchase_url","access_days"],icon:"03"},
+      {name:"Publish settings",summary:"Visibility, certificates and sorting",fields:["status","sort_order","certificate_enabled"],icon:"04"}
+    ]:[
+      {name:"Details",summary:"Complete the required information",fields:[],icon:"01"}
+    ];
+    const fields=[...source.querySelectorAll(":scope > .field")];
+    const sections=groupNames.map((group,i)=>{
+      const node=document.createElement("section");node.className="ae-form-step";
+      node.dataset.step=String(i);
+      node.innerHTML='<div class="ae-form-section-heading"><span class="ae-form-section-number">'+group.icon+'</span><div><h2>'+group.name+'</h2><p>'+group.summary+'</p></div></div><div class="ae-form-step-fields form-grid"></div>';
+      const grid=node.querySelector(".ae-form-step-fields");
+      const members=isCourse?group.fields.map(name=>fields.find(el=>el.querySelector('[name="'+name+'"]'))).filter(Boolean):fields;
+      for(const member of members)grid.append(member);
+      return node;
+    });
+    source.replaceWith(...sections);
+    if(isCourse){
+      const guide=by("ae-editor-guide");
+      guide.innerHTML='<div class="ae-editor-guide-title"><span class="ae-guide-label">YOUR WORKFLOW</span><h3>Course setup</h3><p>Four simple steps to prepare your learning program.</p></div><nav aria-label="Course setup steps" class="ae-guide-steps">'+groupNames.map((g,i)=>'<button type="button" class="ae-guide-step" data-guide-step="'+i+'"><span class="ae-guide-index">'+g.icon+'</span><span><strong>'+g.name+'</strong><small>'+g.summary+'</small></span><span class="ae-guide-check">✓</span></button>').join("")+'</nav><div class="ae-guide-help"><strong>Before you publish</strong><p>Create your course as a draft, add chapters and lessons, and preview the student experience.</p></div>';
+      const preview=document.createElement("div");preview.className="ae-course-live-preview";
+      preview.innerHTML='<span class="ae-guide-label">LIVE COURSE CARD</span><div class="ae-course-live-cover" id="ae-live-cover"><span>AE</span><small>LEARNING</small></div><span class="ae-course-live-pill" id="ae-live-status">Draft</span><h3 id="ae-live-name">Your course title</h3><p id="ae-live-summary">A short overview of your course appears here.</p><div class="ae-live-price" id="ae-live-price">$0.00</div>';
+      guide.append(preview);
+      let step=0,furthest=0;
+      const updatePreview=()=>{
+        by("ae-live-name").textContent=form.elements.namedItem("title")?.value.trim()||"Your course title";
+        by("ae-live-summary").textContent=form.elements.namedItem("short_description")?.value.trim()||"A short overview of your course appears here.";
+        const price=Number(form.elements.namedItem("price")?.value)||0;
+        by("ae-live-price").textContent=price===0?"Free":new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(price);
+        const state=form.elements.namedItem("status")?.value||"draft";by("ae-live-status").textContent=state[0].toUpperCase()+state.slice(1);
+        const image=form.elements.namedItem("featured_image_url")?.value.trim();
+        const cover=by("ae-live-cover");cover.style.backgroundImage=image&&/^https:\/\//i.test(image)?'linear-gradient(#0f253b55,#0f253b55),url("'+image.replaceAll('"','%22')+'")':"";
+      };
+      const showStep=n=>{
+        step=n;furthest=Math.max(furthest,n);
+        sections.forEach((node,i)=>{node.hidden=i!==n;node.classList.toggle("current",i===n)});
+        root.querySelectorAll("[data-guide-step]").forEach((button,i)=>{
+          button.classList.toggle("active",i===n);button.classList.toggle("completed",i<n);
+          button.setAttribute("aria-current",i===n?"step":"false");
+        });
+        by("ae-prev-step").hidden=n===0;
+        by("ae-next-step").hidden=n===sections.length-1;
+        by("ae-final-save").hidden=n!==sections.length-1;
+        by("ae-editor-step-note").textContent="Step "+(n+1)+" of "+sections.length+" · "+groupNames[n].name;
+        root.querySelector(".ae-editor-hero")?.scrollIntoView({behavior:"smooth",block:"start"});
+      };
+      const checkStep=n=>{
+        const controls=[...sections[n].querySelectorAll("input,textarea,select")];
+        for(const control of controls){
+          if(!control.checkValidity()){
+            showStep(n);control.reportValidity();control.focus();return false;
+          }
+        }return true;
+      };
+      by("ae-next-step").onclick=()=>{if(checkStep(step))showStep(step+1)};
+      by("ae-prev-step").onclick=()=>showStep(step-1);
+      root.querySelectorAll("[data-guide-step]").forEach(button=>button.onclick=()=>{
+        const n=Number(button.dataset.guideStep);
+        if(n<=step||n<=furthest){showStep(n);return}
+        for(let i=step;i<n;i++)if(!checkStep(i))return;
+        showStep(n);
+      });
+      form.noValidate=true;
+      form.addEventListener("input",updatePreview);form.addEventListener("change",updatePreview);
+      updatePreview();showStep(0);
+      form.dataset.courseWizard="true";
+      form.validateSteps=()=>{
+        for(let i=0;i<sections.length;i++)if(!checkStep(i))return false;
+        return true;
+      };
+    }else{
+      by("ae-editor-guide").innerHTML='<div class="ae-editor-guide-title"><span class="ae-guide-label">EDITOR</span><h3>Keep it organized</h3><p>Update details here, then save changes when you are ready.</p></div><div class="ae-guide-help"><strong>Connected to Supabase</strong><p>Your changes are applied to the original records. Nothing is published or changed until you save.</p></div>';
+      by("ae-next-step").hidden=true;by("ae-final-save").hidden=false;
+    }
+    form.onsubmit=async ev=>{
       ev.preventDefault();if(s.busy)return;
-      const submit=form.querySelector('[type="submit"]');s.busy=true;submit.disabled=true;
+      if(isCourse&&!form.validateSteps())return;
+      const submit=by("ae-final-save");s.busy=true;submit.disabled=true;
       try{await e.onSubmit(new FormData(form),form);s.editor=null;openRoute(s.courseId?"course/"+s.courseId+"/"+s.tab:"courses");await refresh()}
       catch(err){const n=by("lms-form-error");n.textContent=err.message||String(err);n.classList.remove("hidden");submit.disabled=false}
       finally{s.busy=false}
     };
-    form.querySelector("input,select,textarea")?.focus();
     return form;
   }
   function modal(title,markup,onSubmit){
