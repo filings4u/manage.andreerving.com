@@ -2,7 +2,7 @@
 // Requires Cloudflare R2 binding "LMS_MEDIA"; credentials never reach the browser.
 const SUPABASE_URL = "https://gnfyidajbectlppsekzj.supabase.co";
 const SUPABASE_KEY = "sb_publishable_DGt4HrHAwWyMt-0Xtzlfog_F18RnOyf";
-const origins = new Set(["https://filings4u.github.io","https://manage.andreerving.com"]);
+const origins = new Set(["https://filings4u.github.io","https://manage.andreerving.com","https://app.andreerving.com"]);
 const types = {
   "audio/mpeg":["mp3",50], "audio/mp4":["m4a",50],"audio/x-m4a":["m4a",50],
   "audio/wav":["wav",50],"audio/x-wav":["wav",50],"audio/ogg":["ogg",50],
