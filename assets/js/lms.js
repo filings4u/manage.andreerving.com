@@ -91,7 +91,7 @@ export function createLMS({db,root,notify,safe,isCurrent}){
       }
       if(child.tagName==="FIGURE"){
         const type=child.getAttribute("data-ae-media"),path=child.getAttribute("data-ae-path")||"",label=child.getAttribute("data-ae-label")||"";
-        if(!["image","audio"].includes(type)||!/^[-a-zA-Z0-9_./]+$/.test(path)||path.includes("..")||!path.startsWith(s.courseId+"/")){child.remove();continue}
+        if(!["image","audio"].includes(type)||!/^[-a-zA-Z0-9_./:]+$/.test(path)||path.includes("..")||!(path.startsWith(s.courseId+"/")||path.startsWith("r2:"+s.courseId+"/lesson-media/"))){child.remove();continue}
         for(const attr of [...child.attributes])child.removeAttribute(attr.name);
         child.setAttribute("data-ae-media",type);child.setAttribute("data-ae-path",path);child.setAttribute("data-ae-label",label.slice(0,160));child.className="ae-media-block";
         child.textContent="Loading media…";continue;
