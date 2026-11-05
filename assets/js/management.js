@@ -1,4 +1,4 @@
-import {createLMS} from './lms.js?v=lesson-editor-restored-20261105';
+import {createLMS} from './lms.js?v=media-controls-20261105';
 import{createClient}from'https://esm.sh/@supabase/supabase-js@2.58.0';
 const db=createClient('https://gnfyidajbectlppsekzj.supabase.co','sb_publishable_DGt4HrHAwWyMt-0Xtzlfog_F18RnOyf');
 const app=document.querySelector('#app'),safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
