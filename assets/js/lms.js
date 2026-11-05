@@ -500,20 +500,34 @@ export function createLMS({db,root,notify,safe,isCurrent}){
       await save("course_modules",{course_id:course.id,title,description:String(fd.get("description")||"").trim(),sort_order:m?.sort_order??(related("modules").length+1)*10},m?.id);notify(m?"Section updated":"Section created");
     });
   }
-  const r2Media=async(action,courseId,fields={})=>{
-    const {data,error}=await db.functions.invoke("andre-r2-media",{body:{action,courseId,...fields}});
-    if(error||data?.error){
-      let details=data?.error||error?.message||"R2 media service unavailable";
-      if(error?.context?.json){try{const body=await error.context.json();details=body?.error||details}catch{}}
-      throw new Error(details);
+  // Authenticated Cloudflare Worker gateway. R2 bucket credentials never enter the browser.
+  const r2Gateway="https://andre-lms-media.aerving1.workers.dev";
+  const r2Fetch=async(endpoint,courseId,payload)=>{
+    const {data:{session},error}=await db.auth.getSession();
+    if(error||!session?.access_token)throw Error("Sign in to upload or open lesson media.");
+    const upload=endpoint==="upload";
+    const headers={"Authorization":"Bearer "+session.access_token};
+    if(upload){
+      headers["Content-Type"]=payload.type;
+      headers["X-AE-Course-Id"]=courseId;
+    }else headers["Content-Type"]="application/json";
+    const response=await fetch(r2Gateway+"/"+endpoint,{
+      method:"POST",headers,body:upload?payload:JSON.stringify({courseId,path:payload})
+    });
+    if(!response.ok){
+      const result=await response.json().catch(()=>null);
+      throw Error(result?.error||"Cloudflare R2 request failed ("+response.status+").");
     }
-    return data;
+    return upload?response.json():response.blob();
   };
+  const mediaObjectURLs=new Map();
   const signedLessonMedia=async(courseId,path)=>{
     if(path.startsWith("r2:")){
-      const data=await r2Media("read",courseId,{path});
-      if(!data?.url)throw Error("Could not access R2 media");
-      return data.url;
+      if(mediaObjectURLs.has(path))return mediaObjectURLs.get(path);
+      const blob=await r2Fetch("read",courseId,path);
+      const url=URL.createObjectURL(blob);
+      mediaObjectURLs.set(path,url);
+      return url;
     }
     if(!path.startsWith(courseId+"/")||path.includes(".."))throw Error("Invalid course media path.");
     const {data,error}=await db.storage.from("andreerving-lms-resources").createSignedUrl(path,3600);
@@ -566,20 +580,19 @@ export function createLMS({db,root,notify,safe,isCurrent}){
         if(!canonical[ext]||!file.size||file.size>(type==="image"?10:50)*1048576||
           (file.type&&mime[file.type]!==canonical[ext]))throw Error("Unsupported "+type+" type or file size.");
         const contentType=type==="image"?{"jpg":"image/jpeg","png":"image/png","webp":"image/webp"}[canonical[ext]]:{"mp3":"audio/mpeg","m4a":"audio/mp4","wav":"audio/wav","ogg":"audio/ogg"}[canonical[ext]];
-        const ticket=await r2Media("upload",course.id,{mime:contentType,size:file.size});
-        if(!ticket?.url||!ticket?.path)throw Error("Unable to authorize R2 upload");
-        const result=await fetch(ticket.url,{method:"PUT",headers:{"Content-Type":contentType},body:file});
-        if(!result.ok)throw Error("R2 upload failed ("+result.status+"). Check bucket CORS settings.");
-        return ticket.path;
+        const verifiedFile=file.type===contentType?file:new File([file],file.name,{type:contentType});
+        const result=await r2Fetch("upload",course.id,verifiedFile);
+        if(!result?.path?.startsWith("r2:"+course.id+"/lesson-media/"))
+          throw Error("Cloudflare R2 returned an invalid media reference.");
+        return result.path;
       },
       onResourceUpload:async(file)=>{
         const allowedTypes=new Set(["application/pdf","image/png","image/jpeg","text/plain","application/msword","application/vnd.openxmlformats-officedocument.wordprocessingml.document","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet","application/vnd.openxmlformats-officedocument.presentationml.presentation"]);
         if(!allowedTypes.has(file.type)||file.size>20*1024*1024||!file.size)throw Error("Choose an accepted course resource under 20 MB.");
-        const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,"-").slice(-90)||"resource";
-        const storagePath=course.id+"/"+crypto.randomUUID()+"-"+safeName;
-        const {error}=await db.storage.from("andreerving-lms-resources").upload(storagePath,file,{contentType:file.type,upsert:false});
-        if(error)throw Error("Unable to upload course resource: "+error.message);
-        return storagePath;
+        const result=await r2Fetch("upload",course.id,file);
+        if(!result?.path?.startsWith("r2:"+course.id+"/lesson-media/"))
+          throw Error("Cloudflare R2 returned an invalid resource reference.");
+        return result.path;
       },
       onSave:async(payload)=>{
         const data={...payload,sort_order:lesson?.sort_order??((related("lessons").filter(l=>l.module_id===payload.module_id).length+1)*10)};
