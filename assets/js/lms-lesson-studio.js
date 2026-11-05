@@ -18,7 +18,7 @@ export function createLessonStudio({root,course,modules,lesson=null,lessons=[],m
  const layout='<div class="ae-studio-page"><header class="ae-studio-head"><div class="ae-studio-breadcrumb"><button type="button" id="ae-studio-back">‹ &nbsp; Courses &amp; Programs</button><span>/</span>'+e(course.title)+'<span>/</span>'+e(selectedModuleName)+'<span>/</span> Lesson Editor</div><div class="ae-studio-heading"><div class="ae-studio-title-line"><span class="ae-studio-docicon" aria-hidden="true">▤</span><div class="ae-studio-title-stack"><h1 id="ae-studio-head-title">'+e(lesson?.title||'New lesson')+' <span class="ae-studio-draft">'+(lesson?'Editing':'Draft')+'</span></h1><p>'+e(course.title)+' &nbsp; · &nbsp; '+e(selectedModuleName)+'</p></div></div><div><div class="ae-studio-actions"><button type="button" class="btn" id="ae-top-preview">◉ &nbsp; Preview</button><button type="button" class="btn" id="ae-studio-save">▣ &nbsp; Save lesson</button><button type="button" class="btn ae-studio-publish" id="ae-studio-publish">↑ &nbsp; Publish course</button></div><div class="ae-studio-statusline" id="ae-studio-status" role="status" aria-live="polite">Ready to edit</div></div></div></header>'+
  '<div class="ae-studio-grid"><aside class="ae-studio-card ae-studio-curriculum" aria-label="Course curriculum"><div class="ae-studio-panehead"><h2>Course Curriculum</h2><p>Browse chapters and edit lessons.</p></div><div class="ae-studio-chapters">'+curriculum+'</div><div class="ae-studio-sidebar-actions"><button type="button" id="ae-add-chapter">+ Add Chapter</button><button type="button" id="ae-add-lesson">+ Add Lesson</button></div></aside>'+
  '<main class="ae-studio-main"><section class="ae-studio-card ae-studio-editor-card"><div class="ae-studio-editor-heading"><h2>Lesson content</h2><span>Rich multimedia editor</span></div><input class="ae-studio-title" id="ae-title" aria-label="Lesson title" maxlength="200" value="'+e(lesson?.title||'')+'" placeholder="Give this lesson a title"><div id="ae-studio-content" class="ae-studio-content-shell"></div><div class="ae-studio-add-blocks"><strong>+ Add Content</strong><div class="ae-studio-types">'+[['text','▤','Article'],['image','▧','Image'],['audio','♫','Audio'],['video','▷','Video'],['quiz','☷','Quiz'],['download','↓','Download']].map(([k,symbol,title])=>'<button type="button" class="'+(k===active?'active':'')+'" data-content-action="'+k+'"><span>'+symbol+'</span> '+title+'</button>').join('')+'</div><p class="ae-studio-field-help">Text, images and audio live together in an Article. Video, Quiz and Download select a lesson type.</p></div></section></main>'+
- '<aside class="ae-studio-sidebar"><section class="ae-studio-card"><div class="ae-studio-panehead"><h3>Lesson Settings</h3><p>Configure how this lesson appears.</p></div><div class="ae-studio-sidebar-content"><button type="button" class="ae-studio-preview-card" id="ae-open-preview"><span class="glyph">▣</span><span><strong>Student Preview</strong><small>Open the real student classroom</small></span><span aria-hidden="true">›</span></button><label>Lesson Type<div class="ae-studio-readonly" id="ae-studio-current-type">'+e(label[active])+'</div></label><label>Course visibility<div class="ae-studio-readonly">'+e(course.status==='published'?'Published course':'Course is '+(course.status||'draft'))+'</div></label><label class="ae-studio-toggle">Allow lesson preview <input type="checkbox" id="ae-preview" '+(lesson?.is_preview?'checked':'')+'></label><label>Estimated duration (minutes)<input type="number" id="ae-duration" min="0" max="10000" value="'+e(lesson?.duration_minutes||0)+'"></label><label>Completion rules<div class="ae-studio-readonly">Managed in the learner experience</div></label><label>Lesson URL<div class="ae-studio-readonly" id="ae-studio-slug">'+e(String(lesson?.title||'new-lesson').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''))+'</div></label><label>Section assignment<select id="ae-module">'+modules.map(m=>'<option value="'+e(m.id)+'" '+(m.id===selectedModule?'selected':'')+'>'+e(m.title)+'</option>').join('')+'</select></label></div><div class="ae-studio-panefoot">Changes save to the existing course and lesson records in Supabase.</div></section></aside></div></div>';
+ '<aside class="ae-studio-sidebar"><section class="ae-studio-card"><div class="ae-studio-panehead"><h3>Lesson Settings</h3><p>Configure how this lesson appears.</p></div><div class="ae-studio-sidebar-content"><button type="button" class="ae-studio-preview-card" id="ae-open-preview"><span class="glyph">▣</span><span><strong>Student Preview</strong><small>Open the real student classroom</small></span><span aria-hidden="true">›</span></button><label>Lesson Type<div class="ae-studio-readonly" id="ae-studio-current-type">'+e(label[active])+'</div></label><label>Course visibility<div class="ae-studio-readonly">'+e(course.status==='published'?'Published course':'Course is '+(course.status||'draft'))+'</div></label><label class="ae-studio-toggle">Allow lesson preview <input type="checkbox" id="ae-preview" '+(lesson?.is_preview?'checked':'')+'></label><label class="ae-studio-toggle" id="ae-download-toggle">Allow document downloads <input type="checkbox" id="ae-allow-download" '+(lesson?.allow_download?'checked':'')+'></label><p class="ae-studio-field-help">Off by default. Students can read protected lessons, but download links appear only when enabled for a Download lesson.</p><label>Estimated duration (minutes)<input type="number" id="ae-duration" min="0" max="10000" value="'+e(lesson?.duration_minutes||0)+'"></label><label>Completion rules<div class="ae-studio-readonly">Managed in the learner experience</div></label><label>Lesson URL<div class="ae-studio-readonly" id="ae-studio-slug">'+e(String(lesson?.title||'new-lesson').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''))+'</div></label><label>Section assignment<select id="ae-module">'+modules.map(m=>'<option value="'+e(m.id)+'" '+(m.id===selectedModule?'selected':'')+'>'+e(m.title)+'</option>').join('')+'</select></label></div><div class="ae-studio-panefoot">Changes save to the existing course and lesson records in Supabase.</div></section></aside></div></div>';
  root.innerHTML=layout;
  const safeHtml=v=>{
   const parsed=new DOMParser().parseFromString(String(v||""),"text/html");
@@ -52,10 +52,34 @@ export function createLessonStudio({root,course,modules,lesson=null,lessons=[],m
    figure.className="ae-media-block";figure.contentEditable="false";figure.textContent="Loading "+label+"…";
    try{const url=await onMediaURL(path);if(!figure.isConnected)return;
     const el=document.createElement(type==="audio"?"audio":"img");el.src=url;
-    if(type==="audio"){el.controls=true;el.preload="metadata"}else{el.alt=label;el.loading="lazy"}
+    if(type==="audio"){el.controls=true;el.preload="metadata";el.controlsList="nodownload noplaybackrate";el.setAttribute("controlsList","nodownload noplaybackrate");el.setAttribute("disablepictureinpicture","");el.addEventListener("contextmenu",event=>event.preventDefault())}
+    else{el.alt=label;el.loading="lazy"}
     figure.replaceChildren(el);const cap=document.createElement("figcaption");cap.textContent=label;figure.append(cap);
-   }catch{figure.textContent="Unable to load "+label+". Check storage access."}
+    if(type==="audio")attachAudioActions(figure);
+   }catch{figure.textContent="Unable to load "+label+". Check storage access.";if(type==="audio")attachAudioActions(figure)}
   }));
+ };
+ const attachAudioActions=(figure)=>{
+   if(!figure.isConnected||figure.dataset.aeMedia!=="audio")return;
+   const controls=document.createElement("div");controls.className="ae-audio-admin-actions";controls.contentEditable="false";
+   const replace=document.createElement("button");replace.type="button";replace.className="ae-audio-replace";replace.textContent="↻ Replace audio";replace.title="Upload another file to replace this audio in the lesson";
+   const remove=document.createElement("button");remove.type="button";remove.className="ae-audio-remove";remove.textContent="✕ Delete audio";remove.title="Remove this audio from the lesson";
+   const picker=document.createElement("input");picker.type="file";picker.accept=".mp3,.m4a,.wav,.ogg,audio/mpeg,audio/mp4,audio/wav,audio/ogg";picker.hidden=true;
+   replace.onclick=()=>{if(mediaBusy)return notify("Another upload is in progress.",true);picker.click()};
+   remove.onclick=()=>{if(!confirm("Remove this audio from the lesson? Save the lesson to confirm. The file remains in private storage."))return;figure.remove();changed()};
+   picker.onchange=async()=>{
+     const file=picker.files?.[0];picker.value="";if(!file)return;
+     if(mediaBusy)return notify("Another upload is in progress.",true);
+     if(!/\.(mp3|m4a|wav|ogg)$/i.test(file.name)||!file.size||file.size>50*1048576)return notify("Choose an audio file under 50 MB.",true);
+     mediaBusy=true;replace.disabled=true;remove.disabled=true;
+     const status=$("ae-studio-status");status.textContent="Replacing audio…";
+     try{const path=await onMediaUpload(file,"audio");if(!figure.isConnected)return;
+       figure.dataset.aePath=path;figure.dataset.aeLabel=file.name;changed();await hydrateMedia(figure.parentElement);
+       if($("ae-studio-status"))$("ae-studio-status").textContent="Audio replaced · Save lesson";
+     }catch(error){notify(error.message||String(error),true);if(status.isConnected)status.textContent="Audio replacement failed"}
+     finally{mediaBusy=false;replace.disabled=false;remove.disabled=false}
+   };
+   controls.append(replace,remove,picker);figure.append(controls);
  };
  let article=active==="text"?safeHtml(initial.content):"",notes=active==="video"||active==="download"?safeHtml(initial.content):"";
  let uploadedUID=/^cfstream:[0-9a-f]{32}$/i.test(initial.video)?initial.video.slice(9):null;
@@ -82,6 +106,7 @@ export function createLessonStudio({root,course,modules,lesson=null,lessons=[],m
  function render(){
   root.querySelectorAll("[data-kind]").forEach(btn=>btn.classList.toggle("active",btn.dataset.kind===active));
   if($("ae-studio-current-type"))$("ae-studio-current-type").textContent=label[active];
+  if($("ae-download-toggle"))$("ae-download-toggle").hidden=active!=="download";
   // Remove a previous article toolbar when moving to non-article lesson types.
   if(active!=="text")root.querySelector(".ae-studio-editor-card > .ae-formatbar")?.remove();
   if(active==="text"){
@@ -162,6 +187,7 @@ export function createLessonStudio({root,course,modules,lesson=null,lessons=[],m
 
  $("ae-duration").addEventListener("input",changed);
  $("ae-preview").addEventListener("change",changed);
+ $("ae-allow-download").addEventListener("change",changed);
  const openStudentPreview=()=>{
    // Use the same lesson player layout as the student portal, not a modal.
    // Saved lessons are loaded from Supabase so preview reflects actual student content.
@@ -196,7 +222,7 @@ export function createLessonStudio({root,course,modules,lesson=null,lessons=[],m
      const payload={title,course_id:course.id,module_id:$("ae-module").value,lesson_type:active,
        content_html:active==="quiz"?quizPrefix+JSON.stringify({version:1,questions}):active==="text"?article:notes,
        video_url:videoURL,resource_url:resourceURL,
-       duration_minutes:Number($("ae-duration").value)||0,is_preview:$("ae-preview").checked};
+       duration_minutes:Number($("ae-duration").value)||0,is_preview:$("ae-preview").checked,allow_download:$("ae-allow-download").checked};
      await onSave(payload);clearURL();if($("ae-studio-status"))$("ae-studio-status").textContent="Saved";
    }catch(ex){if($("ae-studio-status"))$("ae-studio-status").textContent="Could not save";notify(ex.message||String(ex),true)}
    finally{if(button.isConnected)button.disabled=false}
