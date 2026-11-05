@@ -144,7 +144,7 @@ export function createLMS({db,root,notify,safe,isCurrent}){
   }
   function renderCurriculum(modules,lessons){
     const ordered=[...modules].sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
-    return '<section class="lms-builder-panel" id="lms-content-builder"><div class="lms-content-heading"><div><h2>Content</h2><p>Drag sections or steps to reorganize your program. Changes save to Supabase.</p></div><button type="button" class="lms-outline-add" id="lms-add-module">＋ Add section</button></div>'+
+    return '<section class="lms-builder-panel" id="lms-content-builder"><div class="lms-content-heading"><div><h2>Content</h2><p>Manage chapters here, or open the full visual LMS lesson editor to create and edit multimedia lessons.</p></div><div class="lms-content-actions"><button type="button" class="lms-gold-action" id="lms-open-visual-editor">✎ &nbsp; Open Visual LMS Editor</button><button type="button" class="lms-outline-add" id="lms-add-module">＋ Add section</button></div></div>'+
       '<div class="lms-section-stack" id="lms-section-stack">'+(ordered.length?ordered.map((m,i)=>{
         const own=lessons.filter(l=>l.module_id===m.id).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
         const folded=s.collapsed?.has(m.id);
@@ -203,6 +203,13 @@ export function createLMS({db,root,notify,safe,isCurrent}){
   function wireTab(){
     all("[data-edit-course]").forEach(b=>b.onclick=()=>openCourseForm(current()));
     all("[data-go-tab]").forEach(b=>b.onclick=()=>{s.tab=b.dataset.goTab;openRoute("course/"+s.courseId+"/"+s.tab);render()});
+    by("lms-open-visual-editor")?.addEventListener("click",()=>{
+      const existing=related("lessons").slice().sort((x,y)=>(x.sort_order||0)-(y.sort_order||0))[0];
+      if(existing)return openLessonForm(existing);
+      const first=related("modules").slice().sort((x,y)=>(x.sort_order||0)-(y.sort_order||0))[0];
+      if(first)return openLessonForm(null,first.id);
+      notify("Add a chapter to begin creating lessons.");addSectionInline();
+    });
     by("lms-add-module")?.addEventListener("click",()=>addSectionInline());
     all("[data-edit-module]").forEach(b=>b.onclick=()=>editSectionInline(b.dataset.editModule));
     all("[data-edit-lesson]").forEach(b=>b.onclick=()=>openLessonForm(s.lessons.find(l=>l.id===b.dataset.editLesson)));
