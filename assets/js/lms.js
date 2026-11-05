@@ -55,6 +55,10 @@ export function createLMS({db,root,notify,safe,isCurrent}){
   }
   function renderStudio(){
     const c=current();if(!c)return renderLibrary();
+    if(s.tab==="preview"){
+      location.assign("training-preview.html?course="+encodeURIComponent(c.id)+"&preview=admin"+(s.previewLessonId?"&lesson="+encodeURIComponent(s.previewLessonId):""));
+      return;
+    }
     const modules=related("modules"),lessons=related("lessons"),enrollments=related("enrollments");
     const displayTabs=[["overview","Overview"],["curriculum","Content"],["students","Participants"],["settings","Settings"]];
     root.innerHTML='<div class="lms-builder-breadcrumb"><button type="button" id="lms-back">‹ &nbsp; Courses & Programs</button><span> / '+esc(c.title)+'</span></div>'+
@@ -63,7 +67,7 @@ export function createLMS({db,root,notify,safe,isCurrent}){
       '<nav class="lms-builder-tabs" role="tablist" aria-label="Course management">'+displayTabs.map(([id,label])=>'<button type="button" role="tab" aria-selected="'+(s.tab===id)+'" class="'+(s.tab===id?'active':'')+'" data-tab="'+id+'">'+label+'</button>').join('')+'</nav>'+
       '<div id="lms-tab-body"></div>';
     by("lms-back").onclick=()=>{s.courseId=null;openRoute("courses");render()};
-    by("lms-preview").onclick=()=>{s.tab="preview";openRoute("course/"+s.courseId+"/preview");render()};
+    by("lms-preview").onclick=()=>{location.assign("training-preview.html?course="+encodeURIComponent(s.courseId)+"&preview=admin")};
     by("lms-invite").onclick=()=>{s.tab="students";openRoute("course/"+s.courseId+"/students");render();openEnrollment()};
     const addButton=by("lms-add-menu"),drop=by("lms-add-dropdown");
     addButton.onclick=()=>{drop.hidden=!drop.hidden;addButton.setAttribute("aria-expanded",String(!drop.hidden))};
