@@ -1,0 +1,65 @@
+
+/* Andre Erving Student LMS Player */
+:root{--player-navy:#11243d;--player-gold:#c99b4c;--player-border:#e2e8f1}
+.ae-player-page{background:#f3f6fb;color:#132b48}
+.ae-player-app{height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+.ae-player-topbar{height:79px;flex:none;display:flex;align-items:center;justify-content:space-between;gap:25px;background:#fff;border-bottom:1px solid var(--player-border);padding:0 26px}
+.ae-player-back{display:flex;align-items:center;gap:12px;text-decoration:none;color:#152945;min-width:235px}
+.ae-player-mark{width:44px;height:44px;border:2px solid var(--player-gold);border-radius:11px;display:grid;place-items:center;color:#be8d37;font-size:17px;font-weight:900}
+.ae-player-back strong,.ae-player-back small{display:block;letter-spacing:.045em}.ae-player-back strong{font-size:13px}.ae-player-back small{font-size:10px;color:#8b9aaf;margin-top:4px}
+.ae-player-topcourse{display:grid;text-align:center;gap:4px;min-width:0}.ae-player-topcourse strong{font-size:15px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}.ae-player-topcourse span{font-size:11px;color:#728399}
+.ae-player-exit{white-space:nowrap;text-decoration:none;border:1px solid #d6e0ea;border-radius:9px;padding:11px 15px;font-size:12px;font-weight:750;color:#25466b}
+.ae-player-shell{min-height:0;display:grid;grid-template-columns:minmax(275px,320px) minmax(0,1fr);flex:1}
+.ae-player-outline{background:#fff;overflow:auto;border-right:1px solid var(--player-border);scrollbar-width:thin}
+.ae-outline-heading{padding:26px 23px 18px;border-bottom:1px solid var(--player-border)}
+.ae-outline-heading>span{font-size:10px;color:#be914d;letter-spacing:.16em;font-weight:800}
+.ae-outline-heading h2{font-size:21px;letter-spacing:-.03em;margin:10px 0 20px}
+.ae-progress-bar{width:100%;height:8px;border-radius:99px;background:#e7ebf2;overflow:hidden}
+.ae-progress-bar span{display:block;height:100%;background:#c49849;width:0;transition:width .25s}
+.ae-outline-heading p{font-size:12px;color:#71829c;margin:10px 0 0}
+.ae-outline-list{padding:15px 12px 50px}
+.ae-outline-section{margin-bottom:13px}
+.ae-outline-section>h3{font-size:12px;font-weight:800;color:#62758c;margin:0;padding:13px 12px 10px;line-height:1.4}
+.ae-outline-step{border:0;background:transparent;display:flex;align-items:center;gap:12px;text-align:left;padding:12px 11px;width:100%;border-radius:10px;color:#324b69}
+.ae-outline-step:hover{background:#f4f7fb}.ae-outline-step.active{background:#eaf1fa;box-shadow:inset 3px 0 #c59b52;color:#132f54}
+.ae-step-state{display:grid;place-items:center;flex:none;width:27px;height:27px;border:1px solid #d2deeb;border-radius:8px;font-size:11px;color:#64748b}
+.ae-outline-step.completed .ae-step-state{background:#e6f4ec;color:#2b885c;border-color:#ccebd8}
+.ae-step-copy{min-width:0;flex:1}.ae-step-copy strong{display:block;font-size:12px;font-weight:750;line-height:1.35}.ae-step-copy small{display:block;font-size:10px;color:#8998a9;margin-top:4px;text-transform:capitalize}
+.ae-player-main{min-height:0;overflow:auto;scrollbar-width:thin;padding:32px clamp(20px,4vw,68px) 65px}
+.ae-player-message{border:1px solid #e1e9f1;background:white;padding:25px;border-radius:14px;max-width:980px;margin:auto;color:#6d7f96}
+#lesson-view{max-width:1030px;margin:auto}
+.ae-lesson-heading{padding:8px 0 26px}
+.ae-lesson-heading>span{color:#b98c42;letter-spacing:.14em;font-size:11px;font-weight:850}
+.ae-lesson-heading h1{font-size:clamp(28px,3.3vw,42px);line-height:1.15;letter-spacing:-.045em;margin:11px 0}
+.ae-lesson-heading p{margin:0;font-size:13px;color:#7e8da2}
+.ae-lesson-media{margin-bottom:22px;border-radius:17px;overflow:hidden;background:#10223c}
+.ae-lesson-media:empty{display:none}
+.ae-lesson-media iframe,.ae-lesson-media video{display:block;width:100%;aspect-ratio:16/9;border:0;background:#10223c}
+.ae-media-loading{display:grid;place-items:center;min-height:340px;color:#d5e5f5;text-align:center;padding:25px;line-height:1.5}
+.ae-lesson-body{border:1px solid var(--player-border);background:#fff;padding:clamp(22px,3vw,40px);border-radius:17px;min-height:175px;line-height:1.72}
+.ae-lesson-body h2,.ae-lesson-body h3{letter-spacing:-.03em;color:#142b4a}
+.ae-lesson-body a{color:#2052a0}
+.ae-lesson-body blockquote{border-left:3px solid #c69d56;margin:20px 0;padding:5px 18px;color:#64738b}
+.ae-lesson-body>p:first-child{margin-top:0}
+.ae-lesson-empty{color:#778ba3}
+.ae-lesson-download{display:flex;align-items:center;gap:14px;border:1px solid #dce7f0;border-radius:12px;padding:19px;text-decoration:none;color:#214b83;background:#f6f9fd;font-weight:750}
+.ae-quiz-question{border:1px solid #e2eaf2;border-radius:12px;padding:20px;margin-bottom:17px}
+.ae-quiz-question h3{font-size:16px;margin:0 0 16px}
+.ae-quiz-option{display:flex;gap:10px;align-items:center;padding:10px 7px;border-radius:7px;font-size:13px}
+.ae-quiz-option:hover{background:#f4f7fc}
+.ae-quiz-option input{accent-color:#1f4b84}
+.ae-quiz-submit{border:0;border-radius:10px;background:#244d82;color:#fff;padding:12px 19px;font-weight:750}
+.ae-quiz-feedback{font-weight:800;margin-top:17px}
+.ae-player-footer{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:25px 0}
+.ae-player-footer-actions{display:flex;align-items:center;gap:10px}
+.ae-player-primary,.ae-player-secondary,.ae-player-complete{padding:13px 17px;border-radius:10px;font-size:12px;font-weight:800;white-space:nowrap}
+.ae-player-primary{background:#194d8f;border:1px solid #194d8f;color:white}.ae-player-complete{background:#ca9e52;border:1px solid #c39239;color:#182d48}
+.ae-player-secondary{background:white;border:1px solid #d6e1ed;color:#2c5079}
+.ae-player-footer button:disabled{opacity:.4;cursor:not-allowed}
+@media(max-width:850px){.ae-player-shell{grid-template-columns:225px minmax(0,1fr)}.ae-player-topbar{padding:0 14px}.ae-player-back{min-width:190px}.ae-player-main{padding:25px 18px}.ae-player-footer{flex-wrap:wrap}}
+@media(max-width:680px){.ae-player-app{height:auto;min-height:100dvh;overflow:visible}.ae-player-topbar{height:auto;padding:12px;gap:10px}.ae-player-topcourse{display:none}.ae-player-shell{display:flex;flex-direction:column}.ae-player-outline{border-right:0;border-bottom:1px solid var(--player-border);max-height:245px}.ae-outline-heading{padding:15px 16px}.ae-outline-heading h2{margin:5px 0}.ae-outline-list{padding:8px}.ae-player-main{overflow:visible;padding:22px 13px}.ae-player-footer-actions{flex-wrap:wrap}.ae-player-exit{font-size:11px}}
+
+.ae-course-completion{margin:22px 0;padding:20px 23px;border:1px solid #d0e6d8;border-left:4px solid #2d9462;background:#f1f9f4;color:#215943;border-radius:11px;line-height:1.55;font-size:14px;font-weight:750}
+.ae-course-completion[hidden]{display:none!important}
+
+.ae-admin-preview-banner{padding:12px 18px;background:#fff4d9;color:#654a19;border:1px solid #e6c985;border-radius:10px;margin-bottom:18px;font-weight:700;font-size:12px}.ae-player-complete[hidden]{display:none!important}
