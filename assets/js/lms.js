@@ -457,7 +457,7 @@ export function createLMS({db,root,notify,safe,isCurrent}){
     ]:[
       {name:"Details",summary:"Complete the required information",fields:[],icon:"01"}
     ];
-    const fields=[...source.querySelectorAll(":scope > .field")];
+    const fields=[...source.querySelectorAll(".field")];
     const sections=groupNames.map((group,i)=>{
       const node=document.createElement("section");node.className="ae-form-step";
       node.dataset.step=String(i);
@@ -467,6 +467,11 @@ export function createLMS({db,root,notify,safe,isCurrent}){
       for(const member of members)grid.append(member);
       return node;
     });
+    if(!isCourse){
+      // Other LMS editors may wrap content in a grid; preserve controls and listeners.
+      const leftovers=[...source.querySelectorAll("input,select,textarea")].filter(el=>!sections.some(g=>g.contains(el)));
+      if(leftovers.length)throw new Error("Unable to organize all editor fields.");
+    }
     source.replaceWith(...sections);
     if(isCourse){
       const guide=by("ae-editor-guide");
