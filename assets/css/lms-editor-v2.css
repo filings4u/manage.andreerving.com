@@ -82,3 +82,8 @@
 @media(max-width:1300px){.ae-studio-grid{grid-template-columns:minmax(180px,.8fr) minmax(360px,1.8fr) minmax(205px,1fr)!important;gap:10px!important}}
 @media(max-width:1060px){.ae-studio-grid{grid-template-columns:235px minmax(0,1fr)!important}.ae-studio-sidebar{grid-column:2}.ae-studio-curriculum{grid-row:1 / span 2}.ae-studio-chapters{max-height:640px}}
 @media(max-width:720px){.ae-studio-grid{grid-template-columns:1fr!important}.ae-studio-sidebar{grid-column:auto}.ae-studio-curriculum{grid-row:auto;min-height:auto}.ae-studio-chapters{max-height:280px;min-height:120px}.ae-studio-heading{align-items:flex-start!important;flex-direction:column}.ae-studio-actions{width:100%}.ae-studio-editor-card{min-height:auto}}
+
+/* Entry point to the redesigned editor */
+.lms-content-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.lms-content-actions .lms-gold-action{position:static;border-radius:9px;padding:12px 18px;font-size:12px;font-weight:800;white-space:nowrap;cursor:pointer}
+@media(max-width:780px){.lms-content-heading{align-items:flex-start;flex-direction:column}.lms-content-actions{justify-content:flex-start;width:100%}}
