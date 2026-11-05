@@ -163,9 +163,9 @@ export function createLessonStudio({root,course,modules,lesson=null,lessons=[],k
        content_html:active==="quiz"?quizPrefix+JSON.stringify({version:1,questions}):active==="text"?article:notes,
        video_url:videoURL,resource_url:resourceURL,
        duration_minutes:Number($("ae-duration").value)||0,is_preview:$("ae-preview").checked};
-     await onSave(payload);clearURL();$("ae-studio-status").textContent="Saved";
-   }catch(ex){$("ae-studio-status").textContent="Could not save";notify(ex.message||String(ex),true)}
-   finally{button.disabled=false}
+     await onSave(payload);clearURL();if($("ae-studio-status"))$("ae-studio-status").textContent="Saved";
+   }catch(ex){if($("ae-studio-status"))$("ae-studio-status").textContent="Could not save";notify(ex.message||String(ex),true)}
+   finally{if(button.isConnected)button.disabled=false}
  };
  render();
 }
