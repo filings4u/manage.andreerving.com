@@ -39,7 +39,8 @@ export default {
       headers:{"apikey":SUPABASE_KEY,"Authorization":"Bearer "+token}});
    if(!staffResponse.ok)return json({error:"Staff access check unavailable"},403,cors);
    const profiles=await staffResponse.json();
-   if(!Array.isArray(profiles)||!profiles.some(p=>p.id===user.id&&p.active===true))
+   const isStaff=Array.isArray(profiles)&&profiles.some(p=>p.id===user.id&&p.active===true);
+   if(pathname==="/upload"&&!isStaff)
      return json({error:"Active administrator account required"},403,cors);
    let courseId, mime, bytes, path;
    if(pathname==="/upload"){
@@ -60,7 +61,17 @@ export default {
    const courseResponse=await fetch(SUPABASE_URL+"/rest/v1/courses?id=eq."+encodeURIComponent(courseId)+"&select=id",{
      headers:{"apikey":SUPABASE_KEY,"Authorization":"Bearer "+token}});
    if(!courseResponse.ok||!(await courseResponse.json()).length)
-     return json({error:"Course not available to this administrator"},403,cors);
+     return json({error:"Course not accessible"},403,cors);
+   if(!isStaff){
+     // Enrolled learners may only read media belonging to their own active course.
+     const enrollment=await fetch(SUPABASE_URL+"/rest/v1/course_enrollments?user_id=eq."+encodeURIComponent(user.id)+"&course_id=eq."+encodeURIComponent(courseId)+"&status=in.(active,completed)&select=id,expires_at",{
+       headers:{"apikey":SUPABASE_KEY,"Authorization":"Bearer "+token}
+     });
+     if(!enrollment.ok)return json({error:"Unable to verify course enrollment"},403,cors);
+     const ent=await enrollment.json();
+     if(!Array.isArray(ent)||!ent.some(row=>!row.expires_at||new Date(row.expires_at)>new Date()))
+       return json({error:"This lesson requires an active enrollment"},403,cors);
+   }
    if(pathname==="/upload"){
      const spec=types[mime];
      if(!req.body)return json({error:"File required"},400,cors);
