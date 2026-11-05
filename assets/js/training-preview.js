@@ -54,7 +54,7 @@ async function hydrateLessonMedia(){
    if(!figure.isConnected)return;
    const media=document.createElement(kind==='audio'?'audio':'img');
    media.src=src;
-   if(kind==='audio'){media.controls=true;media.preload='metadata'}
+   if(kind==='audio'){media.controls=true;media.preload='metadata';media.setAttribute('controlsList','nodownload noplaybackrate');media.addEventListener('contextmenu',event=>event.preventDefault())}
    else {media.alt=label;media.loading='lazy'}
    const caption=document.createElement('figcaption');caption.textContent=label;
    figure.replaceChildren(media,caption);
@@ -102,6 +102,7 @@ async function renderDownload(lesson){
   const body=$("lesson-body");
   body.innerHTML="<h2>Course resource</h2>"+(safeHTML(lesson.content_html)||"")+"<p class='ae-lesson-empty'>Preparing your download…</p>";
   const ref=String(lesson.resource_url||"");
+  if(lesson.allow_download!==true){body.innerHTML="<h2>Course resource</h2>"+(safeHTML(lesson.content_html)||"")+"<p class='ae-lesson-empty'>Downloads are disabled by the instructor.</p>";return}
   let href="";
   if(ref.startsWith("lmsfile:")){
     const path=ref.slice("lmsfile:".length);
@@ -173,7 +174,7 @@ async function init(){
  const res=await Promise.all([
  db.from('courses').select('title').eq('id',courseId).single(),
  db.from('course_modules').select('id,title,description,sort_order').eq('course_id',courseId).order('sort_order'),
- db.from('course_lessons').select('id,module_id,title,lesson_type,content_html,video_url,resource_url,duration_minutes,sort_order').eq('course_id',courseId).order('sort_order'),
+ db.from('course_lessons').select('id,module_id,title,lesson_type,content_html,video_url,resource_url,allow_download,duration_minutes,sort_order').eq('course_id',courseId).order('sort_order'),
  adminPreview?Promise.resolve({data:[],error:null}):db.from('lesson_progress').select('id,lesson_id,completed').eq('course_id',courseId).eq('user_id',user.id)
  ]);
  if(res.some(x=>x.error)){message('Unable to load this course. Please refresh.');return}
