@@ -99,31 +99,37 @@ async function streamPlayback(lesson){
  iframe.title=lesson.title;iframe.allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture';iframe.allowFullscreen=true;iframe.referrerPolicy='no-referrer';host.replaceChildren(iframe);
 }
 async function renderDownload(lesson){
-  const body=$("lesson-body");
-  body.innerHTML="<h2>Course resource</h2>"+(safeHTML(lesson.content_html)||"")+"<p class='ae-lesson-empty'>Preparing your download…</p>";
-  const ref=String(lesson.resource_url||"");
-  if(lesson.allow_download!==true){body.innerHTML="<h2>Course resource</h2>"+(safeHTML(lesson.content_html)||"")+"<p class='ae-lesson-empty'>Downloads are disabled by the instructor.</p>";return}
-  let href="";
-  if(ref.startsWith("lmsfile:")){
-    const path=ref.slice("lmsfile:".length);
-    if(!path.startsWith(courseId+"/")){body.innerHTML="<p class='ae-lesson-empty'>This resource is unavailable for this course.</p>";return}
-    const {data,error}=await db.storage.from("andreerving-lms-resources").createSignedUrl(path,120);
-    if(lessons[position]?.id!==lesson.id)return;
-    if(error||!data?.signedUrl){body.insertAdjacentHTML("beforeend","<p class='ae-lesson-empty'>Unable to authorize this download. Please refresh or contact support.</p>");return}
-    href=data.signedUrl;
-  }else if(ref.startsWith("r2:")){
-    if(!ref.startsWith("r2:"+courseId+"/lesson-media/"))return;
-    try{href=await getR2Media(ref)}catch{body.insertAdjacentHTML("beforeend","<p class='ae-lesson-empty'>Unable to authorize this download.</p>");return}
-  }else if(/^https:\/\//i.test(ref)){href=ref}
-  if(!href){body.insertAdjacentHTML("beforeend","<p class='ae-lesson-empty'>No downloadable resource has been attached yet.</p>");return}
-  body.querySelector(".ae-lesson-empty")?.remove();
-  const a=document.createElement("a");
-  a.className="ae-lesson-download";
-  a.href=href;
-  a.target="_blank";
-  a.rel="noopener noreferrer";
-  a.textContent="↓ Open course resource";
-  body.append(a);
+ const body=$("lesson-body"),ref=String(lesson.resource_url||"");
+ body.innerHTML="<h2>Course resource</h2>"+(safeHTML(lesson.content_html)||"");
+ if(!ref){body.insertAdjacentHTML("beforeend","<p class='ae-lesson-empty'>No resource attached.</p>");return}
+ if(lesson.allow_download!==true){
+  body.insertAdjacentHTML("beforeend","<p class='ae-lesson-empty'>Downloads are disabled by your instructor.</p>");return;
+ }
+ const button=document.createElement("button");button.type="button";button.className="ae-lesson-download";
+ button.textContent="↓ Download course document";body.append(button);
+ button.onclick=async()=>{
+  button.disabled=true;button.textContent="Preparing download…";
+  try{
+   if(ref.startsWith("r2:")){
+    const {data:{session}}=await db.auth.getSession();
+    if(!session?.access_token)throw Error("Session expired");
+    const response=await fetch(r2Gateway+"/download",{method:"POST",
+      headers:{"Authorization":"Bearer "+session.access_token,"Content-Type":"application/json"},
+      body:JSON.stringify({courseId,lessonId:lesson.id,path:ref})});
+    if(!response.ok)throw Error("Download not authorized");
+    const url=URL.createObjectURL(await response.blob());
+    const link=document.createElement("a");link.href=url;link.download="course-resource";document.body.append(link);link.click();link.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),30000);
+   }else if(ref.startsWith("lmsfile:")){
+    const filePath=ref.slice(8);if(!filePath.startsWith(courseId+"/")||filePath.includes(".."))throw Error("Invalid file");
+    const {data,error}=await db.storage.from("andreerving-lms-resources").createSignedUrl(filePath,60,{download:true});
+    if(error||!data?.signedUrl)throw Error("Download unavailable");
+    window.open(data.signedUrl,"_blank","noopener,noreferrer");
+   }else if(/^https:\/\//i.test(ref)){window.open(ref,"_blank","noopener,noreferrer")}
+   else throw Error("Invalid resource reference");
+  }catch(error){message(error?.message||"Unable to download the document")}
+  finally{if(button.isConnected){button.disabled=false;button.textContent="↓ Download course document"}}
+ };
 }
 async function showLesson(index){
  if(index<0||index>=lessons.length)return;
