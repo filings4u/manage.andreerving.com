@@ -509,7 +509,7 @@ export function createLMS({db,root,notify,safe,isCurrent}){
     openRoute("edit/"+s.nextEditRoute);
     const parentModule=lesson?.module_id||moduleId||modules[0].id;
     createLessonStudio({
-      root,course,modules,lessons:related("lessons"),lesson:lesson?{...lesson,module_id:parentModule}:null,kind:initialKind,escape:esc,notify,
+      root,course,modules,lessons:related("lessons"),moduleId:parentModule,lesson:lesson?{...lesson,module_id:parentModule}:null,kind:initialKind,escape:esc,notify,
       onOpenLesson:(id)=>openLessonForm(s.lessons.find(l=>l.id===id)),
       onAddChapter:()=>{s.editor=null;s.tab="curriculum";openRoute("course/"+course.id+"/curriculum");render();openModuleForm()},
       onAddLesson:(target)=>openLessonForm(null,target),
