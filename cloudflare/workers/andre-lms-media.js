@@ -20,7 +20,7 @@ export default {
  async fetch(req,env) {
   const origin=req.headers.get("Origin")||"";
   if(origin&&!origins.has(origin))return fail("Origin not permitted",403);
-  const cors={"Access-Control-Allow-Origin":origin||"https://filings4u.github.io","Vary":"Origin","Access-Control-Allow-Headers":"authorization,content-type","Access-Control-Allow-Methods":"POST,OPTIONS","Access-Control-Max-Age":"3600"};
+  const cors={"Access-Control-Allow-Origin":origin||"https://filings4u.github.io","Vary":"Origin","Access-Control-Allow-Headers":"authorization,content-type,x-ae-course-id","Access-Control-Allow-Methods":"POST,OPTIONS","Access-Control-Max-Age":"3600"};
   if(req.method==="OPTIONS")return new Response(null,{status:204,headers:cors});
   if(req.method!=="POST")return json({error:"Not found"},404,cors);
   const pathname=new URL(req.url).pathname;
