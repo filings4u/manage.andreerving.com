@@ -1,0 +1,84 @@
+
+/* Andre Erving LMS visual editor — admin-only, three-column workspace */
+.ae-studio-page{max-width:none!important;width:100%;margin:0;color:#152640}
+.ae-studio-head{margin:0 0 17px!important}
+.ae-studio-breadcrumb{display:flex;align-items:center;flex-wrap:wrap;gap:9px;color:#71839c;font-size:12px;margin:0 0 18px}
+.ae-studio-breadcrumb button{border:0;background:none;padding:0;color:#41668f;font-size:12px;cursor:pointer}
+.ae-studio-breadcrumb span{color:#a4b1c3}
+.ae-studio-heading{align-items:center!important;gap:20px}
+.ae-studio-title-line{display:flex;align-items:center;gap:14px;min-width:0}
+.ae-studio-docicon{background:#fcf0d8;border-radius:13px;width:51px;height:51px;display:grid;place-items:center;color:#bb861a;font-size:28px;flex:none}
+.ae-studio-title-stack{min-width:0}
+.ae-studio-title-stack h1{margin:0!important;font-size:clamp(24px,2.2vw,33px)!important;letter-spacing:-.045em}
+.ae-studio-title-stack p{margin:6px 0 0!important}
+.ae-studio-draft{border-radius:99px;background:#edf1f7;color:#52647a;padding:5px 12px;font-size:11px;font-weight:800;letter-spacing:0;vertical-align:middle}
+.ae-studio-actions{gap:8px!important;flex-wrap:wrap}
+.ae-studio-actions .btn{background:white;color:#1a3353;border:1px solid #d8e2ef;padding:11px 15px;font-weight:750}
+.ae-studio-actions .ae-studio-publish{background:#ca9419;color:#fff;border-color:#ca9419;min-width:110px}
+.ae-studio-actions .ae-studio-publish:hover{background:#b88517}
+.ae-studio-statusline{font-size:11px;color:#8190a4;text-align:right;margin-top:10px;min-height:16px}
+.ae-studio-grid{display:grid!important;grid-template-columns:minmax(218px, .88fr) minmax(390px, 1.85fr) minmax(235px, 1fr)!important;gap:15px!important;align-items:start}
+.ae-studio-main{min-width:0;display:block!important}
+.ae-studio-card{padding:16px!important;border-radius:11px!important;box-shadow:0 2px 12px #1c304b07!important}
+.ae-studio-curriculum{display:flex;flex-direction:column;min-height:620px;padding:0!important;overflow:hidden}
+.ae-studio-panehead{padding:17px 16px 13px;border-bottom:1px solid #e7ebf1}
+.ae-studio-panehead h2,.ae-studio-panehead h3{font-size:16px!important;margin:0 0 4px!important;letter-spacing:-.025em}
+.ae-studio-panehead p{font-size:11px;margin:0;color:#7d8ba0;line-height:1.45}
+.ae-studio-chapters{padding:8px;flex:1;overflow-y:auto;max-height:calc(100dvh - 365px);min-height:360px;scrollbar-width:thin}
+.ae-studio-chapter{border-bottom:1px solid #edf0f5;padding:3px 0}
+.ae-studio-chapter summary{cursor:pointer;display:flex;gap:9px;align-items:center;list-style:none;border-radius:7px;padding:11px 8px;font-size:12px;font-weight:800;line-height:1.3;color:#243b59}
+.ae-studio-chapter summary::-webkit-details-marker{display:none}
+.ae-studio-chapter summary:before{content:'›';color:#677e9c;font-size:18px;line-height:1;transform-origin:center;flex:none}
+.ae-studio-chapter[open] summary:before{transform:rotate(90deg)}
+.ae-studio-chapter summary:hover{background:#f5f7fa}
+.ae-studio-chapter-count{display:block;margin-top:4px;color:#8191a5;font-size:10px;font-weight:500}
+.ae-studio-chapter-list{padding:1px 0 8px 11px}
+.ae-studio-lesson-link{border:0;width:100%;display:flex;align-items:flex-start;text-align:left;gap:8px;padding:10px 6px;border-radius:7px;background:transparent;color:#2b405c;font-size:11px;line-height:1.35;cursor:pointer}
+.ae-studio-lesson-link .ae-studio-grip{color:#9dacc0;letter-spacing:-2px;font-weight:800;flex:none}
+.ae-studio-lesson-link .ae-studio-small-doc{color:#b48a36;flex:none}
+.ae-studio-lesson-link:hover{background:#f3f6fa}
+.ae-studio-lesson-link.active{background:#fff0d4;color:#23374e;font-weight:800}
+.ae-studio-sidebar-actions{padding:12px;border-top:1px solid #e8edf4;display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.ae-studio-sidebar-actions button{border:1px solid #d5e0ef;background:#fff;color:#263f5f;border-radius:8px;padding:10px 5px;font-size:11px;font-weight:750;cursor:pointer}
+.ae-studio-sidebar-actions button:last-child{background:#c99420;color:#fff;border-color:#c99420}
+.ae-studio-editor-card{padding:12px!important;min-height:610px}
+.ae-studio-editor-heading{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:7px 9px 12px}
+.ae-studio-editor-heading h2{margin:0!important;font-size:14px!important}
+.ae-studio-editor-heading span{font-size:11px;color:#8492a4}
+.ae-studio-title{font-size:26px!important;padding:9px 0 12px!important;margin:5px 0 6px!important;border-bottom:0!important}
+.ae-studio-types{margin:12px 0;gap:6px!important}
+.ae-studio-types button{padding:7px 10px!important;font-size:11px!important}
+.ae-studio-types button span{font-size:15px!important}
+.ae-studio-content-shell{min-width:0}
+.ae-studio-content-shell .ae-studio-card{padding:8px!important;border:0!important;box-shadow:none!important}
+.ae-studio-content-shell .eyebrow{display:none}
+.ae-studio-content-shell h2{font-size:16px!important}
+.ae-formatbar{background:#fff!important;flex-wrap:wrap;border:1px solid #dfe5ee!important;border-radius:8px!important;gap:3px!important;padding:8px!important}
+.ae-formatbar button{font-size:12px!important;min-width:29px!important;padding:7px!important}
+.ae-formatbar #ae-insert-image,.ae-formatbar #ae-insert-audio,.ae-formatbar #ae-insert-link{font-weight:750;color:#876114}
+.ae-lesson-help{font-size:11px!important;color:#8190a4;padding:8px 4px}
+.ae-rich{border:0!important;border-radius:8px!important;padding:17px 13px!important;min-height:350px!important;font-size:13px!important;line-height:1.75!important}
+.ae-rich:focus{outline:2px solid #e0c085!important;outline-offset:-2px}
+.ae-rich .ae-media-block{background:#fff!important;border-color:#e2e7ee!important;box-shadow:none!important}
+.ae-media-block audio{accent-color:#c4932e}
+.ae-studio-add-blocks{border:1px dashed #bbcbe0;border-radius:10px;padding:14px 8px;text-align:center;margin:12px 7px 4px;background:#fafcff}
+.ae-studio-add-blocks strong{display:block;font-size:12px;color:#b98518;margin-bottom:10px}
+.ae-studio-add-blocks .ae-studio-types{justify-content:center;margin:0}
+.ae-studio-add-blocks .ae-studio-types button{background:#fff}
+.ae-studio-sidebar{display:block!important;min-width:0}
+.ae-studio-sidebar .ae-studio-card{padding:0!important;overflow:hidden}
+.ae-studio-sidebar-content{padding:15px 16px}
+.ae-studio-sidebar label{font-size:11px!important;margin-top:15px!important}
+.ae-studio-sidebar select,.ae-studio-sidebar input[type=number],.ae-studio-sidebar input[type=text]{display:block;width:100%;border:1px solid #d5dfec;border-radius:8px;padding:10px;margin-top:7px;background:#fff;color:#2a3f5d;font-size:12px}
+.ae-studio-preview-card{width:100%;border:0;border-radius:9px;background:#fcf4e5;padding:15px 12px;text-align:left;display:flex;gap:10px;align-items:center;color:#233a57;cursor:pointer}
+.ae-studio-preview-card strong{font-size:12px;display:block}
+.ae-studio-preview-card small{font-size:10px;display:block;color:#77849a;margin-top:3px}
+.ae-studio-preview-card .glyph{font-size:23px;color:#ae7e1b}
+.ae-studio-readonly{font-size:11px;color:#60748e;background:#f5f8fb;padding:10px;border-radius:8px;margin-top:6px;overflow-wrap:anywhere}
+.ae-studio-field-help{color:#7e90a6;font-size:10px;margin-top:6px;line-height:1.45}
+.ae-studio-toggle{justify-content:space-between!important;margin-top:17px!important}
+.ae-studio-toggle input{order:2}
+.ae-studio-panefoot{color:#8292a6;font-size:10px;padding:12px 16px;border-top:1px solid #edf1f5;line-height:1.5}
+@media(max-width:1300px){.ae-studio-grid{grid-template-columns:minmax(180px,.8fr) minmax(360px,1.8fr) minmax(205px,1fr)!important;gap:10px!important}}
+@media(max-width:1060px){.ae-studio-grid{grid-template-columns:235px minmax(0,1fr)!important}.ae-studio-sidebar{grid-column:2}.ae-studio-curriculum{grid-row:1 / span 2}.ae-studio-chapters{max-height:640px}}
+@media(max-width:720px){.ae-studio-grid{grid-template-columns:1fr!important}.ae-studio-sidebar{grid-column:auto}.ae-studio-curriculum{grid-row:auto;min-height:auto}.ae-studio-chapters{max-height:280px;min-height:120px}.ae-studio-heading{align-items:flex-start!important;flex-direction:column}.ae-studio-actions{width:100%}.ae-studio-editor-card{min-height:auto}}
