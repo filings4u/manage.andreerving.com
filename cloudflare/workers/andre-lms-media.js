@@ -24,7 +24,7 @@ export default {
   if(req.method==="OPTIONS")return new Response(null,{status:204,headers:cors});
   if(req.method!=="POST")return json({error:"Not found"},404,cors);
   const pathname=new URL(req.url).pathname;
-  if(pathname!=="/upload"&&pathname!=="/read")return json({error:"Not found"},404,cors);
+  if(!["/upload","/read","/download"].includes(pathname))return json({error:"Not found"},404,cors);
   const token=req.headers.get("authorization")?.match(/^Bearer (.+)$/i)?.[1];
   if(!token)return json({error:"Sign in required"},401,cors);
   try{
@@ -42,7 +42,7 @@ export default {
    const isStaff=Array.isArray(profiles)&&profiles.some(p=>p.id===user.id&&p.active===true);
    if(pathname==="/upload"&&!isStaff)
      return json({error:"Active administrator account required"},403,cors);
-   let courseId, mime, bytes, path;
+   let courseId, mime, bytes, path, lessonId;
    if(pathname==="/upload"){
      courseId=req.headers.get("x-ae-course-id")||"";
      mime=(req.headers.get("content-type")||"").split(";")[0].trim().toLowerCase();
@@ -54,6 +54,7 @@ export default {
      const body=await req.json().catch(()=>null);
      path=String(body?.path||"");
      courseId=String(body?.courseId||"");
+     lessonId=String(body?.lessonId||"");
      if(!validUuid(courseId)||!path.startsWith("r2:"+courseId+"/lesson-media/")||
         path.includes("..")||path.length>350||!/^[a-z0-9:/._-]+$/i.test(path))
         return json({error:"Invalid media path"},400,cors);
@@ -79,11 +80,25 @@ export default {
      await env.LMS_MEDIA.put(key,req.body,{httpMetadata:{contentType:mime}});
      return json({path:"r2:"+key},200,cors);
    }
+   if(!isStaff){
+     const r=await fetch(SUPABASE_URL+"/rest/v1/course_lessons?course_id=eq."+encodeURIComponent(courseId)+"&select=id,lesson_type,content_html,resource_url,allow_download&limit=500",{
+       headers:{"apikey":SUPABASE_KEY,"Authorization":"Bearer "+token}
+     });
+     if(!r.ok)return json({error:"Lesson permissions unavailable"},403,cors);
+     const rows=await r.json();
+     const permitted=pathname==="/download"?
+       (validUuid(lessonId)&&rows.some(l=>l.id===lessonId&&l.lesson_type==="download"&&l.allow_download===true&&l.resource_url===path)):
+       rows.some(l=>l.lesson_type==="text"&&typeof l.content_html==="string"&&l.content_html.includes(path));
+     if(!permitted)return json({error:"This media is not authorized for your lesson"},403,cors);
+   }
    const object=await env.LMS_MEDIA.get(path.slice(3));
    if(!object)return json({error:"Media not found"},404,cors);
    const headers=new Headers(cors);
    object.writeHttpMetadata(headers);
    headers.set("content-type",object.httpMetadata?.contentType||"application/octet-stream");
+   if(pathname==="/read"&&!isStaff&&!/^(audio|image)\//i.test(object.httpMetadata?.contentType||""))return json({error:"This file cannot be downloaded"},403,cors);
+   if(pathname==="/download")headers.set("content-disposition",'attachment; filename="course-resource"');
+   headers.set("x-content-type-options","nosniff");
    headers.set("cache-control","private, no-store");
    return new Response(object.body,{status:200,headers});
   }catch(err){
