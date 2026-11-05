@@ -21,11 +21,13 @@ const allowed = new Map([
   ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",{ext:"xlsx",max:50*1024*1024}],
   ["application/vnd.openxmlformats-officedocument.presentationml.presentation",{ext:"pptx",max:50*1024*1024}]
 ]);
+const corsHeaders={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type","Access-Control-Allow-Methods":"POST, OPTIONS"};
 const respond=(body:unknown,status=200)=>new Response(JSON.stringify(body),{
-  status,headers:{"content-type":"application/json","cache-control":"no-store"}
+  status,headers:{...corsHeaders,"content-type":"application/json","cache-control":"no-store"}
 });
 const requireEnv=(key:string)=>{const value=Deno.env.get(key);if(!value)throw new Error("R2_NOT_CONFIGURED");return value;};
 Deno.serve(async req=>{
+  if(req.method==="OPTIONS")return new Response(null,{status:204,headers:corsHeaders});
   if(req.method!=="POST")return respond({error:"Method not allowed"},405);
   const token=(req.headers.get("authorization")||"").match(/^Bearer (.+)$/i)?.[1];
   if(!token)return respond({error:"Authentication required"},401);
