@@ -109,10 +109,9 @@ export function createLMS({db,root,notify,safe,isCurrent}){
     await Promise.all(figures.map(async fig=>{
       const path=fig.dataset.aePath,type=fig.dataset.aeMedia,label=fig.dataset.aeLabel||"Lesson media";
       try{
-        const {data,error}=await db.storage.from("andreerving-lms-resources").createSignedUrl(path,3600);
-        if(error||!data?.signedUrl)throw error||Error("No signed URL");
+        const signedUrl=await signedLessonMedia(s.courseId,path);
         if(!fig.isConnected)return;
-        const media=document.createElement(type==="audio"?"audio":"img");media.src=data.signedUrl;
+        const media=document.createElement(type==="audio"?"audio":"img");media.src=signedUrl;
         if(type==="audio"){media.controls=true;media.preload="metadata"}else{media.loading="lazy";media.alt=label}
         const caption=document.createElement("figcaption");caption.textContent=label;fig.replaceChildren(media,caption);
       }catch{if(fig.isConnected)fig.textContent="Unable to display "+label+". Check storage permissions."}
@@ -501,6 +500,26 @@ export function createLMS({db,root,notify,safe,isCurrent}){
       await save("course_modules",{course_id:course.id,title,description:String(fd.get("description")||"").trim(),sort_order:m?.sort_order??(related("modules").length+1)*10},m?.id);notify(m?"Section updated":"Section created");
     });
   }
+  const r2Media=async(action,courseId,fields={})=>{
+    const {data,error}=await db.functions.invoke("andre-r2-media",{body:{action,courseId,...fields}});
+    if(error||data?.error){
+      let details=data?.error||error?.message||"R2 media service unavailable";
+      if(error?.context?.json){try{const body=await error.context.json();details=body?.error||details}catch{}}
+      throw new Error(details);
+    }
+    return data;
+  };
+  const signedLessonMedia=async(courseId,path)=>{
+    if(path.startsWith("r2:")){
+      const data=await r2Media("read",courseId,{path});
+      if(!data?.url)throw Error("Could not access R2 media");
+      return data.url;
+    }
+    if(!path.startsWith(courseId+"/")||path.includes(".."))throw Error("Invalid course media path.");
+    const {data,error}=await db.storage.from("andreerving-lms-resources").createSignedUrl(path,3600);
+    if(error||!data?.signedUrl)throw Error("Could not access lesson media: "+(error?.message||"Unknown error"));
+    return data.signedUrl;
+  };
   function openLessonForm(lesson=null,moduleId=null,initialKind="text"){
     const course=current();if(!course)return;
     const modules=related("modules");if(!modules.length)return notify("Create a course section first.",true);
@@ -537,12 +556,7 @@ export function createLMS({db,root,notify,safe,isCurrent}){
         onProgress(100);
         return data.uid;
       },
-      onMediaURL:async(path)=>{
-        if(!path.startsWith(course.id+"/")||path.includes(".."))throw Error("Invalid course media path.");
-        const {data,error}=await db.storage.from("andreerving-lms-resources").createSignedUrl(path,3600);
-        if(error||!data?.signedUrl)throw Error("Could not access lesson media: "+(error?.message||"Unknown error"));
-        return data.signedUrl;
-      },
+      onMediaURL:async(path)=>signedLessonMedia(course.id,path),
       onMediaUpload:async(file,type)=>{
         const mime=type==="image"?{
           "image/png":"png","image/jpeg":"jpg","image/webp":"webp"
@@ -551,11 +565,12 @@ export function createLMS({db,root,notify,safe,isCurrent}){
         const canonical=type==="image"?{"jpeg":"jpg","jpg":"jpg","png":"png","webp":"webp"}:{"mp3":"mp3","m4a":"m4a","wav":"wav","ogg":"ogg"};
         if(!canonical[ext]||!file.size||file.size>(type==="image"?10:50)*1048576||
           (file.type&&mime[file.type]!==canonical[ext]))throw Error("Unsupported "+type+" type or file size.");
-        const path=course.id+"/lesson-media/"+crypto.randomUUID()+"."+canonical[ext];
         const contentType=type==="image"?{"jpg":"image/jpeg","png":"image/png","webp":"image/webp"}[canonical[ext]]:{"mp3":"audio/mpeg","m4a":"audio/mp4","wav":"audio/wav","ogg":"audio/ogg"}[canonical[ext]];
-        const {error}=await db.storage.from("andreerving-lms-resources").upload(path,file,{contentType,upsert:false});
-        if(error)throw Error("Unable to upload lesson media: "+error.message);
-        return path;
+        const ticket=await r2Media("upload",course.id,{mime:contentType,size:file.size});
+        if(!ticket?.url||!ticket?.path)throw Error("Unable to authorize R2 upload");
+        const result=await fetch(ticket.url,{method:"PUT",headers:{"Content-Type":contentType},body:file});
+        if(!result.ok)throw Error("R2 upload failed ("+result.status+"). Check bucket CORS settings.");
+        return ticket.path;
       },
       onResourceUpload:async(file)=>{
         const allowedTypes=new Set(["application/pdf","image/png","image/jpeg","text/plain","application/msword","application/vnd.openxmlformats-officedocument.wordprocessingml.document","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet","application/vnd.openxmlformats-officedocument.presentationml.presentation"]);
