@@ -1,0 +1,143 @@
+
+/* Andre Erving — cohesive application workspace, 2026 design system */
+:root{--ae-app-ink:#142842;--ae-app-navy:#101d32;--ae-app-blue:#244b75;--ae-app-gold:#c99526;--ae-app-muted:#7b8ca2;--ae-app-border:#e0e7f0;--ae-app-canvas:#f3f6fa;--ae-app-radius:12px}
+.workspace{padding:24px clamp(18px,2.5vw,40px) 45px}
+.workspace > *{min-width:0}
+.head{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:4px 0 17px}
+.head h1{margin:5px 0 8px!important;font-size:clamp(25px,2.5vw,34px)!important;letter-spacing:-.045em}
+.head>.btn{align-self:center}
+.panel{border-color:var(--ae-app-border);border-radius:13px;box-shadow:0 3px 14px rgba(22,43,71,.035)}
+.panel h2{font-size:17px;letter-spacing:-.025em}
+.workspace .btn,.workspace button:not(.nav-btn){transition:background-color .16s,border-color .16s,transform .16s}
+.workspace .btn:focus-visible,.ae-guide-step:focus-visible,.ae-editor-back:focus-visible{outline:3px solid #d6b66e;outline-offset:3px}
+.sidebar .nav-btn.active{box-shadow:inset 3px 0 #d6a339}
+.lms-banner{border-radius:13px;padding:25px 28px}
+.lms-banner h2{font-size:25px}
+.lms-stats>div,.stat{border-radius:12px}
+.lms-course-card{border-radius:12px;box-shadow:0 5px 22px rgba(23,45,78,.05);transition:transform .16s,box-shadow .16s}
+.lms-course-card:hover{transform:translateY(-2px);box-shadow:0 13px 28px rgba(23,45,78,.10)}
+.lms-course-card .btn{white-space:nowrap}
+.lms-builder-top{gap:18px}
+.lms-builder-tabs{border-bottom:1px solid var(--ae-app-border)}
+.lms-builder-tabs button{transition:color .15s,background .15s}
+.lms-builder-tabs button:hover{background:#f7f9fc}
+.lms-builder-panel{border-radius:12px;box-shadow:0 3px 16px #18355408}
+.lms-builder-section{box-shadow:none;border-color:#e4e9f1}
+.lms-builder-section-header{background:#fafcff}
+.lms-step{transition:background .13s}
+.lms-step:hover{background:#f4f7fb}
+/* Guided editor — common to LMS, content management, and other create/edit pages */
+.ae-editor-workspace{max-width:1600px;width:100%;margin:0 auto;color:var(--ae-app-ink)}
+.ae-editor-topline{display:flex;align-items:center;gap:9px;margin:0 0 15px;font-size:12px;color:#8493a8}
+.ae-editor-back{font:inherit;font-size:12px;font-weight:750;color:#35628e;background:transparent;border:0;padding:6px 2px;cursor:pointer;text-decoration:none}
+.ae-editor-back:hover{text-decoration:underline;color:#162f4c}
+.ae-editor-toptrail{color:#9facbc}
+.ae-editor-hero{display:flex;justify-content:space-between;align-items:center;gap:24px;margin:0 0 22px;padding:0 1px}
+.ae-editor-eyebrow,.ae-guide-label{font-size:10px;letter-spacing:.12em;color:#b3801e;font-weight:850}
+.ae-editor-hero h1{font-size:clamp(27px,2.8vw,40px);line-height:1.14;letter-spacing:-.052em;margin:8px 0;color:#0f2948;font-weight:850}
+.ae-editor-hero p{font-size:13px;color:#718399;line-height:1.65;margin:4px 0 0;max-width:710px}
+.ae-editor-state{display:inline-flex;align-items:center;padding:9px 15px;background:#fdf3e0;color:#996d12;border:1px solid #f0d7a4;border-radius:999px;font-size:11px;font-weight:800;white-space:nowrap}
+.ae-editor-body{display:grid;grid-template-columns:minmax(220px,290px) minmax(0,1fr);align-items:start;gap:19px}
+.ae-editor-guide{min-width:0;display:grid;gap:14px;position:sticky;top:83px;max-height:calc(100dvh - 95px);overflow:auto;scrollbar-width:thin}
+.ae-editor-guide-title,.ae-guide-help,.ae-course-live-preview{background:#fff;border:1px solid var(--ae-app-border);border-radius:13px;padding:20px}
+.ae-editor-guide-title h3{font-size:17px;letter-spacing:-.025em;margin:7px 0 6px}
+.ae-editor-guide-title p,.ae-guide-help p{font-size:12px;line-height:1.65;color:#7b8ba0;margin:4px 0}
+.ae-guide-steps{display:grid;gap:5px;background:#fff;border:1px solid var(--ae-app-border);border-radius:13px;padding:9px}
+.ae-guide-step{display:flex;align-items:center;text-align:left;gap:11px;padding:11px 10px;width:100%;border-radius:9px;border:1px solid transparent;background:transparent;color:#52647e;text-decoration:none;font-family:inherit;cursor:pointer}
+.ae-guide-step:hover{background:#f5f8fc;color:#1b3d63}
+.ae-guide-step.active{background:#fff3dc;border-color:#efcf89;color:#1d3654}
+.ae-guide-index,.ae-form-section-number{display:grid;place-items:center;flex:none;width:32px;height:32px;border-radius:9px;background:#f2f5fa;color:#617d9c;font-size:11px;font-weight:850}
+.ae-guide-step.active .ae-guide-index{background:#d19b27;color:white}
+.ae-guide-step strong{display:block;font-size:12px;font-weight:800;line-height:1.3}
+.ae-guide-step small{display:block;color:#8695a9;font-size:10px;line-height:1.45;margin-top:3px}
+.ae-guide-check{margin-left:auto;color:#2f9870;font-size:13px;opacity:0}
+.ae-guide-step.completed .ae-guide-check{opacity:1}
+.ae-guide-help{padding:18px 19px;background:#f9fbfd}
+.ae-guide-help strong{font-size:12px}
+.ae-course-live-preview{display:block;padding:17px}
+.ae-course-live-cover{background:linear-gradient(125deg,#162b48,#31567e);min-height:130px;margin:13px 0 15px;color:#ecc77d;border-radius:10px;display:grid;place-content:center;justify-items:center;gap:0;background-size:cover;background-position:center}
+.ae-course-live-cover span{font-weight:900;font-size:37px;letter-spacing:-.08em}
+.ae-course-live-cover small{font-size:9px;font-weight:800;letter-spacing:.13em;color:white}
+.ae-course-live-pill{display:inline-flex;border-radius:100px;background:#edf2f7;color:#53677f;font-size:10px;padding:5px 10px;font-weight:750}
+.ae-course-live-preview h3{font-size:15px;margin:11px 0 5px;line-height:1.3;overflow-wrap:anywhere}
+.ae-course-live-preview p{font-size:11px;color:#7b8da4;line-height:1.55;margin:0}
+.ae-live-price{font-size:16px;font-weight:850;color:#193a60;margin-top:14px}
+.ae-editor-formcard{background:#fff;border:1px solid var(--ae-app-border);border-radius:13px;min-width:0;box-shadow:0 4px 20px rgba(23,45,77,.04);overflow:hidden}
+.ae-editor-formcard form{min-width:0}
+.ae-form-step{padding:27px clamp(19px,2.2vw,35px) 22px}
+.ae-form-step[hidden]{display:none!important}
+.ae-form-step+.ae-form-step{border-top:1px solid #e9eef5}
+.ae-form-section-heading{display:flex;align-items:center;gap:13px;margin-bottom:23px;padding-bottom:17px;border-bottom:1px solid #edf1f5}
+.ae-form-section-number{width:40px;height:40px;background:#fff2d6;color:#b37c18;border-radius:11px;font-size:12px}
+.ae-form-section-heading h2{font-size:20px;letter-spacing:-.035em;margin:0 0 4px;color:#183453}
+.ae-form-section-heading p{font-size:12px;color:#7f8fa2;margin:0;line-height:1.45}
+.ae-form-step-fields.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:19px 17px;margin:0;align-items:start}
+.ae-form-step-fields .field{min-width:0;font-size:11px;color:#35506f;font-weight:800;letter-spacing:.005em}
+.ae-form-step-fields .field.wide{grid-column:1/-1}
+.ae-form-step-fields input,.ae-form-step-fields select,.ae-form-step-fields textarea{display:block;width:100%;margin-top:8px;padding:12px 13px;min-height:43px;border:1px solid #d7e1ee;border-radius:9px;font-size:13px;font-weight:500;color:#18334f;background:#fff;outline:none;transition:border-color .16s,box-shadow .16s}
+.ae-form-step-fields input:focus,.ae-form-step-fields select:focus,.ae-form-step-fields textarea:focus{border-color:#9ab0cd;box-shadow:0 0 0 3px #dce8f67e}
+.ae-form-step-fields textarea{min-height:112px;resize:vertical;line-height:1.7}
+.ae-editor-writing-section textarea{min-height:300px}
+.ae-course-workspace .ae-form-step-fields textarea[name="description"]{min-height:310px}
+.ae-form-step-fields .field:has(input[type="checkbox"]){display:flex;gap:11px;align-items:center;min-height:46px;padding:12px 13px;background:#f8fafc;border:1px solid #e2e9f2;border-radius:9px}
+.ae-form-step-fields input[type="checkbox"]{width:17px;height:17px;margin:0;min-height:0;accent-color:#b8871e}
+.ae-editor-footer{position:relative;display:flex;align-items:center;justify-content:space-between;gap:15px;border-top:1px solid #e7ecf4;background:#fbfcfe;padding:17px clamp(19px,2.2vw,35px)}
+.ae-editor-save-note{color:#8090a4;font-size:11px;line-height:1.4}
+.ae-editor-footer-buttons{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.ae-editor-footer .btn{min-width:100px;border-radius:8px}
+.ae-editor-footer .ae-editor-submit{background:#c99526;color:#fff;border-color:#c99526}
+.ae-editor-footer button[hidden]{display:none!important}
+.ae-editor-formcard .notice.error{margin:12px 25px}
+.ae-compact-workspace .ae-form-step{padding-bottom:24px}
+.ae-admin-editor .ae-editor-formcard form{display:block}
+.ae-editor-writing-section{background:#fbfcfe}
+.ae-editor-writing-section textarea{background:#fff}
+/* Repeatable, contextual operational tables */
+.workspace .panel>.toolbar{border-bottom:1px solid #ebeff5;padding:0 0 17px;margin-bottom:4px}
+.workspace .toolbar input[type="search"]{min-width:260px;border-radius:9px}
+.workspace .tablewrap{border-radius:9px;overflow-x:auto}
+.workspace table{border-collapse:separate;border-spacing:0;width:100%}
+.workspace table thead th{color:#698098;background:#f7f9fc;text-transform:uppercase;letter-spacing:.08em;font-size:10px;padding:13px 12px;border-bottom:1px solid #e8eef6}
+.workspace table tbody tr:hover td{background:#fbfcfe}
+.workspace table tbody td{font-size:12px;color:#28425e;padding:15px 12px;vertical-align:middle;border-bottom:1px solid #edf1f6}
+.workspace .row-actions button{border:1px solid #d9e3ef;border-radius:8px;background:#fff;padding:8px 12px;font-size:11px;font-weight:750}
+.workspace .row-actions button:hover{background:#f3f7fc}
+.workspace .empty{padding:30px 15px;text-align:center;color:#7b8da6}
+.workspace .destination{border-radius:13px}
+.workspace .destination-actions button{transition:transform .15s,background-color .15s,border-color .15s}
+.workspace .destination-actions button:hover{transform:translateY(-1px)}
+.workspace .support-grid{gap:16px}
+.workspace .support-ticket{transition:background-color .15s}
+.workspace .support-ticket:hover{background:#f2f6fb}
+.workspace .support-message{border-radius:10px}
+.workspace .activity-grid div{border:1px solid #e7eef5}
+@media(max-width:1180px){
+ .ae-editor-body{grid-template-columns:220px minmax(0,1fr);gap:13px}
+ .ae-editor-guide-title,.ae-guide-help,.ae-course-live-preview{padding:15px}
+ .ae-editor-hero h1{font-size:30px}
+}
+@media(max-width:860px){
+ .ae-editor-body{display:block}
+ .ae-editor-guide{position:static;max-height:none;display:block;margin:0 0 13px}
+ .ae-editor-guide-title,.ae-guide-help,.ae-course-live-preview{display:none}
+ .ae-guide-steps{display:flex;overflow-x:auto;gap:6px;padding:8px}
+ .ae-guide-step{min-width:165px;width:auto;flex:none}
+ .ae-guide-step small{display:none}
+ .ae-editor-hero{align-items:flex-start}
+ .ae-editor-footer{flex-wrap:wrap}
+}
+@media(max-width:620px){
+ .workspace{padding:16px 12px 30px}
+ .ae-editor-hero{display:block}
+ .ae-editor-state{margin-top:12px}
+ .ae-form-step{padding:18px 15px}
+ .ae-form-step-fields.form-grid{grid-template-columns:1fr}
+ .ae-form-step-fields .field.wide{grid-column:auto}
+ .ae-editor-footer{padding:15px;align-items:stretch}
+ .ae-editor-footer-buttons{width:100%}
+ .ae-editor-footer-buttons .btn{flex:1}
+ .ae-form-section-heading h2{font-size:18px}
+ .workspace .toolbar input[type="search"]{min-width:0;width:100%}
+ .workspace .panel{padding:16px}
+ .workspace .support-grid{display:block}
+}
