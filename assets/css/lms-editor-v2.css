@@ -87,3 +87,11 @@
 .lms-content-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}
 .lms-content-actions .lms-gold-action{position:static;border-radius:9px;padding:12px 18px;font-size:12px;font-weight:800;white-space:nowrap;cursor:pointer}
 @media(max-width:780px){.lms-content-heading{align-items:flex-start;flex-direction:column}.lms-content-actions{justify-content:flex-start;width:100%}}
+
+/* Inline lesson audio management: staff only */
+.ae-audio-admin-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin:12px 0 1px;user-select:none}
+.ae-audio-admin-actions button{font:inherit;font-size:12px;font-weight:750;border-radius:8px;padding:8px 13px;cursor:pointer;border:1px solid #d8e2ed;background:#fff;color:#28415f}
+.ae-audio-admin-actions .ae-audio-replace{background:#fff8e8;border-color:#e4c787;color:#845b12}
+.ae-audio-admin-actions .ae-audio-remove{background:#fff6f6;border-color:#efc9ce;color:#af3845}
+.ae-audio-admin-actions button:disabled{opacity:.55;cursor:wait}
+.ae-studio-sidebar .ae-studio-toggle[hidden]{display:none!important}
