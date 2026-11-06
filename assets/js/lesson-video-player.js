@@ -3,16 +3,16 @@
  * Combines the lesson's authenticated narration and visual, with synchronized scene cards.
  * This is a browser-rendered presentation; it is not represented as an uploaded MP4.
  */
-export function mountNarratedLessonVideo(host,{title,number,artworkUrl,audioUrl,sections=[]}){
+export function mountNarratedLessonVideo(host,{title,number,artworkUrl,audioUrl,sections=[],headings=[]}){
   if(!host||!audioUrl)return;
   const clean=v=>String(v||'').replace(/\s+/g,' ').trim();
-  const scenes=[
-    {eyebrow:'FREIGHT BROKER TRAINING',headline:clean(title),copy:'Lesson '+number+' · Professional freight brokerage training'},
-    {eyebrow:'CONCEPT AND OPERATING STANDARD',headline:'Understand the concept',copy:clean(sections[0]||title)},
-    {eyebrow:'REAL-WORLD FREIGHT EXAMPLE',headline:'See how it works',copy:clean(sections[1]||sections[0]||'')},
-    {eyebrow:'PRACTICAL APPLICATION',headline:'Apply the lesson',copy:clean(sections[2]||'')},
-    {eyebrow:'KNOWLEDGE CHECK',headline:'Review and practice',copy:'Use the written lesson and module assessment to check your understanding.'}
-  ];
+  const realSections=sections.map((body,i)=>({eyebrow:'MODULE LESSON · SECTION '+String(i+1).padStart(2,'0'),headline:clean(headings[i]||'Lesson section '+(i+1)),copy:clean(body)})).filter(x=>x.copy||x.headline);
+  const scenes=[{eyebrow:'ANDRE ERVING · FREIGHT BROKER TRAINING',headline:clean(title),copy:'Lesson '+number+' · Learn the process. Practice the skill.'},...realSections];
+  // Relative lengths approximate segment speech timing. Each section is recorded
+  // separately, with a heading and inserted silence before the next section.
+  const weights=scenes.map((scene,i)=>i===0?24:Math.max(35,(scene.headline.length+scene.copy.length)+35));
+  const totalWeight=weights.reduce((a,b)=>a+b,0);
+  const cuts=[];let running=0;for(const weight of weights){running+=weight;cuts.push(running/totalWeight)}
   const esc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   host.classList.add('rc-video-host');
   host.innerHTML='<div class="rc-video-stage" tabindex="0" role="group" aria-label="'+esc(title)+' narrated video lesson">'+
@@ -37,14 +37,16 @@ export function mountNarratedLessonVideo(host,{title,number,artworkUrl,audioUrl,
     const ratio=duration>0?Math.min(1,audio.currentTime/duration):0;
     seek.value=String(Math.round(ratio*1000));
     time.textContent=fmt(audio.currentTime)+' / '+fmt(duration);
-    const next=Math.min(scenes.length-1,Math.floor(ratio*scenes.length));
+    const next=Math.max(0,cuts.findIndex(c=>ratio<c)===-1?scenes.length-1:cuts.findIndex(c=>ratio<c));
     if(next!==active){active=next;const s=scenes[next];eyebrow.textContent=s.eyebrow;heading.textContent=s.headline;copy.textContent=s.copy;stage.dataset.scene=String(next)}
     copy.hidden=!showCaptions;
     play.textContent=audio.paused?'▶':'❚❚';
     overlay.hidden=!audio.paused&&!!audio.currentTime;
     overlay.textContent=audio.currentTime?'▶':'▶';
   }
-  const toggle=()=>{if(audio.paused){host.querySelectorAll('audio').forEach(a=>{if(a!==audio)a.pause()});document.querySelectorAll('.rc-audio-player').forEach(a=>{if(a!==audio)a.pause()});audio.play().catch(()=>{})}else audio.pause()};
+  const onOtherAudio=e=>{if(e.target!==audio&&e.target instanceof HTMLAudioElement)audio.pause()};
+  document.addEventListener('play',onOtherAudio,true);
+  const toggle=()=>{if(audio.paused){document.querySelectorAll('audio').forEach(a=>{if(a!==audio)a.pause()});audio.play().catch(()=>{})}else audio.pause()};
   stage.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>{
     switch(b.dataset.action){
       case 'play':toggle();break;
@@ -58,5 +60,5 @@ export function mountNarratedLessonVideo(host,{title,number,artworkUrl,audioUrl,
   stage.onkeydown=e=>{if(e.target===stage&&(e.key===' '||e.key==='Enter')){e.preventDefault();toggle()}};
   ['timeupdate','durationchange','loadedmetadata','play','pause','ended','seeked'].forEach(event=>audio.addEventListener(event,render));
   render();
-  return {pause(){audio.pause()},destroy(){audio.pause();audio.removeAttribute('src');audio.load();host.replaceChildren()}};
+  return {pause(){audio.pause()},destroy(){document.removeEventListener('play',onOtherAudio,true);audio.pause();audio.removeAttribute('src');audio.load();host.replaceChildren()}};
 }
