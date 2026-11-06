@@ -165,3 +165,32 @@
 .ae-list-empty button{background:#fff6e5;color:#916415;border:1px solid #ead099;border-radius:8px;padding:10px 17px;font-size:12px;font-weight:800}
 @media(max-width:1100px){.ae-list-summary{grid-template-columns:repeat(3,minmax(0,1fr))}.ae-list-summary-copy{grid-column:1/-1}}
 @media(max-width:680px){.ae-list-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.ae-list-summary-copy{grid-column:1/-1}.ae-record-toolbar{flex-direction:column;align-items:stretch}.ae-record-toolbar input[type=search]{width:100%}.ae-panel-heading{padding:18px 17px 10px}.ae-record-toolbar{padding:12px 17px!important}}
+
+/* Enrollment and customer support operations */
+.ae-operations-intro,.ae-support-intro{display:flex;align-items:center;justify-content:space-between;gap:25px;background:linear-gradient(112deg,#172e4c,#2b5278);color:white;border-radius:13px;padding:22px 27px;margin-bottom:19px}
+.ae-operations-intro h2,.ae-support-intro h2{font-size:22px;letter-spacing:-.035em;margin:6px 0 7px;color:white}
+.ae-operations-intro p,.ae-support-intro p{font-size:12px;color:#d0def0;line-height:1.55;margin:0;max-width:620px}
+.ae-operations-intro .ae-editor-eyebrow,.ae-support-intro .ae-editor-eyebrow{color:#e4c17b}
+.ae-operations-stats,.ae-support-counters{display:flex;align-items:center;gap:11px;flex:none}
+.ae-operations-stats>div,.ae-support-counters>div{min-width:115px;background:#ffffff18;border:1px solid #ffffff35;border-radius:10px;padding:12px 17px}
+.ae-operations-stats strong,.ae-support-counters strong{display:block;font-size:23px;line-height:1.15;color:#fff}
+.ae-operations-stats span,.ae-support-counters span{display:block;font-size:10px;color:#d4e3f4;margin-top:5px}
+.ae-enrollment-grid{display:grid;grid-template-columns:minmax(260px,0.82fr) minmax(0,1.55fr);align-items:start;gap:16px}
+.ae-enrollment-grid>.panel{min-width:0;margin:0}
+.ae-operation-form{padding:0!important;overflow:hidden}
+.ae-operation-form .ae-panel-heading,.ae-operation-records .ae-panel-heading{padding:19px 22px 15px;border-bottom:1px solid #e9edf4}
+.ae-operation-form .form-grid{display:grid;grid-template-columns:1fr;gap:15px;padding:21px 22px 5px;margin:0}
+.ae-operation-form .form-actions{padding:4px 0 13px}
+.ae-enrollment-note{font-size:11px!important;padding:0 22px 20px;margin:0;line-height:1.55}
+.ae-operation-records{padding:0!important;overflow:hidden}
+.ae-operation-records .tablewrap{padding:13px 14px;overflow:auto}
+.ae-operation-records .empty{margin:0}
+.ae-support-workspace{grid-template-columns:minmax(250px,0.8fr) minmax(0,1.55fr);gap:16px}
+.ae-support-workspace .panel{border-radius:12px;min-width:0}
+.ae-support-workspace .support-ticket{border-radius:8px}
+.ae-support-workspace .support-ticket.selected{background:#fff2d8;border-color:#efce83}
+.ae-support-workspace .support-messages{background:#f8fafd;border:1px solid #e7edf5;border-radius:10px}
+.ae-support-workspace .support-header{border-bottom:1px solid #e9eef5;padding-bottom:12px}
+@media(max-width:1200px){.ae-enrollment-grid{grid-template-columns:1fr}.ae-operation-form .form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ae-operation-form .form-actions{grid-column:1/-1}}
+@media(max-width:900px){.ae-operations-intro,.ae-support-intro{align-items:flex-start;flex-direction:column}.ae-support-workspace{grid-template-columns:1fr}}
+@media(max-width:620px){.ae-operation-form .form-grid{grid-template-columns:1fr}.ae-operations-stats,.ae-support-counters{width:100%;flex-wrap:wrap}.ae-operations-stats>div,.ae-support-counters>div{flex:1}.ae-operations-intro,.ae-support-intro{padding:19px 17px}}
