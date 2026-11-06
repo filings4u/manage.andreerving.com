@@ -9,6 +9,29 @@ export function createLessonStudio({root,course,modules,lesson=null,lessons=[],m
  const icon={text:"▤",video:"▷",quiz:"☷",download:"↓"};
  const label={text:"Article",video:"Video",quiz:"Quiz",download:"Download"};
 
+ const studioDialog=(title,description,{confirmLabel='Continue',cancelLabel='Cancel',input=false}={})=>new Promise(resolve=>{
+   const backdrop=document.createElement('div');
+   backdrop.className='ae-studio-inline-backdrop';
+   backdrop.setAttribute('role','presentation');
+   const dialog=document.createElement('section');dialog.className='ae-studio-inline-dialog';
+   dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');
+   dialog.setAttribute('aria-label',title);
+   const heading=document.createElement('h2');heading.textContent=title;
+   const body=document.createElement('p');body.textContent=description;
+   const field=input?document.createElement('input'):null;
+   if(field){field.type='url';field.placeholder='https://example.com';field.autocomplete='off';field.className='ae-studio-dialog-field'}
+   const actions=document.createElement('div');actions.className='ae-studio-dialog-actions';
+   const cancel=document.createElement('button');cancel.type='button';cancel.textContent=cancelLabel;cancel.className='ae-studio-dialog-cancel';
+   const ok=document.createElement('button');ok.type='button';ok.textContent=confirmLabel;ok.className='ae-studio-dialog-ok';
+   const close=value=>{document.removeEventListener('keydown',onKey);backdrop.remove();resolve(value)};
+   const onKey=ev=>{if(ev.key==='Escape'){ev.preventDefault();close(input?'':false)}};
+   cancel.onclick=()=>close(input?'':false);
+   ok.onclick=()=>close(input?(field?.value.trim()||''):true);
+   actions.append(cancel,ok);dialog.append(heading,body);if(field)dialog.append(field);dialog.append(actions);backdrop.append(dialog);
+   backdrop.addEventListener('click',event=>{if(event.target===backdrop)close(input?'':false)});
+   document.addEventListener('keydown',onKey);
+   document.body.append(backdrop);(field||cancel).focus();
+ });
  const selectedModule=lesson?.module_id||moduleId||modules[0]?.id;
  const selectedModuleName=modules.find(m=>m.id===selectedModule)?.title||"Course section";
  const curriculum=modules.map(m=>{
@@ -91,7 +114,7 @@ export function createLessonStudio({root,course,modules,lesson=null,lessons=[],m
    const remove=document.createElement("button");remove.type="button";remove.className="ae-audio-remove";remove.textContent="✕ Delete audio";remove.title="Remove this audio from the lesson";
    const picker=document.createElement("input");picker.type="file";picker.accept=".mp3,.m4a,.wav,.ogg,audio/mpeg,audio/mp4,audio/wav,audio/ogg";picker.hidden=true;
    replace.onclick=()=>{if(mediaBusy)return notify("Another upload is in progress.",true);picker.click()};
-   remove.onclick=()=>{if(!confirm("Remove this audio from the lesson? Save the lesson to confirm. The file remains in private storage."))return;figure.remove();changed()};
+   remove.onclick=async()=>{if(!await studioDialog('Remove lesson audio','Remove this audio from the lesson? The file will remain in private storage until separately deleted.',{confirmLabel:'Remove audio'}))return;figure.remove();changed()};
    picker.onchange=async()=>{
      const file=picker.files?.[0];picker.value="";if(!file)return;
      if(mediaBusy)return notify("Another upload is in progress.",true);
@@ -169,7 +192,7 @@ export function createLessonStudio({root,course,modules,lesson=null,lessons=[],m
    $("ae-insert-audio").onclick=()=>$("ae-audio-file").click();
    $("ae-image-file").onchange=ev=>{void upload("image",ev.target.files?.[0]);ev.target.value=""};
    $("ae-audio-file").onchange=ev=>{void upload("audio",ev.target.files?.[0]);ev.target.value=""};
-   $("ae-insert-link").onclick=()=>{const value=prompt("Enter an HTTPS URL");if(!value)return;try{const url=new URL(value);if(url.protocol!=="https:")throw Error();$("ae-rich").focus();document.execCommand("createLink",false,url.href);changed()}catch{notify("Use a valid HTTPS link.",true)}};
+   $("ae-insert-link").onclick=async()=>{const value=await studioDialog('Add a lesson link','Enter a secure HTTPS URL.',{input:true,confirmLabel:'Insert link'});if(!value)return;try{const url=new URL(value);if(url.protocol!=="https:")throw Error();$("ae-rich").focus();document.execCommand("createLink",false,url.href);changed()}catch{notify("Use a valid HTTPS link.",true)}};
 
   }else if(active==="video"){
    $("ae-studio-content").innerHTML='<section class="ae-studio-card"><span class="eyebrow">CLOUDFLARE STREAM</span><h2>Upload your video</h2><p>Upload a video file from your computer. Cloudflare Stream handles encoding and delivery to students.</p><label class="ae-upload-drop" id="ae-drop"><span class="ae-upload-glyph">↑</span><strong>Choose video file or drop it here</strong><small>MP4, WebM or MOV · Maximum 200 MB</small><input type="file" id="ae-video-file" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov"></label><div id="ae-video-name">'+(uploadedUID?"Cloudflare Stream video already attached":"No video selected")+'</div><progress id="ae-upload-progress" max="100" value="0" hidden></progress><div class="ae-video-sample" id="ae-video-sample"></div></section><section class="ae-studio-card"><h2>Instructor notes</h2><div id="ae-notes" class="ae-rich ae-rich-short" contenteditable="true" role="textbox" data-placeholder="Add a lesson summary or transcript notes...">'+notes+'</div></section>';
@@ -194,17 +217,17 @@ export function createLessonStudio({root,course,modules,lesson=null,lessons=[],m
   if(action===active)return;
   capture();clearURL();active=action;render();changed();
  });
- const exitStudio=()=>{if($("ae-studio-status").textContent==="Unsaved changes"&&!confirm("Discard unsaved lesson changes?"))return;clearURL();onCancel()};
+ const exitStudio=async()=>{if($("ae-studio-status").textContent==="Unsaved changes"&&!await studioDialog('Discard changes','Your unsaved lesson edits will be lost.',{confirmLabel:'Discard changes'}))return;clearURL();onCancel()};
  $("ae-studio-back").onclick=exitStudio;
- $("ae-add-chapter").onclick=()=>{if($("ae-studio-status").textContent==="Unsaved changes"&&!confirm("Discard unsaved lesson changes?"))return;clearURL();onAddChapter?.()};
- $("ae-add-lesson").onclick=()=>{if($("ae-studio-status").textContent==="Unsaved changes"&&!confirm("Discard unsaved lesson changes?"))return;clearURL();onAddLesson?.($("ae-module").value)};
- root.querySelectorAll("[data-studio-lesson]").forEach(btn=>btn.onclick=()=>{if(btn.dataset.studioLesson===lesson?.id)return;if($("ae-studio-status").textContent==="Unsaved changes"&&!confirm("Discard unsaved lesson changes?"))return;clearURL();onOpenLesson?.(btn.dataset.studioLesson)});
+ $("ae-add-chapter").onclick=async()=>{if($("ae-studio-status").textContent==="Unsaved changes"&&!await studioDialog('Discard changes','Your unsaved lesson edits will be lost.',{confirmLabel:'Discard changes'}))return;clearURL();onAddChapter?.()};
+ $("ae-add-lesson").onclick=async()=>{if($("ae-studio-status").textContent==="Unsaved changes"&&!await studioDialog('Discard changes','Your unsaved lesson edits will be lost.',{confirmLabel:'Discard changes'}))return;clearURL();onAddLesson?.($("ae-module").value)};
+ root.querySelectorAll("[data-studio-lesson]").forEach(btn=>btn.onclick=async()=>{if(btn.dataset.studioLesson===lesson?.id)return;if($("ae-studio-status").textContent==="Unsaved changes"&&!await studioDialog('Discard changes','Your unsaved lesson edits will be lost.',{confirmLabel:'Discard changes'}))return;clearURL();onOpenLesson?.(btn.dataset.studioLesson)});
  // Defer preview callback lookup until the user clicks it. The handler is
  // initialized below; resolving it eagerly prevented render() from ever running.
  $("ae-top-preview").onclick=()=>$("ae-open-preview").click();
- $("ae-studio-publish").onclick=()=>{
+ $("ae-studio-publish").onclick=async()=>{
    if($("ae-studio-status").textContent==="Unsaved changes")return notify("Save the lesson before publishing the course.",true);
-   if(!confirm("Publish this course so enrolled students can access its lessons?"))return;
+   if(!await studioDialog('Publish course','Make the current course available to enrolled students?',{confirmLabel:'Publish course'}))return;
    onPublish?.();
  };
 
