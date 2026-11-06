@@ -95,3 +95,19 @@
 .ae-audio-admin-actions .ae-audio-remove{background:#fff6f6;border-color:#efc9ce;color:#af3845}
 .ae-audio-admin-actions button:disabled{opacity:.55;cursor:wait}
 .ae-studio-sidebar .ae-studio-toggle[hidden]{display:none!important}
+
+
+/* Image controls: manageable preview dimensions, 5px corners, optional credit */
+.ae-rich figure.ae-media-block[data-ae-media="image"]{
+ display:block;box-sizing:border-box;width:100%;max-width:100%;
+ padding:12px;margin:18px 0;border-radius:9px;overflow:hidden;
+}
+.ae-rich figure.ae-media-block[data-ae-media="image"] img{
+ display:block;max-width:min(100%,720px)!important;width:auto;height:auto;
+ max-height:420px!important;object-fit:contain;border-radius:5px!important;margin:0 auto;
+}
+.ae-image-credit-editor{margin:12px auto 0;max-width:720px;display:block;user-select:text}
+.ae-image-credit-editor label{display:block;font-size:11px;font-weight:750;color:#516782;line-height:1.6}
+.ae-image-credit-editor input{width:100%;display:block;margin-top:6px;padding:10px 12px;
+ border:1px solid #d4dfed;border-radius:7px;background:white;color:#23405f;font:inherit;font-size:12px}
+.ae-image-credit-editor input:focus{outline:2px solid #d7b15f;outline-offset:1px}
