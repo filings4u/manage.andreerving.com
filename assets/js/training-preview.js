@@ -14,11 +14,13 @@ function safeHTML(input){
  if(!allow.has(child.tagName)){
    if(child.tagName==='FIGURE'){
      const kind=child.getAttribute('data-ae-media'),path=child.getAttribute('data-ae-path')||'',label=child.getAttribute('data-ae-label')||'Lesson media';
+     const credit=kind==='image'?(child.getAttribute('data-ae-credit')||'').trim().slice(0,240):'';
      if(!['audio','image'].includes(kind)||path.includes('..')||!/^[a-z0-9:/._-]+$/i.test(path)||
        !(path.startsWith(courseId+'/')||path.startsWith('r2:'+courseId+'/lesson-media/'))){child.remove();continue}
      for(const attr of [...child.attributes])child.removeAttribute(attr.name);
      child.className='ae-media-block';
      child.dataset.aeMedia=kind;child.dataset.aePath=path;child.dataset.aeLabel=label.slice(0,160);
+     if(credit)child.dataset.aeCredit=credit;
      child.textContent='Loading '+label.slice(0,160)+'…';continue;
    }
    if(['SCRIPT','STYLE','SVG','IFRAME','OBJECT','IMG','FORM','VIDEO','AUDIO','SOURCE'].includes(child.tagName)){child.remove();continue}while(child.firstChild)node.insertBefore(child.firstChild,child);child.remove();clean(node);continue
@@ -56,8 +58,9 @@ async function hydrateLessonMedia(){
    media.src=src;
    if(kind==='audio'){media.controls=true;media.preload='metadata';media.setAttribute('controlsList','nodownload noplaybackrate');media.addEventListener('contextmenu',event=>event.preventDefault())}
    else {media.alt=label;media.loading='lazy'}
-   const caption=document.createElement('figcaption');caption.textContent=label;
-   figure.replaceChildren(media,caption);
+   figure.replaceChildren(media);
+   const captionText=kind==='image'?(figure.dataset.aeCredit||'').trim():label;
+   if(captionText){const caption=document.createElement('figcaption');caption.textContent=kind==='image'?'Image credit: '+captionText:captionText;figure.append(caption)}
   }catch{if(figure.isConnected)figure.textContent="Unable to open "+label+". Please contact support."}
  }));
 }
