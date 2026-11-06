@@ -178,7 +178,8 @@ async function enhanceClassroom(lesson){
  const resources=lesson.resource_url&&lesson.allow_download?'<p>Your instructor has attached a downloadable resource to this lesson. Open the Resources section of the lesson guide to access it.</p>':'<p>No downloadable files are attached to this lesson. Use the written lesson and practice assignment as your study resources.</p>';
  const extra=module?.title?.includes('Compliance')?'<p><a href="https://www.fmcsa.dot.gov/registration/broker-registration" target="_blank" rel="noopener noreferrer">FMCSA Broker Registration — official reference ↗</a></p>':'';
  $('rc-resources-pane').innerHTML='<h2>Lesson resources</h2>'+resources+extra;
- $('rc-resource-list').innerHTML='<div class="rc-resource-row">▤ &nbsp; Written lesson guide</div><div class="rc-resource-row">♫ &nbsp; Audio narration</div>'+(lesson.resource_url&&lesson.allow_download?'<div class="rc-resource-row">↓ &nbsp; Instructor resource available</div>':'');
+ $('rc-resource-list').innerHTML='<button type="button" class="rc-resource-row" data-rc-resource="guide">▤ &nbsp; Written lesson guide →</button>'+ (audio?'<button type="button" class="rc-resource-row" data-rc-resource="audio">♫ &nbsp; Audio narration →</button>':'') +(lesson.resource_url&&lesson.allow_download?'<button type="button" class="rc-resource-row" data-rc-resource="resources">↓ &nbsp; Instructor resource →</button>':'');
+ $('rc-resource-list').querySelectorAll('[data-rc-resource]').forEach(b=>b.onclick=()=>{setClassroomTab(b.dataset.rcResource);$('rc-tab-nav').scrollIntoView({behavior:'smooth',block:'start'})});
  $('rc-audio-pane').innerHTML='<h2>Listen to this lesson</h2><p>Audio narration of the lesson overview and example.</p><div id="rc-audio-tab-slot"></div>';
  const railAudio=$('rc-audio-slot');railAudio.innerHTML='<p class="rc-muted">No audio is attached to this lesson.</p>';
  const next=lessons[position+1];
@@ -211,7 +212,7 @@ async function enhanceClassroom(lesson){
 }
 async function showLesson(index){
  if(index<0||index>=lessons.length)return;
- clearPlayerMedia();position=index;const lesson=lessons[index];collapsedModules.delete(lesson.module_id);
+ clearPlayerMedia();position=index;const lesson=lessons[index];modules.forEach(m=>collapsedModules.add(m.id));collapsedModules.delete(lesson.module_id);
  $('lesson-view').hidden=false;$('player-status').hidden=true;
  $('lesson-title').textContent=lesson.title;$('lesson-overline').textContent='LESSON '+(index+1)+' OF '+lessons.length+' · '+type(lesson.lesson_type).toUpperCase();
  $('lesson-subtitle').textContent=(modules.find(m=>m.id===lesson.module_id)?.title||'Course')+' · '+(lesson.duration_minutes||0)+' min';
@@ -273,7 +274,7 @@ async function init(){
    link.href="./"+backRoute;
  });
  if(!lessons.length){message('No lessons have been added to this course yet.');renderOutline();return}
- $('lesson-prev').onclick=()=>showLesson(position-1);$('lesson-next').onclick=()=>showLesson(position+1);$('lesson-complete').onclick=complete;document.querySelectorAll('[data-rc-tab]').forEach(b=>b.onclick=()=>setClassroomTab(b.dataset.rcTab));
+ $('lesson-prev').onclick=()=>showLesson(position-1);$('lesson-next').onclick=()=>showLesson(position+1);$('lesson-complete').onclick=complete;document.querySelectorAll('[data-rc-tab]').forEach(b=>b.onclick=()=>setClassroomTab(b.dataset.rcTab));document.querySelectorAll('.rc-global-nav a[href="#rc-resources-pane"]').forEach(a=>a.onclick=e=>{e.preventDefault();setClassroomTab('resources');$('rc-tab-nav').scrollIntoView({behavior:'smooth',block:'start'})});
  const desired=params.get('lesson'),start=Math.max(0,lessons.findIndex(l=>l.id===desired));await showLesson(start);
 }
 init().catch(e=>message('Unable to load the course player: '+e.message));
