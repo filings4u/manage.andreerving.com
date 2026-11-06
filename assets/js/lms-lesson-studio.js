@@ -32,8 +32,10 @@ export function createLessonStudio({root,course,modules,lesson=null,lessons=[],m
     const type=child.getAttribute("data-ae-media"),path=child.getAttribute("data-ae-path")||"";
     if(!["audio","image"].includes(type)||!/^[-a-zA-Z0-9_./:]+$/.test(path)||path.includes("..")||!(path.startsWith(course.id+"/")||path.startsWith("r2:"+course.id+"/lesson-media/"))){child.remove();continue}
     const label=child.getAttribute("data-ae-label")||"";
+    const credit=type==="image"?(child.getAttribute("data-ae-credit")||"").trim().slice(0,240):"";
     child.replaceChildren();for(const attr of [...child.attributes])child.removeAttribute(attr.name);
     child.setAttribute("data-ae-media",type);child.setAttribute("data-ae-path",path);child.setAttribute("data-ae-label",label.slice(0,160));
+    if(credit)child.setAttribute("data-ae-credit",credit);
     child.className="ae-media-block";child.contentEditable="false";
     child.textContent=(type==="audio"?"♫ Audio: ":"▧ Image: ")+label.slice(0,160);continue;
    }
@@ -54,10 +56,33 @@ export function createLessonStudio({root,course,modules,lesson=null,lessons=[],m
     const el=document.createElement(type==="audio"?"audio":"img");el.src=url;
     if(type==="audio"){el.controls=true;el.preload="metadata";el.setAttribute("controlsList","nodownload noplaybackrate");el.setAttribute("disablepictureinpicture","");el.addEventListener("contextmenu",event=>event.preventDefault())}
     else{el.alt=label;el.loading="lazy"}
-    figure.replaceChildren(el);const cap=document.createElement("figcaption");cap.textContent=label;figure.append(cap);
-    if(type==="audio")attachAudioActions(figure);
+    figure.replaceChildren(el);
+    if(type==="audio"){
+      const cap=document.createElement("figcaption");cap.textContent=label;figure.append(cap);
+      attachAudioActions(figure);
+    }else{
+      attachImageCreditEditor(figure);
+    }
    }catch{figure.textContent="Unable to load "+label+". Check storage access.";if(type==="audio")attachAudioActions(figure)}
   }));
+ };
+ const attachImageCreditEditor=(figure)=>{
+   if(!figure.isConnected||figure.dataset.aeMedia!=="image")return;
+   const controls=document.createElement("div");
+   controls.className="ae-image-credit-editor";controls.contentEditable="false";
+   const label=document.createElement("label");
+   label.textContent="Image credit (optional)";
+   const field=document.createElement("input");
+   field.type="text";field.maxLength=240;field.placeholder="Photographer, organization, or source";
+   field.value=figure.dataset.aeCredit||"";
+   field.setAttribute("aria-label","Image credit");
+   field.addEventListener("input",()=>{
+     const credit=field.value.trim();
+     if(credit)figure.dataset.aeCredit=credit;
+     else figure.removeAttribute("data-ae-credit");
+     changed();
+   });
+   label.append(field);controls.append(label);figure.append(controls);
  };
  const attachAudioActions=(figure)=>{
    if(!figure.isConnected||figure.dataset.aeMedia!=="audio")return;
