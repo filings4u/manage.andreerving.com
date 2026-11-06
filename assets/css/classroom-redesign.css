@@ -92,3 +92,15 @@ body.ae-player-page{background:#f4f7fc;color:#122544}
 @media(max-width:1180px){.ae-player-shell{grid-template-columns:260px minmax(0,1fr)}.rc-lesson-rail{grid-column:2;grid-row:2;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;border:0;overflow:visible;padding:10px 16px}.rc-rail-card{margin:0}.ae-player-main{grid-column:2}}
 @media(max-width:850px){.rc-global-nav{display:none}.ae-player-topcourse strong{font-size:17px}.ae-player-back{min-width:145px}.rc-brand-wordmark strong{font-size:22px}.rc-brand-wordmark small{font-size:7px}.ae-player-shell{grid-template-columns:230px minmax(0,1fr)}}
 @media(max-width:680px){.ae-player-app{height:auto;min-height:100dvh;overflow:visible}.ae-player-shell{display:flex;flex-direction:column}.ae-player-topbar{min-height:68px;padding:9px 12px}.ae-player-topcourse{display:none}.ae-player-outline{max-height:360px;overflow:auto}.rc-course-cover{display:none}.ae-player-main{overflow:visible;padding:18px 12px}.rc-lesson-rail{display:flex;flex-direction:column;padding:12px;overflow:visible}.rc-tab-pane,.ae-lesson-body{padding:18px}.rc-tab-nav button{font-size:10px}.ae-player-exit{font-size:10px}.rc-module-toggle{font-size:11px}}
+
+/* Official Andre Erving classroom branding */
+.ae-player-topbar{background:#f6f9fe;color:#10223d;border-bottom:1px solid #dbe5f1}
+.ae-player-back{min-width:200px;max-width:245px;display:flex;align-items:center;gap:0}
+.rc-full-logo{display:block;width:218px;max-width:100%;height:54px;object-fit:contain;object-position:left center}
+.ae-player-topcourse strong{color:#10243e}
+.ae-player-topcourse span{color:#667a96}
+.rc-global-nav a{color:#193b66}
+.rc-global-nav a:hover{color:#2456dc}
+.ae-player-exit{background:#fff;color:#214dc4;border:1px solid #d7e3f5}
+.ae-player-exit:hover{background:#eaf1fe}
+@media(max-width:850px){.ae-player-back{min-width:155px}.rc-full-logo{width:174px;height:45px}}
