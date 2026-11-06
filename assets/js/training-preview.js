@@ -295,7 +295,7 @@ init().then(()=>clearTimeout(classroomTimeout)).catch(e=>{clearTimeout(classroom
  * Combines the lesson's authenticated narration and visual, with synchronized scene cards.
  * This is a browser-rendered presentation; it is not represented as an uploaded MP4.
  */
-export function mountNarratedLessonVideo(host,{title,number,artworkUrl,audioUrl,sections=[],headings=[]}){
+function mountNarratedLessonVideo(host,{title,number,artworkUrl,audioUrl,sections=[],headings=[]}){
   if(!host||!audioUrl)return;
   const clean=v=>String(v||'').replace(/\s+/g,' ').trim();
   const realSections=sections.map((body,i)=>({eyebrow:'MODULE LESSON · SECTION '+String(i+1).padStart(2,'0'),headline:clean(headings[i]||'Lesson section '+(i+1)),copy:clean(body)})).filter(x=>x.copy||x.headline);
