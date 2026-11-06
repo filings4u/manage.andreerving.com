@@ -1,11 +1,12 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2.58.0';
+import {mountNarratedLessonVideo} from './lesson-video-player.js?v=freight-audio-20261106';
 const db=createClient('https://gnfyidajbectlppsekzj.supabase.co','sb_publishable_DGt4HrHAwWyMt-0Xtzlfog_F18RnOyf');
 const $=id=>document.getElementById(id),params=new URLSearchParams(location.search),courseId=params.get('course');
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const adminPreview=true;
 const uid=v=>/^[0-9a-f-]{36}$/i.test(v||'');
 const type=t=>({text:'Article',video:'Video',download:'Download',quiz:'Quiz'}[t]||'Lesson');
-let user=null,modules=[],lessons=[],progress=[],position=0,working=false;
+let user=null,modules=[],lessons=[],progress=[],position=0,working=false,activeVideoPlayer=null;
 const done=id=>!!progress.find(p=>p.lesson_id===id&&p.completed);
 function message(text){$('player-status').hidden=false;$('player-status').textContent=text}
 function safeHTML(input){
@@ -181,7 +182,7 @@ async function enhanceClassroom(lesson){
  $('rc-resource-list').innerHTML='<button type="button" class="rc-resource-row" data-rc-resource="guide">▤ &nbsp; Written lesson guide →</button>'+ (audio?'<button type="button" class="rc-resource-row" data-rc-resource="audio">♫ &nbsp; Audio narration →</button>':'') +(lesson.resource_url&&lesson.allow_download?'<button type="button" class="rc-resource-row" data-rc-resource="resources">↓ &nbsp; Instructor resource →</button>':'');
  $('rc-resource-list').querySelectorAll('[data-rc-resource]').forEach(b=>b.onclick=()=>{setClassroomTab(b.dataset.rcResource);$('rc-tab-nav').scrollIntoView({behavior:'smooth',block:'start'})});
  $('rc-audio-pane').innerHTML='<h2>Listen to this lesson</h2><p>Audio narration of the lesson overview and example.</p><div id="rc-audio-tab-slot"></div>';
- const railAudio=$('rc-audio-slot');railAudio.innerHTML='<p class="rc-muted">No audio is attached to this lesson.</p>';
+ const railAudio=$('rc-audio-slot');railAudio.innerHTML='<p class="rc-muted">No audio is attached to this lesson.</p>';let artUrl='',narrationUrl='';
  const next=lessons[position+1];
  $('rc-next-lesson').textContent=next?next.title+' →':'Course completed';
  $('rc-next-lesson').disabled=!next;
@@ -198,21 +199,30 @@ async function enhanceClassroom(lesson){
      const url=image.path.startsWith('r2:')?await getR2Media(image.path):(await db.storage.from('andreerving-lms-resources').createSignedUrl(image.path,600)).data?.signedUrl;
      if(lessons[position]?.id!==currentId||!url)return;
      const img=document.createElement('img');img.className='rc-visual';img.src=url;img.alt=lesson.title+' educational illustration';
-     if(lesson.lesson_type!=='video')$('lesson-media').replaceChildren(img);
+     artUrl=url;if(lesson.lesson_type!=='video')$('lesson-media').replaceChildren(img);
    }catch(e){if(lessons[position]?.id===currentId&&lesson.lesson_type!=='video')$('lesson-media').innerHTML=''}
  }
  if(audio){
    try{
      const url=audio.path.startsWith('r2:')?await getR2Media(audio.path):(await db.storage.from('andreerving-lms-resources').createSignedUrl(audio.path,600)).data?.signedUrl;
      if(lessons[position]?.id!==currentId||!url)return;
-     addAudioPlayer($('rc-audio-slot'),url);
+     narrationUrl=url;addAudioPlayer($('rc-audio-slot'),url);
      addAudioPlayer($('rc-audio-tab-slot'),url);
    }catch(e){if(lessons[position]?.id===currentId)railAudio.textContent='Audio is temporarily unavailable.'}
+ }
+ if(lesson.lesson_type==='text'&&narrationUrl&&lessons[position]?.id===currentId){
+   const headings=[...parsed.querySelectorAll('h2')].map(h=>h.textContent.trim());
+   const sectionNodes=[...parsed.querySelectorAll('h2')].map(h=>h.nextElementSibling?.textContent?.trim()||'');
+   activeVideoPlayer=mountNarratedLessonVideo($('lesson-media'),{
+     title:lesson.title,
+     number:(modules.findIndex(m=>m.id===lesson.module_id)+1)+'.'+(Math.round((lesson.sort_order||10)/10)),
+     artworkUrl:artUrl,audioUrl:narrationUrl,sections:sectionNodes.slice(0,5),headings:headings.slice(0,5)
+   });
  }
 }
 async function showLesson(index){
  if(index<0||index>=lessons.length)return;
- clearPlayerMedia();position=index;const lesson=lessons[index];modules.forEach(m=>collapsedModules.add(m.id));collapsedModules.delete(lesson.module_id);
+ if(activeVideoPlayer){activeVideoPlayer.destroy();activeVideoPlayer=null}clearPlayerMedia();position=index;const lesson=lessons[index];modules.forEach(m=>collapsedModules.add(m.id));collapsedModules.delete(lesson.module_id);
  $('lesson-view').hidden=false;$('player-status').hidden=true;
  $('lesson-title').textContent=lesson.title;$('lesson-overline').textContent='LESSON '+(index+1)+' OF '+lessons.length+' · '+type(lesson.lesson_type).toUpperCase();
  $('lesson-subtitle').textContent=(modules.find(m=>m.id===lesson.module_id)?.title||'Course')+' · '+(lesson.duration_minutes||0)+' min';
