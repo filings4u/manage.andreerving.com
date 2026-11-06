@@ -84,7 +84,6 @@ function renderOutline(){
  $('modules').innerHTML=modules.map((m,mi)=>{
    const indices=lessons.map((l,i)=>l.module_id===m.id?i:-1).filter(i=>i>=0);
    const current=indices.includes(position);
-   if(current)collapsedModules.delete(m.id);
    const collapsed=collapsedModules.has(m.id);
    return '<section class="ae-outline-section"><button type="button" class="rc-module-toggle" data-module-toggle="'+esc(m.id)+'" aria-expanded="'+(!collapsed)+'"><span class="rc-module-index">'+String(mi+1).padStart(2,'0')+'</span><span class="rc-module-name">'+esc(m.title)+'<small style="display:block;font-weight:400;color:#b6cae0">'+indices.filter(i=>done(lessons[i].id)).length+'/'+indices.length+' lessons</small></span><span class="rc-module-caret">'+(collapsed?'⌄':'⌃')+'</span></button><div class="rc-module-lessons" '+(collapsed?'hidden':'')+'>'+indices.map((i)=>{
      const l=lessons[i],completed=done(l.id);
@@ -212,7 +211,7 @@ async function enhanceClassroom(lesson){
 }
 async function showLesson(index){
  if(index<0||index>=lessons.length)return;
- clearPlayerMedia();position=index;const lesson=lessons[index];
+ clearPlayerMedia();position=index;const lesson=lessons[index];collapsedModules.delete(lesson.module_id);
  $('lesson-view').hidden=false;$('player-status').hidden=true;
  $('lesson-title').textContent=lesson.title;$('lesson-overline').textContent='LESSON '+(index+1)+' OF '+lessons.length+' · '+type(lesson.lesson_type).toUpperCase();
  $('lesson-subtitle').textContent=(modules.find(m=>m.id===lesson.module_id)?.title||'Course')+' · '+(lesson.duration_minutes||0)+' min';
