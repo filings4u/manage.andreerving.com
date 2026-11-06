@@ -94,3 +94,21 @@
   text-align:center;
   overflow-wrap:anywhere;
 }
+
+
+/* Unified lesson images: contained, never oversized or horizontally overflowing */
+.ae-lesson-body figure.ae-media-block[data-ae-media="image"]{
+ display:block;box-sizing:border-box;width:100%;max-width:100%;
+ margin:20px 0 26px;padding:0;border:0;background:transparent;box-shadow:none;
+ overflow:hidden;
+}
+.ae-lesson-body figure.ae-media-block[data-ae-media="image"] img{
+ display:block;box-sizing:border-box;width:auto;max-width:min(100%,720px);
+ height:auto;max-height:420px;object-fit:contain;object-position:center;
+ border-radius:5px;margin:0 auto;
+}
+.ae-lesson-body figure.ae-media-block[data-ae-media="image"] figcaption{
+ display:block;margin:9px auto 0;max-width:720px;
+ color:#798a9d;font-size:11px;line-height:1.45;text-align:center;
+ overflow-wrap:anywhere;
+}
