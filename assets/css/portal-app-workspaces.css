@@ -141,3 +141,27 @@
  .workspace .panel{padding:16px}
  .workspace .support-grid{display:block}
 }
+
+/* Searchable content and operations workspaces */
+.ae-list-summary{display:grid;grid-template-columns:repeat(3,minmax(130px,.7fr)) minmax(240px,1.7fr);gap:13px;margin:0 0 20px}
+.ae-list-metric,.ae-list-summary-copy{background:#fff;border:1px solid #e1e8f1;border-radius:12px;padding:19px 21px;min-width:0;box-shadow:0 2px 12px #1b345008}
+.ae-list-metric span{display:block;color:#7d8da2;font-size:11px;font-weight:650}
+.ae-list-metric strong{display:block;font-size:27px;line-height:1.2;margin-top:8px;font-weight:850;letter-spacing:-.04em;color:#173251}
+.ae-list-summary-copy{display:flex;flex-direction:column;justify-content:center;background:linear-gradient(115deg,#172c49,#274969);color:#fff;border-color:#243c5c}
+.ae-list-summary-copy strong{font-size:16px;letter-spacing:-.03em}
+.ae-list-summary-copy span{font-size:11px;color:#c6d5e8;line-height:1.5;margin-top:6px}
+.ae-records-panel{padding:0!important;overflow:hidden}
+.ae-panel-heading{padding:22px 25px 12px}
+.ae-panel-heading h2{margin:7px 0 5px;font-size:19px!important}
+.ae-panel-heading p{color:#8090a4;font-size:12px;margin:0}
+.ae-record-toolbar{margin:0!important;padding:13px 25px 19px!important;display:flex;align-items:center;justify-content:space-between;gap:15px}
+.ae-record-toolbar input[type=search]{width:min(100%,420px);min-height:42px}
+.ae-records-panel .tablewrap{padding:0 17px 18px;border-radius:0;overflow-x:auto}
+.ae-records-panel table{white-space:normal}
+.ae-records-panel .row-actions button{white-space:nowrap;color:#275180}
+.ae-list-empty{display:grid;justify-items:center;gap:12px;padding:55px 25px;text-align:center;color:#7489a2}
+.ae-list-empty>span{font-size:34px;color:#b5c4d7}
+.ae-list-empty strong{font-size:14px;color:#405a7b;max-width:380px;line-height:1.5}
+.ae-list-empty button{background:#fff6e5;color:#916415;border:1px solid #ead099;border-radius:8px;padding:10px 17px;font-size:12px;font-weight:800}
+@media(max-width:1100px){.ae-list-summary{grid-template-columns:repeat(3,minmax(0,1fr))}.ae-list-summary-copy{grid-column:1/-1}}
+@media(max-width:680px){.ae-list-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.ae-list-summary-copy{grid-column:1/-1}.ae-record-toolbar{flex-direction:column;align-items:stretch}.ae-record-toolbar input[type=search]{width:100%}.ae-panel-heading{padding:18px 17px 10px}.ae-record-toolbar{padding:12px 17px!important}}
