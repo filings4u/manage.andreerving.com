@@ -436,6 +436,7 @@ export function createLMS({db,root,notify,safe,isCurrent}){
   function openRoute(part){
     const value="#/lms/"+part;
     if(location.hash!==value)history.pushState(null,"",value);
+    root.closest(".main")?.scrollTo({top:0,behavior:"instant"});
   }
   function renderEditor(){
     if(!s.editor)return render();
@@ -472,6 +473,13 @@ export function createLMS({db,root,notify,safe,isCurrent}){
       const leftovers=[...source.querySelectorAll("input,select,textarea")].filter(el=>!sections.some(g=>g.contains(el)));
       if(leftovers.length)throw new Error("Unable to organize all editor fields.");
     }
+    if(isCourse){
+      // Verify that every database field survives the visual regrouping.
+      const originalNames=fields.flatMap(label=>[...label.querySelectorAll("[name]")].map(input=>input.name));
+      const assignedNames=sections.flatMap(step=>[...step.querySelectorAll("[name]")].map(input=>input.name));
+      if(originalNames.length!==assignedNames.length||originalNames.some(name=>!assignedNames.includes(name)))
+        throw Error("Course field grouping is incomplete; no changes have been saved.");
+    }
     source.replaceWith(...sections);
     if(isCourse){
       const guide=by("ae-editor-guide");
@@ -500,7 +508,7 @@ export function createLMS({db,root,notify,safe,isCurrent}){
         by("ae-next-step").hidden=n===sections.length-1;
         by("ae-final-save").hidden=n!==sections.length-1;
         by("ae-editor-step-note").textContent="Step "+(n+1)+" of "+sections.length+" · "+groupNames[n].name;
-        root.querySelector(".ae-editor-hero")?.scrollIntoView({behavior:"smooth",block:"start"});
+        root.closest(".main")?.scrollTo({top:0,behavior:"smooth"});
       };
       const checkStep=n=>{
         const controls=[...sections[n].querySelectorAll("input,textarea,select")];
