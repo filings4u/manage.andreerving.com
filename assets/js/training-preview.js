@@ -69,20 +69,33 @@ function clearPlayerMedia(){
  playerMediaURLs.clear();
 }
 function quizQuestions(value){try{if(!String(value||'').startsWith('AE_QUIZ_V1:'))return [];const data=JSON.parse(value.slice(11));return Array.isArray(data.questions)?data.questions:[]}catch{return []}}
+const collapsedModules=new Set();
 function renderOutline(){
  const completed=lessons.filter(l=>done(l.id)).length,pct=lessons.length?Math.round(completed/lessons.length*100):0;
- $('course-progress-label').textContent=adminPreview?'Administrator preview':pct+'% complete';$('course-progress-bar').style.width=adminPreview?'0%':pct+'%';$('outline-progress').textContent=adminPreview?'Learner view · no progress is recorded':completed+' of '+lessons.length+' lessons completed';
- $('modules').innerHTML=modules.map(m=>'<section class="ae-outline-section"><h3>'+esc(m.title)+'</h3>'+lessons.map((l,i)=>l.module_id===m.id?'<button type="button" data-lesson-index="'+i+'" class="ae-outline-step '+(i===position?'active ':'')+(done(l.id)?'completed':'')+'" '+(i===position?'aria-current="step"':'')+'><span class="ae-step-state">'+(done(l.id)?'✓':i+1)+'</span><span class="ae-step-copy"><strong>'+esc(l.title)+'</strong><small>'+type(l.lesson_type)+(l.duration_minutes?' · '+l.duration_minutes+' min':'')+'</small></span></button>':'').join('')+'</section>').join('');
+ $('course-progress-label').textContent=adminPreview?'Administrator preview':pct+'% complete';
+ $('course-progress-bar').style.width=adminPreview?'0%':pct+'%';
+ $('outline-progress').textContent=adminPreview?'Learner view · progress is not recorded':completed+' of '+lessons.length+' lessons completed';
+ $('rc-sidebar-course').textContent=$('course-title').textContent;
+ $('rc-sidebar-count').textContent=modules.length+' Modules · '+lessons.length+' Lessons';
+ $('rc-sidebar-progress').style.width=adminPreview?'0%':pct+'%';
+ $('rc-sidebar-percent').textContent=adminPreview?'Administrator preview':pct+'% complete';
+ $('rc-lesson-progress-bar').style.width=adminPreview?'0%':pct+'%';
+ $('rc-lesson-progress-text').textContent=adminPreview?'Preview mode — no progress recorded':pct+'% complete · '+completed+' of '+lessons.length+' lessons';
+ $('modules').innerHTML=modules.map((m,mi)=>{
+   const indices=lessons.map((l,i)=>l.module_id===m.id?i:-1).filter(i=>i>=0);
+   const current=indices.includes(position);
+   if(current)collapsedModules.delete(m.id);
+   const collapsed=collapsedModules.has(m.id);
+   return '<section class="ae-outline-section"><button type="button" class="rc-module-toggle" data-module-toggle="'+esc(m.id)+'" aria-expanded="'+(!collapsed)+'"><span class="rc-module-index">'+String(mi+1).padStart(2,'0')+'</span><span class="rc-module-name">'+esc(m.title)+'<small style="display:block;font-weight:400;color:#b6cae0">'+indices.filter(i=>done(lessons[i].id)).length+'/'+indices.length+' lessons</small></span><span class="rc-module-caret">'+(collapsed?'⌄':'⌃')+'</span></button><div class="rc-module-lessons" '+(collapsed?'hidden':'')+'>'+indices.map((i)=>{
+     const l=lessons[i],completed=done(l.id);
+     return '<button type="button" data-lesson-index="'+i+'" class="ae-outline-step '+(i===position?'active ':'')+(completed?'completed':'')+'" '+(i===position?'aria-current="step"':'')+'><span class="ae-step-state">'+(completed?'✓':(l.lesson_type==='quiz'?'?':String((l.sort_order||0)/10)))+'</span><span class="ae-step-copy"><strong>'+esc(l.title)+'</strong><small>'+type(l.lesson_type)+(l.duration_minutes?' · '+l.duration_minutes+' min':'')+'</small></span></button>';
+   }).join('')+'</div></section>';
+ }).join('');
  $('modules').querySelectorAll('[data-lesson-index]').forEach(b=>b.onclick=()=>showLesson(Number(b.dataset.lessonIndex)));
- const view=$('lesson-view');
- let completion=$('ae-course-completion');
+ $('modules').querySelectorAll('[data-module-toggle]').forEach(b=>b.onclick=()=>{const id=b.dataset.moduleToggle;if(collapsedModules.has(id))collapsedModules.delete(id);else collapsedModules.add(id);renderOutline()});
+ const view=$('lesson-view');let completion=$('ae-course-completion');
  if(view&&!completion){completion=document.createElement('div');completion.id='ae-course-completion';completion.className='ae-course-completion';view.querySelector('.ae-player-footer')?.before(completion)}
- if(completion){
-   const finished=!adminPreview&&lessons.length>0&&completed===lessons.length;
-   completion.hidden=!finished;
-   completion.textContent=finished?'Congratulations! You have completed every lesson in this course. Your progress has been saved.':'';
- }
-
+ if(completion){const finished=!adminPreview&&lessons.length>0&&completed===lessons.length;completion.hidden=!finished;completion.textContent=finished?'Congratulations! You have completed every lesson in this course. Your progress has been saved.':''}
 }
 function renderQuiz(lesson){
  const qs=quizQuestions(lesson.content_html);
@@ -134,6 +147,69 @@ async function renderDownload(lesson){
   finally{if(button.isConnected){button.disabled=false;button.textContent="↓ Download course document"}}
  };
 }
+function setClassroomTab(tab){
+ const found=['guide','audio','transcript','takeaways','resources'].includes(tab)?tab:'guide';
+ document.querySelectorAll('[data-rc-tab]').forEach(b=>{const active=b.dataset.rcTab===found;b.classList.toggle('active',active);b.setAttribute('aria-selected',String(active))});
+ document.querySelectorAll('[data-rc-pane]').forEach(p=>p.hidden=p.dataset.rcPane!==found);
+}
+function lessonText(lesson){
+ const doc=new DOMParser().parseFromString(lesson.content_html||'','text/html');
+ doc.querySelectorAll('figure,script,style').forEach(n=>n.remove());
+ return doc.body.innerHTML;
+}
+function lessonFigures(lesson){
+ const doc=new DOMParser().parseFromString(lesson.content_html||'','text/html');
+ return [...doc.querySelectorAll('figure[data-ae-media][data-ae-path]')].map(f=>({kind:f.getAttribute('data-ae-media'),path:f.getAttribute('data-ae-path'),label:f.getAttribute('data-ae-label')||'Course media'}));
+}
+function addAudioPlayer(host,url){
+ host.replaceChildren();
+ const player=document.createElement('audio');player.controls=true;player.preload='metadata';player.src=url;player.className='rc-audio-player';player.setAttribute('controlsList','nodownload noplaybackrate');player.addEventListener('contextmenu',e=>e.preventDefault());host.append(player);
+}
+async function enhanceClassroom(lesson){
+ const currentId=lesson.id,media=lessonFigures(lesson),image=media.find(f=>f.kind==='image'),audio=media.find(f=>f.kind==='audio');
+ const module=modules.find(m=>m.id===lesson.module_id);
+ const intro=lessonText(lesson);
+ const parsed=new DOMParser().parseFromString(intro,'text/html');
+ const paragraphs=[...parsed.querySelectorAll('p')].map(p=>p.textContent.trim()).filter(Boolean);
+ const headings=[...parsed.querySelectorAll('h2,h3')].map(e=>e.textContent.trim()).filter(Boolean);
+ $('rc-breadcrumb').textContent=($('course-title').textContent||'Course')+'  ›  '+(module?.title||'Module')+'  ›  '+lesson.title;
+ $('lesson-description').textContent=lesson.lesson_type==='quiz'?'Test your knowledge of this module.':(paragraphs[0]||module?.description||'');
+ $('rc-transcript-pane').innerHTML='<h2>Written lesson text</h2>'+safeHTML(intro);
+ $('rc-takeaways-pane').innerHTML='<h2>Key takeaways</h2><ul class="rc-learning-points">'+(headings.length?headings.slice(0,5):['Lesson overview','Practical application','Knowledge check']).map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul>';
+ const resources=lesson.resource_url&&lesson.allow_download?'<p>Your instructor has attached a downloadable resource to this lesson. Open the Resources section of the lesson guide to access it.</p>':'<p>No downloadable files are attached to this lesson. Use the written lesson and practice assignment as your study resources.</p>';
+ const extra=module?.title?.includes('Compliance')?'<p><a href="https://www.fmcsa.dot.gov/registration/broker-registration" target="_blank" rel="noopener noreferrer">FMCSA Broker Registration — official reference ↗</a></p>':'';
+ $('rc-resources-pane').innerHTML='<h2>Lesson resources</h2>'+resources+extra;
+ $('rc-resource-list').innerHTML='<div class="rc-resource-row">▤ &nbsp; Written lesson guide</div><div class="rc-resource-row">♫ &nbsp; Audio narration</div>'+(lesson.resource_url&&lesson.allow_download?'<div class="rc-resource-row">↓ &nbsp; Instructor resource available</div>':'');
+ $('rc-audio-pane').innerHTML='<h2>Listen to this lesson</h2><p>Audio narration of the lesson overview and example.</p><div id="rc-audio-tab-slot"></div>';
+ const railAudio=$('rc-audio-slot');railAudio.innerHTML='<p class="rc-muted">No audio is attached to this lesson.</p>';
+ const next=lessons[position+1];
+ $('rc-next-lesson').textContent=next?next.title+' →':'Course completed';
+ $('rc-next-lesson').disabled=!next;
+ const quiz=lessons.find(l=>l.module_id===lesson.module_id&&l.lesson_type==='quiz');
+ $('rc-quiz-description').textContent=quiz?'Answer '+quizQuestions(quiz.content_html).length+' questions in this module knowledge check.':'No module quiz is assigned.';
+ $('rc-start-quiz').disabled=!quiz;
+ $('rc-start-quiz').textContent=quiz&&quiz.id===lesson.id?'Current knowledge check':'Go to Module Quiz';
+ $('rc-start-quiz').onclick=()=>{if(quiz)showLesson(lessons.findIndex(l=>l.id===quiz.id))};
+ $('rc-next-lesson').onclick=()=>{if(next)showLesson(position+1)};
+ if(lesson.lesson_type==='quiz'){$('rc-tab-nav').hidden=true;$('lesson-media').innerHTML='';setClassroomTab('guide');return}
+ $('rc-tab-nav').hidden=false;setClassroomTab('guide');
+ if(image){
+   try{
+     const url=image.path.startsWith('r2:')?await getR2Media(image.path):(await db.storage.from('andreerving-lms-resources').createSignedUrl(image.path,600)).data?.signedUrl;
+     if(lessons[position]?.id!==currentId||!url)return;
+     const img=document.createElement('img');img.className='rc-visual';img.src=url;img.alt=lesson.title+' educational illustration';
+     if(lesson.lesson_type!=='video')$('lesson-media').replaceChildren(img);
+   }catch(e){if(lessons[position]?.id===currentId&&lesson.lesson_type!=='video')$('lesson-media').innerHTML=''}
+ }
+ if(audio){
+   try{
+     const url=audio.path.startsWith('r2:')?await getR2Media(audio.path):(await db.storage.from('andreerving-lms-resources').createSignedUrl(audio.path,600)).data?.signedUrl;
+     if(lessons[position]?.id!==currentId||!url)return;
+     addAudioPlayer($('rc-audio-slot'),url);
+     addAudioPlayer($('rc-audio-tab-slot'),url);
+   }catch(e){if(lessons[position]?.id===currentId)railAudio.textContent='Audio is temporarily unavailable.'}
+ }
+}
 async function showLesson(index){
  if(index<0||index>=lessons.length)return;
  clearPlayerMedia();position=index;const lesson=lessons[index];
@@ -145,8 +221,8 @@ async function showLesson(index){
  $('lesson-complete').hidden=adminPreview;
  $('lesson-complete').disabled=adminPreview||done(lesson.id);$('lesson-complete').textContent=done(lesson.id)?'✓ Completed':'Mark complete ✓';
  if(lesson.lesson_type==='quiz')renderQuiz(lesson);
- else if(lesson.lesson_type==='download'){await renderDownload(lesson)}else $('lesson-body').innerHTML=safeHTML(lesson.content_html)||'<p class="ae-lesson-empty">Content for this lesson is being prepared.</p>';
- if(lesson.lesson_type==='text')void hydrateLessonMedia();
+ else if(lesson.lesson_type==='download'){await renderDownload(lesson)}else $('lesson-body').innerHTML=safeHTML(lesson.content_html)||'<p class="ae-lesson-empty">Lesson materials are unavailable.</p>';
+ if(lesson.lesson_type==='text')void enhanceClassroom(lesson); else if(lesson.lesson_type==='quiz')void enhanceClassroom(lesson); else void enhanceClassroom(lesson);
  if(lesson.lesson_type==='video'){
    if(/^cfstream:[a-f0-9]{32}$/i.test(lesson.video_url||''))await streamPlayback(lesson);
    else if(lesson.video_url&&/^https:\/\//i.test(lesson.video_url))$('lesson-media').innerHTML='<div class="ae-media-loading"><a href="'+esc(lesson.video_url)+'" target="_blank" rel="noopener noreferrer">Open legacy video ↗</a></div>';
@@ -198,7 +274,7 @@ async function init(){
    link.href="./"+backRoute;
  });
  if(!lessons.length){message('No lessons have been added to this course yet.');renderOutline();return}
- $('lesson-prev').onclick=()=>showLesson(position-1);$('lesson-next').onclick=()=>showLesson(position+1);$('lesson-complete').onclick=complete;
+ $('lesson-prev').onclick=()=>showLesson(position-1);$('lesson-next').onclick=()=>showLesson(position+1);$('lesson-complete').onclick=complete;document.querySelectorAll('[data-rc-tab]').forEach(b=>b.onclick=()=>setClassroomTab(b.dataset.rcTab));
  const desired=params.get('lesson'),start=Math.max(0,lessons.findIndex(l=>l.id===desired));await showLesson(start);
 }
 init().catch(e=>message('Unable to load the course player: '+e.message));
