@@ -1,0 +1,2529 @@
+{
+  "course_id": "2d95d514-baa7-4641-b107-6265256a504b",
+  "course": "Freight Broker Training",
+  "version": 1,
+  "format": "16:9",
+  "stage": "Production scripts and storyboards; final MP4 videos pending",
+  "lessons": [
+    {
+      "lesson_id": "e9fb2f0b-a3f8-43b3-b430-bd643dec3db8",
+      "number": "1.1",
+      "module": "Freight Brokerage Foundations",
+      "title": "Welcome to Freight Brokerage Training",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Welcome to Freight Brokerage Training",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Welcome to Freight Brokerage Training."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "A freight broker arranges transportation rather than physically carrying freight. During this course you will follow a fictional shipment from a shipper's request through carrier payment. Keep a separate document for every quote, approval, rate confirmation, status update, and invoice. That habit is not busywork: a defensible transaction record is one of the most important brokerage controls."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "Imagine that a manufacturer asks for a truck tomorrow but has not provided pallet weight or delivery hours. The correct first step is to request missing details, not to guess a price. At the end of training, your portfolio should prove that you can gather those details and coordinate the move."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Create a training folder named Brokerage Practice and add folders for Prospects, Quotes, Carriers, Active Loads, Delivered Loads and Accounting."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/e9fb2f0b-a3f8-43b3-b430-bd643dec3db8.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/e9fb2f0b-a3f8-43b3-b430-bd643dec3db8.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "f3f3a036-8206-4ddd-a4e2-f8416c140fac",
+      "number": "1.2",
+      "module": "Freight Brokerage Foundations",
+      "title": "Understanding the Freight Transportation Industry",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Understanding the Freight Transportation Industry",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Understanding the Freight Transportation Industry."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "A typical supply chain connects producers, warehouses, distributors, retail locations and final recipients. The shipper initiates the transportation need; the consignee receives it; a motor carrier supplies equipment and driver capacity. Warehousing and transportation decisions interact: missed appointments can cause storage costs, stockouts or production interruptions."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A Chicago manufacturer loads pallets for a Dallas distribution center. The broker confirms pickup access in Chicago, delivery appointment in Dallas, freight weight and equipment specifications. Even when both facilities are open, a narrow appointment window can change which carrier is suitable."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Map one shipment through shipper, broker, carrier and consignee. Record the information each party must exchange."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/f3f3a036-8206-4ddd-a4e2-f8416c140fac.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/f3f3a036-8206-4ddd-a4e2-f8416c140fac.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "f1c102b6-3231-4e22-8a69-0c6a891b5615",
+      "number": "1.3",
+      "module": "Freight Brokerage Foundations",
+      "title": "What Is a Freight Broker?",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "What Is a Freight Broker?",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to What Is a Freight Broker?."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "A property broker arranges or offers to arrange transportation by authorized motor carriers for compensation. Brokers differ from carriers, which physically transport property, and freight forwarders, which take on distinct responsibilities. A broker should never represent itself as the actual carrier when it is arranging the truck."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "If the shipper agrees to $2,400 and an authorized carrier agrees to $1,950, the broker's gross profit is $450 and gross margin is 18.75%. Those amounts are not net earnings because office costs, software, claims, financing and labor remain. The broker must also verify the carrier before tendering the load."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Describe the parties and calculate gross profit and margin on the Chicago-to-Dallas shipment."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/f1c102b6-3231-4e22-8a69-0c6a891b5615.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/f1c102b6-3231-4e22-8a69-0c6a891b5615.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "feb9748e-c71e-4a8f-94d6-991f4a835a56",
+      "number": "1.4",
+      "module": "Freight Brokerage Foundations",
+      "title": "How a Freight Brokerage Makes Money",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "How a Freight Brokerage Makes Money",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to How a Freight Brokerage Makes Money."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "A broker generally earns the spread between the amount charged to the customer and the amount owed to the motor carrier. Gross profit equals customer revenue minus carrier transportation cost. Gross margin measures gross profit as a percentage of customer revenue, while markup measures gross profit as a percentage of carrier cost. Mixing up the two produces pricing mistakes."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "For a $2,000 carrier buy rate, a 20% markup creates a $2,400 sell rate and a 16.67% margin. To earn a true 20% gross margin, divide $2,000 by 0.80: the required sell rate is $2,500. Accessorial costs can reduce profit if they are not approved and passed through appropriately."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Calculate a quote using both 20% markup and 20% margin, then reconcile the difference."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/feb9748e-c71e-4a8f-94d6-991f4a835a56.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/feb9748e-c71e-4a8f-94d6-991f4a835a56.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "8dfe225a-3d99-457b-9eda-9714d697fc1f",
+      "number": "1.5",
+      "module": "Freight Brokerage Foundations",
+      "title": "Freight Broker vs. Freight Broker Agent",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Freight Broker vs. Freight Broker Agent",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Freight Broker vs. Freight Broker Agent."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "An independent brokerage operates using its own authority, security arrangements, customer agreements and compliance program. A broker agent works under another brokerage's authority and usually receives a negotiated share of gross profit. An agent still needs to follow the brokerage's screening, contracting, security and customer processes."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "If an agent brings a load earning $500 gross profit and receives a 60% split, the agent earns $300 before any separate contractual deductions. The brokerage retains $200 to support authority, technology, insurance, accounting and supervision. Compare the split alongside access to systems, liability allocation and payment timing, not just the headline percentage."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Build a table comparing startup cost, authority, billing, control and commission for independent brokerage versus agency."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/8dfe225a-3d99-457b-9eda-9714d697fc1f.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/8dfe225a-3d99-457b-9eda-9714d697fc1f.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "19e620b2-a0ba-4da2-a19d-1d09ee35c32a",
+      "number": "1.6",
+      "module": "Freight Brokerage Foundations",
+      "title": "A Day in the Life of a Freight Broker",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "A Day in the Life of a Freight Broker",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to A Day in the Life of a Freight Broker."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "A broker's workday is a sequence of time-sensitive commitments. Begin by reviewing active loads and overnight exceptions; confirm today's pickups and deliveries; respond to shipper requests; source and vet carriers; update stakeholders; then reconcile PODs and billing documents. Prospecting remains necessary even on busy operating days."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "At 8 a.m. two loads are late, one pickup has no confirmed truck and three customers request quotes. Resolve safety and service exposures first, secure the unassigned pickup, then issue researched quotes. Document the reason for each exception and its next owner so the problem does not disappear between shifts."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Build a priority list for five hypothetical loads and three customer requests."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/19e620b2-a0ba-4da2-a19d-1d09ee35c32a.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/19e620b2-a0ba-4da2-a19d-1d09ee35c32a.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "04b8f6d6-00bf-465d-88c4-6ff0e67a027b",
+      "number": "2.1",
+      "module": "Starting a Freight Brokerage Business",
+      "title": "Choosing Your Business Model",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Choosing Your Business Model",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Choosing Your Business Model."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "A generalist brokerage offers many equipment types and lanes but faces broader competition and operational complexity. A niche brokerage focuses on an industry, equipment type or geographic corridor. An independent agent model lowers some setup burdens while leaving the agent dependent on the host broker's contract, permissions and back office."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A beginner with existing food-manufacturer contacts might target Midwest dry van lanes before attempting refrigerated produce or oversize machinery. Narrow specialization helps develop rate knowledge and a vetted carrier network. A clear niche does not prohibit other shipments; it prioritizes sales effort and operating competence."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Select a niche, three target lanes and two types of customers you will deliberately decline at launch."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/04b8f6d6-00bf-465d-88c4-6ff0e67a027b.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/04b8f6d6-00bf-465d-88c4-6ff0e67a027b.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "950ef212-6459-490f-a855-6d044d5d32a8",
+      "number": "2.2",
+      "module": "Starting a Freight Brokerage Business",
+      "title": "Creating Your Business Plan",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Creating Your Business Plan",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Creating Your Business Plan."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "A useful brokerage plan identifies the target shipper, service problem, expected gross profit per load, startup expense, cash reserves and repeatable sales activity. Revenue projections should use assumptions that can be tested: loads per customer per week, close rate, carrier buy rate and collection terms."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "Assume two customers each tender three loads weekly and average gross profit is $350. That is six loads and $2,100 weekly gross profit before overhead, not guaranteed cash flow. Test what happens if a customer pauses shipments or if average buy rates rise."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Prepare conservative, expected and optimistic 90-day projections with explicit assumptions."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/950ef212-6459-490f-a855-6d044d5d32a8.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/950ef212-6459-490f-a855-6d044d5d32a8.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "3c2c7c5d-b88d-4ccf-99be-64f5df9331af",
+      "number": "2.3",
+      "module": "Starting a Freight Brokerage Business",
+      "title": "Establishing Your Business",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Establishing Your Business",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Establishing Your Business."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Business entity formation and federal brokerage authority are separate decisions. An LLC or corporation may provide business structure and administrative benefits, but it does not by itself authorize brokerage activity. Maintain consistent legal names, EIN details, banking records, business address and contracting information across filings."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A brokerage registers an LLC with its state and opens a business bank account. It still cannot broker regulated interstate motor carrier transportation solely because the LLC exists. The operator must secure the applicable federal registration and financial responsibility before operating."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Create a checklist for entity filing, EIN, bank account, bookkeeping, registrations and professional advisers."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/3c2c7c5d-b88d-4ccf-99be-64f5df9331af.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/3c2c7c5d-b88d-4ccf-99be-64f5df9331af.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "bd09a474-8afb-4d27-9723-8500a5313b21",
+      "number": "2.4",
+      "module": "Starting a Freight Brokerage Business",
+      "title": "Building Your Brand and Business Identity",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Building Your Brand and Business Identity",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Building Your Brand and Business Identity."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Professional branding tells a shipper what you arrange, the lanes you understand and how you communicate. Make the broker role explicit. A credible brand emphasizes reliable tracking, responsive support and vetted carrier access rather than unverifiable promises of being the cheapest."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "Compare two introductions: 'We move anything anywhere at the lowest cost' offers little credibility. 'We arrange Midwest-to-Texas dry van loads with appointment coordination and proactive delivery updates' gives a defined service promise that can be measured."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Draft a homepage introduction, business email signature and two-sentence shipper value proposition."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/bd09a474-8afb-4d27-9723-8500a5313b21.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/bd09a474-8afb-4d27-9723-8500a5313b21.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "ce888c2b-d85c-40e7-ac29-ac55ab293ee5",
+      "number": "2.5",
+      "module": "Starting a Freight Brokerage Business",
+      "title": "Planning Startup Costs and Cash Reserves",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Planning Startup Costs and Cash Reserves",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Planning Startup Costs and Cash Reserves."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Startup expenses include operating authority filings, financial security premiums or trust funding, software, communications, marketing and professional support. Working capital is separate: a broker may need to pay a carrier before collecting from the shipper. Growth in load count can create a cash shortage even while gross profit rises."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A broker owes carriers $12,000 this week but will not collect $15,000 of customer invoices for 30 days. That timing gap requires liquidity or an agreed financing arrangement. A factoring fee may improve timing but reduce net profit."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Create a startup budget separating one-time costs, monthly overhead and a carrier-payment reserve."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/ce888c2b-d85c-40e7-ac29-ac55ab293ee5.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/ce888c2b-d85c-40e7-ac29-ac55ab293ee5.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "f3895137-2ce8-4458-b275-361eb54e4e69",
+      "number": "2.6",
+      "module": "Starting a Freight Brokerage Business",
+      "title": "Designing Your Brokerage Workflow",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Designing Your Brokerage Workflow",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Designing Your Brokerage Workflow."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "A shipment should move through clear stages: lead, qualified customer, tender received, rate quoted, tender accepted, carrier approved, booked, picked up, in transit, delivered, invoiced and settled. Each transition has a required verification or document. Never treat 'carrier found' as equivalent to 'carrier approved.'"
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A coordinator sees a carrier's name on a load board. The load should remain in sourcing until authority, identity and coverage checks pass. Once accepted, save the rate confirmation and contact details in the load record before dispatch."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Draw your workflow and identify one stop/go control for customer credit, carrier approval and payment release."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/f3895137-2ce8-4458-b275-361eb54e4e69.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/f3895137-2ce8-4458-b275-361eb54e4e69.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "e697af63-b988-41b3-8705-8bf5f9f8261d",
+      "number": "3.1",
+      "module": "Licensing, Authority & Compliance",
+      "title": "Federal vs. State Regulatory Requirements",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Federal vs. State Regulatory Requirements",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Federal vs. State Regulatory Requirements."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Federal property-broker registration is administered by FMCSA; state-level entity, tax and local business rules are separate. Some commodities, shipping modes or activities involve additional specialized rules. Training should start with ordinary U.S. domestic property brokerage and clearly flag activities that require professional or legal review."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A company incorporated in Illinois wants to arrange interstate truckloads. Its Illinois registration does not substitute for FMCSA authority. It should also check local tax, business and contract obligations rather than assuming federal registration covers everything."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Write a responsibility matrix for FMCSA, state entity registration, taxation and professional insurance advice."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/e697af63-b988-41b3-8705-8bf5f9f8261d.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/e697af63-b988-41b3-8705-8bf5f9f8261d.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "127a05fe-31c1-44bd-932f-3d0c66be2b4c",
+      "number": "3.2",
+      "module": "Licensing, Authority & Compliance",
+      "title": "Obtaining Freight Broker Operating Authority",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Obtaining Freight Broker Operating Authority",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Obtaining Freight Broker Operating Authority."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Before applying, confirm the registered legal business name, contact information and business classification. Follow FMCSA's current registration process, monitor the application status and verify that required process-agent and financial-security filings are accepted. Do not present application submission as equivalent to active authority."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "An applicant submits registration paperwork but the surety bond is not yet effective. The applicant should not begin brokering regulated shipments based solely on a receipt or pending registration number. The status must show authority is effective."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Create a simulated registration packet checklist with a separate column for proof of completed filings."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/127a05fe-31c1-44bd-932f-3d0c66be2b4c.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/127a05fe-31c1-44bd-932f-3d0c66be2b4c.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "06fd8644-b748-404f-8328-32035abc5256",
+      "number": "3.3",
+      "module": "Licensing, Authority & Compliance",
+      "title": "BOC-3 and Process Agents",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "BOC-3 and Process Agents",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to BOC-3 and Process Agents."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "The BOC-3 filing designates agents authorized to receive legal process for the registrant. It is not cargo insurance and does not replace a broker's surety bond or trust fund. Use an appropriate process-agent provider and verify that the required filing is present in official records."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A new broker purchases a BOC-3 service but never confirms filing acceptance. When another compliance document is delayed, the owner learns that the application remains incomplete. Create a check-and-record routine instead of relying on emailed purchase receipts."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Review a fictional registration packet and identify missing filing evidence."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/06fd8644-b748-404f-8328-32035abc5256.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/06fd8644-b748-404f-8328-32035abc5256.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "e7e173e0-ce50-4b0f-823e-9a497022ed2f",
+      "number": "3.4",
+      "module": "Licensing, Authority & Compliance",
+      "title": "BMC-84 Surety Bond vs. BMC-85 Trust",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "BMC-84 Surety Bond vs. BMC-85 Trust",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to BMC-84 Surety Bond vs. BMC-85 Trust."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Federal property brokers generally must maintain $75,000 financial security through a BMC-84 surety bond or a qualifying BMC-85 trust arrangement. The bond usually requires a premium and underwriting; the trust requires qualifying security assets. Effective January 16, 2026, financial-responsibility providers and qualifying trust assets are subject to updated FMCSA rules."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A broker secures a BMC-84 bond with a $75,000 penal amount. The broker does not pay the full $75,000 as a routine premium; the quoted premium depends on underwriting. By contrast, an eligible trust arrangement involves qualifying assets securing the required amount. If available security drops below $75,000 and is not replenished within seven calendar days, authority may be suspended."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Compare hypothetical bond premiums with the liquidity effect of funding a trust and review the current FMCSA overview."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/e7e173e0-ce50-4b0f-823e-9a497022ed2f.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/e7e173e0-ce50-4b0f-823e-9a497022ed2f.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "662995af-5248-450a-8b04-e59f4f173501",
+      "number": "3.5",
+      "module": "Licensing, Authority & Compliance",
+      "title": "Broker Records, Contracts and Transparency",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Broker Records, Contracts and Transparency",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Broker Records, Contracts and Transparency."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Under 49 CFR 371.3, a broker must keep a record of each transaction for three years. Required items include consignor identity, originating carrier information, bill-of-lading or freight-bill identification, broker compensation and freight-charge collection/payment details. Parties to the brokered transaction have record-review rights. Distinguish existing rules from proposed transparency amendments."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "For a shipment with freight bill FB-104, record the shipper, carrier registration details, amount charged, compensation, carrier payment and dates. Organize these in a retrievable file even if the transportation-management system stores them in separate screens."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Create a transaction-record checklist using the current text of 49 CFR 371.3 and reconcile it to a model load."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/662995af-5248-450a-8b04-e59f4f173501.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/662995af-5248-450a-8b04-e59f4f173501.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "0c34c4ac-ab5b-44c2-828c-9bd4123efda9",
+      "number": "3.6",
+      "module": "Licensing, Authority & Compliance",
+      "title": "Maintaining Compliance After Launch",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Maintaining Compliance After Launch",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Maintaining Compliance After Launch."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Compliance continues after the authority becomes active. Monitor operating status and financial security, keep legal names and records consistent, review service agreements and avoid accepting specialized freight outside the brokerage's capability. Assign responsibility for checking the status rather than assuming software will catch every problem."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "Your bond provider sends a notice of nonrenewal. Do not wait for a shipper to discover an authority problem. Contact the provider immediately, document any replacement filing, and verify official status before tendering new freight."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Create a calendar for weekly authority checks, monthly account reconciliation and quarterly contract reviews."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/0c34c4ac-ab5b-44c2-828c-9bd4123efda9.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/0c34c4ac-ab5b-44c2-828c-9bd4123efda9.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "b9f2bea2-2c1c-400e-8d6d-297cc3be6a28",
+      "number": "4.1",
+      "module": "Freight, Equipment & Transportation Modes",
+      "title": "Understanding Freight Characteristics",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Understanding Freight Characteristics",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Understanding Freight Characteristics."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "A useful tender specifies commodity, pieces or pallets, total gross weight, dimensions, packaging, stackability, special handling and pickup/delivery constraints. A vague commodity description may hide reefer requirements, weight restrictions or loading equipment needs. Ask for accurate data before offering an equipment or price commitment."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "'Twenty pallets of packaged goods' is insufficient if the shipper has not provided total weight or pallet height. A load of 20 pallets weighing 45,000 pounds may have very different capacity requirements than 20 pallets weighing 10,000 pounds."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Create a complete intake form and identify five missing details from a vague load request."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/b9f2bea2-2c1c-400e-8d6d-297cc3be6a28.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/b9f2bea2-2c1c-400e-8d6d-297cc3be6a28.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "6bb054ed-ceff-4b64-9116-1a14016db86f",
+      "number": "4.2",
+      "module": "Freight, Equipment & Transportation Modes",
+      "title": "Dry Van Freight",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Dry Van Freight",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Dry Van Freight."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Dry vans are enclosed trailers used for many general commodities that do not require active temperature control. Trailer interior dimensions, door opening, floor capacity and equipment availability vary, so exact requirements must be verified with the carrier. Confirm loading method, seal procedure and whether the shipper requires swing doors or specific trailer conditions."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A customer tenders palletized boxed household products and asks for a 53-foot dry van. Before booking, verify gross weight, pallet height, dock loading compatibility and any cargo securement requirements. The broker should not infer that every trailer can accommodate every pallet arrangement."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Write a dry van quote request that includes commodity, total weight, trailer length and appointment details."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/6bb054ed-ceff-4b64-9116-1a14016db86f.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/6bb054ed-ceff-4b64-9116-1a14016db86f.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "2e37038d-9826-4824-b7df-6e3b293c2b94",
+      "number": "4.3",
+      "module": "Freight, Equipment & Transportation Modes",
+      "title": "Refrigerated and Temperature-Controlled Freight",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Refrigerated and Temperature-Controlled Freight",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Refrigerated and Temperature-Controlled Freight."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Refrigerated shipments require documented temperature and product instructions, including whether equipment should be precooled and whether continuous operation is needed. Different commodities can have incompatible settings. A broker should communicate the shipper's exact requirement rather than inventing a universal temperature for 'food.'"
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A shipper requests chilled dairy but the tender lacks a temperature range. The broker must obtain the exact instructions before confirmation. If a reefer unit alarms in transit, notify the carrier and shipper promptly, capture temperature evidence and coordinate the next step."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Create a reefer dispatch checklist with set point, operating mode, seal and exception contacts."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/2e37038d-9826-4824-b7df-6e3b293c2b94.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/2e37038d-9826-4824-b7df-6e3b293c2b94.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "dac4a26e-5fc9-459d-966e-7a9c3a3475de",
+      "number": "4.4",
+      "module": "Freight, Equipment & Transportation Modes",
+      "title": "Flatbed and Specialized Freight",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Flatbed and Specialized Freight",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Flatbed and Specialized Freight."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Flatbed, step deck and removable gooseneck trailers solve different height and loading requirements. Oversize freight may require special permits and routing; securement requirements are the motor carrier's responsibility, though brokers must avoid promising unsuitable equipment. Exact dimensions determine equipment choice more reliably than the item name."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A piece of industrial machinery is taller than a normal enclosed trailer permits. Instead of sending a generic flatbed quote, collect length, width, height, total weight, pickup method and destination restrictions. Consult a qualified specialized carrier about equipment and permitted movement."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Prepare an oversize freight intake sheet and identify when a specialized carrier review is mandatory."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/dac4a26e-5fc9-459d-966e-7a9c3a3475de.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/dac4a26e-5fc9-459d-966e-7a9c3a3475de.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "734f81b6-fcb1-4a53-9a74-c065f9af9061",
+      "number": "4.5",
+      "module": "Freight, Equipment & Transportation Modes",
+      "title": "Intermodal, Rail, Air and Ocean Freight",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Intermodal, Rail, Air and Ocean Freight",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Intermodal, Rail, Air and Ocean Freight."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Different transportation modes trade off transit speed, cost, capacity and handling. Intermodal freight may involve a truck drayage leg, rail movement and final delivery; each interchange introduces an appointment and custody handoff. Ocean or air arrangements may require specialist forwarders and different contractual roles."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A container arrives at an inland terminal after rail transit. The drayage carrier needs the container identification, availability status, appointment information and delivery address. Demurrage or storage exposure can arise when container pickup is delayed."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Draw a truck-rail-truck move and mark every handoff and potential fee."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/734f81b6-fcb1-4a53-9a74-c065f9af9061.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/734f81b6-fcb1-4a53-9a74-c065f9af9061.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "ce0041eb-a9b1-4cd7-befb-ba62284a9881",
+      "number": "4.6",
+      "module": "Freight, Equipment & Transportation Modes",
+      "title": "LTL Freight and Freight Classification",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "LTL Freight and Freight Classification",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to LTL Freight and Freight Classification."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Less-than-truckload shipments share trailer space with other customers' freight. Pricing often depends on origin, destination, weight, pallet dimensions, freight classification and service accessorials. NMFC classification rules changed in 2025 for many commodities; do not reuse a historical class without checking the current item and density requirements."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A shrink-wrapped pallet measures 48 by 40 by 60 inches and weighs 500 pounds. Its volume is 80,000/1,728, or about 55.56 cubic feet; its density is about 9 pounds per cubic foot. That density may inform classification but does not independently determine the correct class for every commodity."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Calculate density for three pallet sizes and research the applicable current NMFC item."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/ce0041eb-a9b1-4cd7-befb-ba62284a9881.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/ce0041eb-a9b1-4cd7-befb-ba62284a9881.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "2ecb23fa-1ab8-44ac-a95a-5b4c4e5a923e",
+      "number": "5.1",
+      "module": "Freight Markets, Lanes & Pricing",
+      "title": "Understanding Freight Supply and Demand",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Understanding Freight Supply and Demand",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Understanding Freight Supply and Demand."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Truckload rates respond to the balance between shippers needing capacity and carriers offering it. Harvest seasons, holidays, severe weather, fuel prices and regional manufacturing cycles can shift that balance. A quoted lane price is a time-specific estimate, not an assurance that a truck will accept the load."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A produce market suddenly requires many reefers at the same time that regional trucks are scarce. An old rate from last month may no longer secure service. Recheck available capacity and give the shipper a price with a valid-until time."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Write a market update identifying two demand factors and two capacity factors for a lane."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/2ecb23fa-1ab8-44ac-a95a-5b4c4e5a923e.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/2ecb23fa-1ab8-44ac-a95a-5b4c4e5a923e.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "c67ba261-be6a-422d-9ad0-4d7c5ff940ee",
+      "number": "5.2",
+      "module": "Freight Markets, Lanes & Pricing",
+      "title": "What Is a Freight Lane?",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "What Is a Freight Lane?",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to What Is a Freight Lane?."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "A freight lane is a recurring origin-destination pattern. Lane pricing depends on mileage, geographic access, directional freight balance and the carrier's ability to find the next load. Deadhead is unpaid travel to pickup or repositioning; it can make a short haul unprofitable."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A carrier sits 120 miles from your shipper and would run 600 loaded miles. The carrier effectively travels 720 miles before the next load, so dividing the quoted buy rate only by loaded miles understates its operating exposure. This affects negotiation and truck availability."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Compare two fictional carriers with different deadhead and loaded-mile totals."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/c67ba261-be6a-422d-9ad0-4d7c5ff940ee.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/c67ba261-be6a-422d-9ad0-4d7c5ff940ee.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "3f98a864-c2d1-41b0-a6e1-3c42177bbc93",
+      "number": "5.3",
+      "module": "Freight Markets, Lanes & Pricing",
+      "title": "Using Load Boards and Market Intelligence",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Using Load Boards and Market Intelligence",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Using Load Boards and Market Intelligence."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "A load board is a capacity-matching tool, not a substitute for carrier screening. Compare equipment, pickup date, lane, postings, historical rate trends and source credibility. Rates published on a board may reflect asking prices or historical data rather than completed transactions."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "Three carriers quote $1,800, $1,950 and $2,200 for the same lane. Before choosing the cheapest, verify that each quote includes the same equipment, appointment timing and accessorial terms and that each carrier passes compliance screening."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Write a rate-research note with a range, assumptions and carrier-verification status."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/3f98a864-c2d1-41b0-a6e1-3c42177bbc93.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/3f98a864-c2d1-41b0-a6e1-3c42177bbc93.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "d548b97d-4561-405b-868b-fe5159eaa2f2",
+      "number": "5.4",
+      "module": "Freight Markets, Lanes & Pricing",
+      "title": "Calculating Freight Transportation Costs",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Calculating Freight Transportation Costs",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Calculating Freight Transportation Costs."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "A carrier's price generally reflects time, distance, fuel, empty miles, tolls, labor, equipment utilization and service demands. Brokers should use these drivers to understand bids, not to assume they know each carrier's exact expenses. Accessorials such as detention and extra stops must be captured in the original request."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "Two shipments travel the same 500 miles, but one has a six-hour warehouse delay and an extra stop. Their transportation costs are not necessarily equal. Record stops and appointment windows in the tender so a quoted rate is comparable and enforceable."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Estimate cost drivers for a sample 500-mile haul with one additional stop."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/d548b97d-4561-405b-868b-fe5159eaa2f2.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/d548b97d-4561-405b-868b-fe5159eaa2f2.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "c125fc47-4e2e-477e-8e81-fe79551febd9",
+      "number": "5.5",
+      "module": "Freight Markets, Lanes & Pricing",
+      "title": "Creating Profitable Shipper Quotes",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Creating Profitable Shipper Quotes",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Creating Profitable Shipper Quotes."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Start with a qualified carrier buy estimate, add a risk allowance and determine the required gross margin. A quote should state origin, destination, dates, equipment, commodity assumptions, included stops and excluded accessorials. A low sell rate that cannot purchase reliable capacity is not a workable quote."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "With a $1,950 carrier cost and 20% target gross margin, the minimum sell rate before other costs is $1,950/0.8, or $2,437.50. Quoting $2,100 might win a customer but leaves only $150 gross profit and may not justify the exposure."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Build a written quote with a target 20% gross margin and clear expiration time."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/c125fc47-4e2e-477e-8e81-fe79551febd9.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/c125fc47-4e2e-477e-8e81-fe79551febd9.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "909e8938-ab21-454d-af0f-85bc83ebd6f2",
+      "number": "5.6",
+      "module": "Freight Markets, Lanes & Pricing",
+      "title": "Spot Rates, Contract Rates and Pricing Strategy",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Spot Rates, Contract Rates and Pricing Strategy",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Spot Rates, Contract Rates and Pricing Strategy."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Spot pricing addresses an individual shipment; contract pricing covers recurring needs under agreed rules. Contract freight benefits from volume predictability but can expose the broker to market-rate changes. Define minimum volume, fuel treatment, rate-review triggers and service parameters before committing to repeated loads."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A shipper offers three weekly loads for six months. The broker should not blindly use today's cheapest spot rate for a fixed six-month commitment. Evaluate seasonal capacity, carrier commitments and how surcharges or exceptional costs will be handled."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Prepare a side-by-side spot and contract proposal with assumptions."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/909e8938-ab21-454d-af0f-85bc83ebd6f2.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/909e8938-ab21-454d-af0f-85bc83ebd6f2.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "af7548ba-11ac-41ef-86a6-07225618ba63",
+      "number": "6.1",
+      "module": "Finding Shippers & Building a Sales Pipeline",
+      "title": "Identifying Your Ideal Shipper",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Identifying Your Ideal Shipper",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Identifying Your Ideal Shipper."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "An ideal shipper profile describes a real freight need you can serve reliably. Segment prospects by industry, equipment, recurring lanes, shipment frequency, buying process and service issues. A manufacturer that loads multiple dry vans weekly is very different from an individual moving household goods."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A broker specializing in Midwest-to-Texas dry van traffic looks for packaging manufacturers and regional distributors rather than calling every business in the phone book. The company can describe a service commitment for appointment updates and vetted carriers that matches those accounts."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Define a target shipper by commodity, locations, lanes, shipment frequency and decision-maker role."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/af7548ba-11ac-41ef-86a6-07225618ba63.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/af7548ba-11ac-41ef-86a6-07225618ba63.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "13dc61e6-832c-459b-8d3d-c73dcadb62e3",
+      "number": "6.2",
+      "module": "Finding Shippers & Building a Sales Pipeline",
+      "title": "Where and How to Find Shippers",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Where and How to Find Shippers",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Where and How to Find Shippers."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Research companies that manufacture, import, distribute or wholesale physical goods. Public industrial directories, company websites, trade groups and referrals can identify facilities. Check the actual business and its shipping locations before contacting it; company headquarters is not always the pickup facility."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A food manufacturer lists corporate headquarters in Chicago but ships from a nearby distribution center. A useful prospect record includes the shipping facility and likely mode, not merely the corporate address. Research a relevant operations contact and prepare a question about the company's transportation process."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Build ten prospect records including a source, facility, likely freight type and reason for contacting."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/13dc61e6-832c-459b-8d3d-c73dcadb62e3.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/13dc61e6-832c-459b-8d3d-c73dcadb62e3.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "528c123f-3991-458a-ab92-4c711b4ba562",
+      "number": "6.3",
+      "module": "Finding Shippers & Building a Sales Pipeline",
+      "title": "Building a Prospecting Database",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Building a Prospecting Database",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Building a Prospecting Database."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "A CRM should support follow-up, not become a list of unverified names. Capture business, contact role, email, phone, shipping location, target lanes, last contact, next action, service fit and lead stage. Keep factual notes separate from assumptions and do not retain unnecessary personal information."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "Two prospects both request a rate, but one ships weekly and one needs a one-time pickup. Mark the first as a potential recurring opportunity and schedule a specific follow-up. If a decision maker asks not to be contacted, respect the request and update the record."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Create a 25-row prospect tracker and define consistent stages from New to Qualified, Quoted, Won and Closed."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/528c123f-3991-458a-ab92-4c711b4ba562.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/528c123f-3991-458a-ab92-4c711b4ba562.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "efcf4c1e-2886-4b94-bc35-cca836843e78",
+      "number": "6.4",
+      "module": "Finding Shippers & Building a Sales Pipeline",
+      "title": "Cold Calling and Professional Outreach",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Cold Calling and Professional Outreach",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Cold Calling and Professional Outreach."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "A professional introduction identifies the broker, explains a relevant capability and requests a brief conversation rather than reciting an elaborate sales pitch. Research the prospect's business, use accurate claims, honor opt-out requests and follow applicable marketing rules. Ask a specific service-oriented question."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A concise opening might be: 'I arrange dry van freight from northern Illinois into Texas. Are you the person responsible for outbound transportation, or is there someone else I should contact?' If the shipper says the current provider is adequate, offer a meaningful lane-specific reason to speak again instead of arguing."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Write a 45-second call opening, a voicemail and a follow-up email with one clear call to action."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/efcf4c1e-2886-4b94-bc35-cca836843e78.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/efcf4c1e-2886-4b94-bc35-cca836843e78.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "baba6d19-d6fc-404e-a09a-8c6b37bbc9af",
+      "number": "6.5",
+      "module": "Finding Shippers & Building a Sales Pipeline",
+      "title": "Conducting a Shipper Needs Assessment",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Conducting a Shipper Needs Assessment",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Conducting a Shipper Needs Assessment."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Discovery focuses on lane origins and destinations, weekly volume, seasonality, freight characteristics, pickup and delivery windows, billing requirements, reporting expectations and common failures. Do not promise service or a price before knowing enough to evaluate the load."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A shipper says its current provider often misses a Wednesday delivery appointment. Ask about pickup cutoff, normal transit window, receiving schedule, shipment weight and what happens when a truck is late. The sale may depend more on a recovery process than a cheaper price."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Develop twelve discovery questions and role-play the shipper who complains about missed appointments."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/baba6d19-d6fc-404e-a09a-8c6b37bbc9af.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/baba6d19-d6fc-404e-a09a-8c6b37bbc9af.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "619f490b-25b8-4b86-b174-c06165076370",
+      "number": "6.6",
+      "module": "Finding Shippers & Building a Sales Pipeline",
+      "title": "Following Up, Selling and Onboarding Shippers",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Following Up, Selling and Onboarding Shippers",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Following Up, Selling and Onboarding Shippers."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Send a concise recap of the shipper's stated needs, agreed next step, and quote assumptions. Before accepting freight, check customer credit and any required service agreement, payment terms, reporting rules and account contacts. A verbal sales win is not the same as operational readiness."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A customer says 'send a truck tomorrow' but has never completed credit approval or signed required terms. Explain the onboarding requirements, obtain the load details and follow the brokerage's authorization process before tendering the freight."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Draft an onboarding checklist that includes credit review, signed agreement, contacts, quote acceptance and first-load setup."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/619f490b-25b8-4b86-b174-c06165076370.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/619f490b-25b8-4b86-b174-c06165076370.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "6205b793-66f7-446f-b570-b3d3d2bb1106",
+      "number": "7.1",
+      "module": "Finding, Vetting & Managing Carriers",
+      "title": "Finding Qualified Motor Carriers",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Finding Qualified Motor Carriers",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Finding Qualified Motor Carriers."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Find capacity by equipment, origin market, destination preference and schedule. A strong carrier prospect list includes registration identifiers, verified contacts, lanes, trailer type and past performance. Posting a load is a sourcing step only; it does not establish that a respondent is eligible or trustworthy."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "For an urgent dry van pickup in Chicago, shortlist three carriers with nearby equipment, then confirm each candidate's true operating entity and dispatcher contact before discussing final booking. An attractive rate without a qualified truck cannot protect the shipper."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Build a three-carrier shortlist with equipment, availability, verification status and alternate capacity."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/6205b793-66f7-446f-b570-b3d3d2bb1106.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/6205b793-66f7-446f-b570-b3d3d2bb1106.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "93cc96e1-eb19-4289-ba94-c391d6e09c71",
+      "number": "7.2",
+      "module": "Finding, Vetting & Managing Carriers",
+      "title": "Understanding Carrier Authority and Safety",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Understanding Carrier Authority and Safety",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Understanding Carrier Authority and Safety."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Review FMCSA information for operating authority status, legal name and registration identifiers. Evaluate public safety information carefully and recognize that individual metrics may be incomplete or require context. Establish written qualification standards and retain the evidence used for each approval."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A caller provides a carrier MC number but the legal name differs from the party named in its rate request. Stop booking and independently confirm the registration and authorized contact. Do not dismiss discrepancies as mere clerical errors without verification."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Evaluate three fictional carriers using authority status, safety indicators and identity consistency."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/93cc96e1-eb19-4289-ba94-c391d6e09c71.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/93cc96e1-eb19-4289-ba94-c391d6e09c71.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "ccd64143-5601-4b3c-97ca-06a2846bdf48",
+      "number": "7.3",
+      "module": "Finding, Vetting & Managing Carriers",
+      "title": "Verifying Carrier Identity and Insurance",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Verifying Carrier Identity and Insurance",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Verifying Carrier Identity and Insurance."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Fraud prevention requires independent callbacks using trustworthy contact sources, not telephone numbers supplied in a suspicious email. Verify operating authority, policy details and coverage adequacy for the particular commodity. Certificates alone are not definitive proof of an active policy; confirm through appropriate channels."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A new dispatcher asks you to replace the approved carrier's email address immediately before pickup and sends an updated certificate. Place the tender on hold, call the carrier using a previously verified number, and validate coverage before releasing shipping instructions."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Prepare an identity and insurance verification log showing source, reviewer, timestamp and approval outcome."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/ccd64143-5601-4b3c-97ca-06a2846bdf48.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/ccd64143-5601-4b3c-97ca-06a2846bdf48.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "981c321f-923d-49d4-9b94-91c2dfc895e7",
+      "number": "7.4",
+      "module": "Finding, Vetting & Managing Carriers",
+      "title": "Carrier Onboarding and Agreements",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Carrier Onboarding and Agreements",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Carrier Onboarding and Agreements."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Carrier onboarding collects the legal entity's registration identifiers, tax documentation, agreement acceptance, authorized dispatch contact, insurance evidence and verified remittance instructions. Use one controlled record rather than scattering documents across unrelated email threads. Apply the brokerage's contracting rules consistently."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A carrier sends a signed agreement and asks to be paid into an account whose owner name differs from the carrier's legal entity. Do not approve payment until the discrepancy is independently verified according to policy. Save who approved the change and the evidence supporting it."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Assemble an onboarding checklist with a separate approval for bank-detail updates."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/981c321f-923d-49d4-9b94-91c2dfc895e7.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/981c321f-923d-49d4-9b94-91c2dfc895e7.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "f43e0bb2-a0f4-4a7f-a8a0-22d581c301ee",
+      "number": "7.5",
+      "module": "Finding, Vetting & Managing Carriers",
+      "title": "Developing Strong Carrier Relationships",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Developing Strong Carrier Relationships",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Developing Strong Carrier Relationships."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Carriers value accurate load details, realistic appointments, timely replies, fair rates and predictable payment. Relationship quality should be assessed with measurable outcomes such as pickup reliability, on-time delivery, claims, document timeliness and communication. A reliable recurring carrier may outperform an unfamiliar low bid."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A carrier consistently covers the same Dallas lane but recently missed two appointments. Discuss the cause, compare the events with the agreed service standard and define a corrective action. Retain the carrier only if performance and compliance remain acceptable."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Develop a carrier scorecard and a monthly performance review agenda."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/f43e0bb2-a0f4-4a7f-a8a0-22d581c301ee.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/f43e0bb2-a0f4-4a7f-a8a0-22d581c301ee.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "01f4f59b-5d69-4e44-ac15-36287055ccfc",
+      "number": "7.6",
+      "module": "Finding, Vetting & Managing Carriers",
+      "title": "Preventing Carrier Fraud and Double Brokering",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Preventing Carrier Fraud and Double Brokering",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Preventing Carrier Fraud and Double Brokering."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Identity theft and unauthorized rebrokering can redirect a shipment to an unapproved party. Red flags include a last-minute dispatcher change, mismatched email domains, unfamiliar pickup drivers, altered insurance documents and unexplained requests to change carrier names. Establish a positive verification at pickup with the actual approved carrier."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A warehouse is instructed to load a trailer displaying a different company name than the carrier on the rate confirmation. Pause loading and verify the driver, equipment and approved operating entity. Document the escalation and advise the shipper rather than assuming the substitution is harmless."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Write an incident response for a suspected unauthorized carrier substitution before pickup."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/01f4f59b-5d69-4e44-ac15-36287055ccfc.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/01f4f59b-5d69-4e44-ac15-36287055ccfc.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "7bb836cc-3fbf-4cd8-8380-ba883f5c9bba",
+      "number": "8.1",
+      "module": "Negotiation, Quoting & Booking Loads",
+      "title": "Understanding a Load Tender",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Understanding a Load Tender",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Understanding a Load Tender."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "A tender should specify pickup and delivery addresses, contact information, schedule, commodity, weight, equipment, special handling, references and agreed commercial terms. Check whether the load can legally and safely fit the specified equipment and whether the appointment windows are achievable."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "The tender reads '48 pallets, food products, Dallas tomorrow.' Ask whether pallets are double-stackable, the total weight, required temperature, pickup time and receiving hours. Do not quote a firm price for a tender that could require equipment unlike what was requested."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Mark missing fields in a draft tender and prepare a clarification email."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/7bb836cc-3fbf-4cd8-8380-ba883f5c9bba.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/7bb836cc-3fbf-4cd8-8380-ba883f5c9bba.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "83192be5-ed55-4dde-a4f7-9e882a1c8e3e",
+      "number": "8.2",
+      "module": "Negotiation, Quoting & Booking Loads",
+      "title": "Gathering Market Rates Before Negotiating",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Gathering Market Rates Before Negotiating",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Gathering Market Rates Before Negotiating."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Build a rate range from current lane research, equipment fit, capacity, day of week and service requirements. Distinguish a quoted carrier buy rate from an indicative trend. Establish a maximum buy rate and target gross profit before speaking to the shipper so negotiations are disciplined."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A shipper wants a next-day pickup in a tight market. Available trucks are quoting $2,050–$2,250, not the historical $1,800 reference. Base your customer quote on credible bookable capacity rather than presenting the old number as an available rate."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Document three rate sources, a carrier buy range and the assumptions behind the customer quote."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/83192be5-ed55-4dde-a4f7-9e882a1c8e3e.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/83192be5-ed55-4dde-a4f7-9e882a1c8e3e.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "e4fcd3dc-0f3b-462a-853e-868f810e10d9",
+      "number": "8.3",
+      "module": "Negotiation, Quoting & Booking Loads",
+      "title": "Negotiating with Shippers",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Negotiating with Shippers",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Negotiating with Shippers."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Negotiate service outcomes as well as price. Describe the equipment, appointment plan, tracking cadence and exception response included in the offer. If the customer demands a lower price, explore lawful service tradeoffs or route flexibility rather than claiming that required services can be provided at a loss indefinitely."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A buyer asks you to cut $250 from a $2,600 quote. Explain which cost drivers are fixed, confirm whether pickup timing is flexible and request a recurring-lane commitment if appropriate. Record the revised terms before tendering."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Role-play a price objection and write a confirmation note containing final service terms."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/e4fcd3dc-0f3b-462a-853e-868f810e10d9.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/e4fcd3dc-0f3b-462a-853e-868f810e10d9.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "75e09151-5893-4a21-946e-8bad6a3940a3",
+      "number": "8.4",
+      "module": "Negotiation, Quoting & Booking Loads",
+      "title": "Negotiating with Carriers",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Negotiating with Carriers",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Negotiating with Carriers."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Ask the carrier to confirm equipment, current location, driver availability, transit feasibility, included charges and tracking requirements. Focus on mutual clarity rather than pressure tactics. Document the agreed all-in amount and any potential accessorial triggers; otherwise a cheap verbal rate can become an expensive dispute."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A carrier accepts $1,900 but later claims an extra $150 for a second pickup listed in the tender. If the second stop was known, clarify whether it was included before confirming the booking. Never assume an unspecified stop is free."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Prepare a carrier negotiation worksheet showing first ask, counteroffer, final buy rate and conditions."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/75e09151-5893-4a21-946e-8bad6a3940a3.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/75e09151-5893-4a21-946e-8bad6a3940a3.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "a2af4c36-2b0c-446d-942e-e7873fba8e5a",
+      "number": "8.5",
+      "module": "Negotiation, Quoting & Booking Loads",
+      "title": "Creating and Sending Rate Confirmations",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Creating and Sending Rate Confirmations",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Creating and Sending Rate Confirmations."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "A rate confirmation records the carrier identity, load number, shipment addresses, dates, commodity, equipment, agreed amount, accessorial rules and special requirements. It should correspond with the accepted tender and broker-carrier agreement. Get documented acceptance and retain the file."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "If the carrier rate confirmation specifies Tuesday pickup but the shipper changed the appointment to Monday, do not dispatch using conflicting instructions. Issue a corrected confirmation and obtain acknowledgment so the parties operate from the same schedule."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Draft a complete rate confirmation and identify the authorization record."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/a2af4c36-2b0c-446d-942e-e7873fba8e5a.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/a2af4c36-2b0c-446d-942e-e7873fba8e5a.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "703cc0e4-8bc5-4f8c-bd0b-50b074633d87",
+      "number": "8.6",
+      "module": "Negotiation, Quoting & Booking Loads",
+      "title": "Booking and Dispatching Your First Load",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Booking and Dispatching Your First Load",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Booking and Dispatching Your First Load."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Booking is complete only after the carrier is screened, price and equipment agreed, instructions acknowledged and pickup details communicated. Provide the correct reference numbers and contacts. Confirm that real-time tracking and escalation ownership are in place before the truck arrives."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A driver reports arriving at pickup but cannot enter because the reference number does not match. The broker should promptly verify the correct number with the shipper, communicate it to the driver and record the event and any detention exposure."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Produce a mock dispatch packet from approved tender through accepted carrier confirmation."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/703cc0e4-8bc5-4f8c-bd0b-50b074633d87.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/703cc0e4-8bc5-4f8c-bd0b-50b074633d87.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "e332b5ed-19dd-430d-950d-8cd13ed78592",
+      "number": "9.1",
+      "module": "Freight Operations & Load Management",
+      "title": "The Complete Load Lifecycle",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "The Complete Load Lifecycle",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to The Complete Load Lifecycle."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Each load passes through tender acceptance, carrier sourcing, verification, dispatch, pickup confirmation, in-transit milestones, delivery, POD collection and settlement. A transportation management system should have explicit states and exceptions so staff know what still needs attention."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A load shows as 'in transit' but no pickup confirmation exists. Treat the status as unverified and call the approved carrier using a trusted contact. Confirm pickup date, seal/reference details and ETA before telling the customer the freight moved."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Build a stage-gate checklist identifying the evidence required at each state transition."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/e332b5ed-19dd-430d-950d-8cd13ed78592.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/e332b5ed-19dd-430d-950d-8cd13ed78592.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "24ca0bcc-956e-47a4-b811-11fd26c4cafd",
+      "number": "9.2",
+      "module": "Freight Operations & Load Management",
+      "title": "Scheduling Pickup and Delivery",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Scheduling Pickup and Delivery",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Scheduling Pickup and Delivery."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Appointments depend on facility hours, transit time, loading/unloading practices, route restrictions and the carrier's legal driving plan. Never promise transit that is not operationally realistic. Record local time zones and distinguish 'first come, first served' from a firm appointment."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A shipper in Chicago releases freight at 4 p.m. and a receiver in Dallas offers an 8 a.m. next-day appointment. Before agreeing, check distance, traffic, driver availability and hours-of-service limits with the carrier. Change the commitment if the timing is infeasible."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Create pickup and delivery instructions including local time zones and emergency contacts."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/24ca0bcc-956e-47a4-b811-11fd26c4cafd.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/24ca0bcc-956e-47a4-b811-11fd26c4cafd.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "9da5f920-3b3d-476e-baae-adcc2035320c",
+      "number": "9.3",
+      "module": "Freight Operations & Load Management",
+      "title": "Tracking Loads and Communicating Updates",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Tracking Loads and Communicating Updates",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Tracking Loads and Communicating Updates."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Track actual events, not just planned milestones. Record arrival at pickup, loading complete, departure, location or ETA updates, arrival at delivery, unloading and POD. Customers should receive meaningful alerts when the plan changes rather than waiting to discover a missed appointment."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A driver estimates delivery at noon, two hours after the appointment. Tell the shipper and receiver what is known, when the ETA will be reconfirmed and who is coordinating a new appointment. Keep the message factual and avoid blaming the carrier prematurely."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Write three customer updates: on-time pickup, delay detected and delivered/POD pending."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/9da5f920-3b3d-476e-baae-adcc2035320c.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/9da5f920-3b3d-476e-baae-adcc2035320c.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "0b48ef06-84be-4c77-a0d0-c8db72da4c35",
+      "number": "9.4",
+      "module": "Freight Operations & Load Management",
+      "title": "Managing Delays and Service Failures",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Managing Delays and Service Failures",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Managing Delays and Service Failures."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "When problems occur, prioritize safety, facts, mitigation and documentation. Identify whether a missed pickup, breakdown, weather event or rejection changes the shipper's obligations or delivery commitments. Maintain a timeline of verified decisions and promised callbacks."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A driver reports a mechanical breakdown 150 miles from destination. Verify location and freight safety, obtain the carrier's repair or recovery plan, notify the customer and assess appointment impact. Do not arrange another truck without proper authority and consent."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Prepare an incident timeline and a recovery communication for a breakdown."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/0b48ef06-84be-4c77-a0d0-c8db72da4c35.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/0b48ef06-84be-4c77-a0d0-c8db72da4c35.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "e97df487-7f2f-4018-b4eb-e27ff2cb794f",
+      "number": "9.5",
+      "module": "Freight Operations & Load Management",
+      "title": "Handling Accessorial Charges",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Handling Accessorial Charges",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Handling Accessorial Charges."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Detention, layover, truck ordered not used, lumper and extra-stop charges require clear contract terms and supporting evidence. Record check-in, loading/unloading times, facility cause and approved amounts. Disputes often arise because parties have different assumptions about free time."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A truck checks in at 9 a.m., leaves at 3 p.m. and the rate confirmation allows two hours of free loading time. Potential billable delay is four hours, subject to the agreed contract, cause and evidence. Confirm with the shipper before billing disputed charges."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Reconcile check-in/out timestamps against a fictional detention clause."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/e97df487-7f2f-4018-b4eb-e27ff2cb794f.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/e97df487-7f2f-4018-b4eb-e27ff2cb794f.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "0f1fc546-686c-4740-890a-d5ad7fc5d8a3",
+      "number": "9.6",
+      "module": "Freight Operations & Load Management",
+      "title": "Closing and Reviewing a Delivered Load",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Closing and Reviewing a Delivered Load",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Closing and Reviewing a Delivered Load."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "A delivered load is not financially complete until POD, rate confirmation, carrier charges and customer billing are reconciled. Review any shortage, damage, seal issue or exception and attach supporting evidence. Close the operational record only when the accounting handoff is clear."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "The POD shows a shortage of two cases while the driver's earlier pickup count shows a full shipment. Flag the discrepancy, preserve available evidence and notify the responsible parties before issuing a clean-delivery statement."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Create a load-closeout checklist covering POD, exceptions, invoices and carrier payment."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/0f1fc546-686c-4740-890a-d5ad7fc5d8a3.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/0f1fc546-686c-4740-890a-d5ad7fc5d8a3.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "f53e34f8-669e-48ab-b3b9-6fb0ffb4cafb",
+      "number": "10.1",
+      "module": "Documents, Billing & Financial Management",
+      "title": "Essential Freight Brokerage Documents",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Essential Freight Brokerage Documents",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Essential Freight Brokerage Documents."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "The shipper agreement establishes customer-facing service and commercial obligations; the broker-carrier agreement governs broker and carrier relationships; the rate confirmation sets the load-specific agreement; the bill of lading evidences receipt and carriage details; the POD documents delivery. These files serve different purposes."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A carrier sends a delivery receipt but the signed rate confirmation is missing. Accounting cannot confidently reconcile accessorial charges from a delivery receipt alone. Maintain all the relevant records under a single load reference."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Build a mock load file and label the purpose of each document."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/f53e34f8-669e-48ab-b3b9-6fb0ffb4cafb.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/f53e34f8-669e-48ab-b3b9-6fb0ffb4cafb.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "3bc7d6b9-43d8-499f-ada6-e63ea061d584",
+      "number": "10.2",
+      "module": "Documents, Billing & Financial Management",
+      "title": "Creating Accurate Shipper Invoices",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Creating Accurate Shipper Invoices",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Creating Accurate Shipper Invoices."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Customer billing should match the accepted sell rate and documented, approved accessorials. Include the correct customer name, invoice number, load reference, service dates and payment terms; attach the POD or other agreed supporting records. An inaccurate invoice can delay collections and damage trust."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A $2,400 freight quote includes one pickup and one delivery. The carrier later requests a $100 additional-stop fee. Do not bill the shipper automatically; determine whether the second stop was ordered and approved under the agreed terms."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Generate an invoice and tie each line item to a contract, quote or documented approval."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/3bc7d6b9-43d8-499f-ada6-e63ea061d584.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/3bc7d6b9-43d8-499f-ada6-e63ea061d584.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "253d603f-eba2-4ea0-80e2-424ca7022c1a",
+      "number": "10.3",
+      "module": "Documents, Billing & Financial Management",
+      "title": "Processing Carrier Payments",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Processing Carrier Payments",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Processing Carrier Payments."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Reconcile the carrier invoice to the signed rate confirmation, agreed accessorials and proof of delivery. Check whether the carrier assigned payment to a factor. Payment destination changes deserve independent verification to prevent fraud, even when an email appears to come from an existing contact."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A carrier's normal remittance is unchanged for months, then an email requests payment to a new bank account. Pause the change, call a trusted previously verified number and record the approval path before changing payment data."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Prepare a carrier payable checklist with a distinct bank-change verification control."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/253d603f-eba2-4ea0-80e2-424ca7022c1a.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/253d603f-eba2-4ea0-80e2-424ca7022c1a.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "0ec96b18-6798-4df1-a5c5-9f320964e8ec",
+      "number": "10.4",
+      "module": "Documents, Billing & Financial Management",
+      "title": "Understanding Factoring and Credit",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Understanding Factoring and Credit",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Understanding Factoring and Credit."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Credit analysis protects against shippers who cannot or will not pay on time. Factoring can accelerate cash receipts in exchange for a fee and contractual conditions, but it changes economics and administrative workflow. Distinguish a shipper's credit assessment from a carrier's factoring assignment."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A brokerage sells $10,000 of receivables to a factor for a hypothetical 3% fee, yielding $9,700 before any other adjustments. That fee affects net economics and should not be treated as freight transportation cost without a consistent accounting policy."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Compare ordinary collections with a hypothetical factoring arrangement and list the key contractual questions."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/0ec96b18-6798-4df1-a5c5-9f320964e8ec.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/0ec96b18-6798-4df1-a5c5-9f320964e8ec.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "ecaabb9a-4ab3-4f8c-bea8-65e653e45a57",
+      "number": "10.5",
+      "module": "Documents, Billing & Financial Management",
+      "title": "Tracking Revenue, Margin and Cash Flow",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Tracking Revenue, Margin and Cash Flow",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Tracking Revenue, Margin and Cash Flow."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Measure revenue, carrier cost, gross profit, gross margin and overhead separately. Cash flow follows actual collection and payment timing, not the booking date. Use per-load profitability and aging reports to reveal accounts that consume capacity while creating little value."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "Three loads each sell for $2,500. If carrier costs are $2,000, $2,200 and $2,450, gross profits are $500, $300 and $50. The third load creates revenue but leaves little room for operating expenses or problems."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Create a six-load profit table and identify which load requires a pricing review."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/ecaabb9a-4ab3-4f8c-bea8-65e653e45a57.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/ecaabb9a-4ab3-4f8c-bea8-65e653e45a57.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "788383c0-8af0-47bc-89a9-a3257464d5ee",
+      "number": "10.6",
+      "module": "Documents, Billing & Financial Management",
+      "title": "Building Financial Controls",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Building Financial Controls",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Building Financial Controls."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Define who can approve carrier onboarding, rate changes, customer credit and payment instructions. Segregate duties when practical and create an auditable exception log. Reconciliation compares what was promised, executed, billed and paid, revealing duplicate charges or missing income."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "One employee creates a new carrier record and attempts a $9,000 payment to it on the same day. A separate reviewer should verify approved documents, shipment evidence and bank information before funds leave the business."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Design an approval workflow for new vendor payments and rate adjustments."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/788383c0-8af0-47bc-89a9-a3257464d5ee.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/788383c0-8af0-47bc-89a9-a3257464d5ee.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "4f640db2-e01e-4c33-9243-28bb992ba089",
+      "number": "11.1",
+      "module": "Risk, Fraud Prevention & Problem Resolution",
+      "title": "Understanding Freight Brokerage Risk",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Understanding Freight Brokerage Risk",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Understanding Freight Brokerage Risk."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Brokers face exposures from failed service, unauthorized carriers, fraud, cargo damage, unpaid charges and poorly drafted contracts. Not every risk is covered by the same insurance. Review the actual agreement and insurance terms with qualified advisers rather than promising blanket protection."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A cargo loss occurs after a motor carrier made an unapproved equipment substitution. The broker's response should focus on facts, agreement obligations, preserving records, timely notifications and preventing further loss—not an assumption that any policy automatically covers the claim."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Create a risk register ranking loss, payment, service, contract and cybersecurity scenarios by severity and likelihood."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/4f640db2-e01e-4c33-9243-28bb992ba089.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/4f640db2-e01e-4c33-9243-28bb992ba089.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "8429d299-126e-43e2-b7a2-4f556e676996",
+      "number": "11.2",
+      "module": "Risk, Fraud Prevention & Problem Resolution",
+      "title": "Cargo Claims, Loss and Damage",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Cargo Claims, Loss and Damage",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Cargo Claims, Loss and Damage."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "At delivery, document damaged packaging, shortage counts, seal discrepancies and any notation on the POD. Preserve photographs, invoices, shipping papers, communications and timestamps. Notify the carrier, shipper and insurers as appropriate; do not make admissions or promises of payment without authority."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "The consignee signs the POD noting three crushed cartons. Ask for clear photographs, the value of affected goods, shipment identifiers and records of loading condition. Keep the affected parties informed and follow applicable notice and claim procedures."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Write an incident report and evidence request for crushed cartons discovered at delivery."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/8429d299-126e-43e2-b7a2-4f556e676996.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/8429d299-126e-43e2-b7a2-4f556e676996.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "47849df9-bfcd-447c-a644-1cacee1d2b4d",
+      "number": "11.3",
+      "module": "Risk, Fraud Prevention & Problem Resolution",
+      "title": "Preventing Fraud and Cybercrime",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Preventing Fraud and Cybercrime",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Preventing Fraud and Cybercrime."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Brokers are targets for phishing, fake carrier profiles, credential theft and fraudulent pickups. Require multifactor authentication, least-privilege access, independently verified changes and clear incident procedures. Stop a suspicious shipment before pickup whenever reasonable; recovery becomes harder once freight leaves a facility."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A message resembling your load board provider asks you to sign in through a shortened link. Instead of clicking, open the known service site directly and verify the notice through official support. Reset credentials and report the event if staff entered information."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Write a 10-point anti-phishing checklist and a callback procedure for high-risk shipment changes."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/47849df9-bfcd-447c-a644-1cacee1d2b4d.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/47849df9-bfcd-447c-a644-1cacee1d2b4d.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "98e1f452-d066-4564-be3d-716c664dbc73",
+      "number": "11.4",
+      "module": "Risk, Fraud Prevention & Problem Resolution",
+      "title": "Understanding Double Brokering and Co-Brokering",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Understanding Double Brokering and Co-Brokering",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Understanding Double Brokering and Co-Brokering."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Unauthorized rebrokering occurs when a party transfers transportation arrangements without the required approval or authority. Legitimate broker-to-broker or co-brokering arrangements depend on appropriate registration, disclosure and contracts. Use explicit consent and written records; do not let an intermediary conceal the actual motor carrier."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A supposed carrier accepts a load and then gives it to a second company that arrives at the shipper. Confirm who is legally tendered and authorized, stop any unapproved pickup, and contact the original parties to resolve the discrepancy."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Evaluate a hypothetical carrier substitution and document whether the transaction is authorized."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/98e1f452-d066-4564-be3d-716c664dbc73.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/98e1f452-d066-4564-be3d-716c664dbc73.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "c52b6e1c-dc2c-409b-b1ae-727cc64c3cb7",
+      "number": "11.5",
+      "module": "Risk, Fraud Prevention & Problem Resolution",
+      "title": "Managing Customer and Carrier Disputes",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Managing Customer and Carrier Disputes",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Managing Customer and Carrier Disputes."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Resolve disputes with a shared timeline, documents and the contractual standard. Separate observed facts from opinions, identify the disputed amount or service condition and offer a written resolution process. Avoid escalating by blaming parties before investigating."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A carrier bills $300 detention while the warehouse states the driver arrived late. Compare check-in logs, appointment records, GPS and the rate confirmation's free-time clause. Explain which facts are accepted, contested or still missing before negotiating."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Write a neutral dispute-resolution email referencing specific records and a response deadline."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/c52b6e1c-dc2c-409b-b1ae-727cc64c3cb7.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/c52b6e1c-dc2c-409b-b1ae-727cc64c3cb7.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "824d99a3-8ef4-4462-a253-f6685c17162a",
+      "number": "11.6",
+      "module": "Risk, Fraud Prevention & Problem Resolution",
+      "title": "Creating a Brokerage Risk Management Plan",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Creating a Brokerage Risk Management Plan",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Creating a Brokerage Risk Management Plan."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "A practical risk plan assigns prevention controls, early warning signs, escalation owners, emergency contacts, evidence retention and periodic review. Include separate paths for suspected cargo theft, payment fraud, temperature excursions and service delays. Train staff to use the procedure when events are urgent."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A dispatcher reports that a driver identity does not match the approved carrier. The plan should instruct staff to pause release, verify independently, alert the shipper and record actions, instead of improvising an untracked group message."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Prepare a one-page response plan with an incident owner, backup and notification tree."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/824d99a3-8ef4-4462-a253-f6685c17162a.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/824d99a3-8ef4-4462-a253-f6685c17162a.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "48119fd5-6239-4f13-bec0-857f7fa7fa33",
+      "number": "12.1",
+      "module": "Technology, Growth & Final Practicum",
+      "title": "Choosing the Right Brokerage Technology",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Choosing the Right Brokerage Technology",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Choosing the Right Brokerage Technology."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "A transportation management system manages loads, documents and events; a CRM manages prospects and customers; accounting software handles invoices, payables and financial reporting. Select tools based on workflow, integrations, permissions and data export—not feature counts alone."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A startup uses a CRM and load board but manually stores PODs on staff laptops. That creates retrieval and security risks. A lean stack should centralize records, preserve authorized access and support a reliable billing handoff before purchasing optional automation."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Design a budgeted stack listing required functions and owners for CRM, TMS, accounting and communications."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/48119fd5-6239-4f13-bec0-857f7fa7fa33.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/48119fd5-6239-4f13-bec0-857f7fa7fa33.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "c5231a54-86cc-4e3c-9412-74273cced5f9",
+      "number": "12.2",
+      "module": "Technology, Growth & Final Practicum",
+      "title": "Using AI and Automation Responsibly",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Using AI and Automation Responsibly",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Using AI and Automation Responsibly."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "AI can draft messages, summarize carrier conversations and classify documents, but it can invent rates, identities or contractual terms. Use AI for assistance, not as the authority behind a shipper commitment or carrier approval. Avoid submitting private contracts, customer information or identity documents to unapproved services."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "An AI-generated quote says the carrier carries $250,000 cargo insurance. The actual certificate shows a different limit. Before communicating the quote, verify coverage using approved sources and correct the record; never assume fluent text is accurate."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Review a fictional AI-prepared load summary and flag unsupported claims."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/c5231a54-86cc-4e3c-9412-74273cced5f9.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/c5231a54-86cc-4e3c-9412-74273cced5f9.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "c65a3783-c841-4294-bb50-30c39bf3686f",
+      "number": "12.3",
+      "module": "Technology, Growth & Final Practicum",
+      "title": "Creating Standard Operating Procedures",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Creating Standard Operating Procedures",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Creating Standard Operating Procedures."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "An SOP tells a new employee exactly when a task begins, who owns it, which evidence is required, where it is saved and when escalation is mandatory. Use short decision points and examples. Procedures should be versioned and reviewed after actual incidents."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "For carrier onboarding, start with registration and identity checks, continue to insurance and agreement acceptance, then require final approval before dispatch. If a mismatch appears at any stage, the SOP should halt the workflow pending verification rather than silently allowing a workaround."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Write a one-page carrier onboarding SOP with a stop/go checklist and escalation path."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/c65a3783-c841-4294-bb50-30c39bf3686f.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/c65a3783-c841-4294-bb50-30c39bf3686f.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "b437e9ff-ac72-4aef-a26d-37035e01b9de",
+      "number": "12.4",
+      "module": "Technology, Growth & Final Practicum",
+      "title": "Measuring Performance and Scaling",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Measuring Performance and Scaling",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Measuring Performance and Scaling."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "Track load count, gross profit per load, on-time pickup and delivery, customer retention, carrier quality, days sales outstanding and exceptions. Growth is sustainable only when staff and systems can manage the increased volume without degrading verification or cash flow."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "A brokerage doubles weekly loads but also doubles service failures and collection delays. A revenue dashboard might look strong while customer retention and working capital deteriorate. Review service quality and cash metrics before adding more staff or lanes."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Design a dashboard with five metrics, target ranges and assigned owners."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/b437e9ff-ac72-4aef-a26d-37035e01b9de.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/b437e9ff-ac72-4aef-a26d-37035e01b9de.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "3234fa54-755e-4144-b371-9657a7d802f3",
+      "number": "12.5",
+      "module": "Technology, Growth & Final Practicum",
+      "title": "Building Your First 90-Day Action Plan",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Building Your First 90-Day Action Plan",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Building Your First 90-Day Action Plan."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "A 90-day launch plan should sequence legality, processes, prospecting, qualification and repeatable execution. Begin with authority, financial security and operations readiness; then focus on a clearly defined niche and daily sales habit; review results weekly and correct weak processes."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "Days 1–30 prioritize operating readiness and prospect research; days 31–60 focus on discovery meetings, carrier network development and documented quotes; days 61–90 emphasize responsibly executing initial freight, customer follow-up and margin analysis. Goals are illustrative and should reflect actual readiness."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Create a week-by-week action plan with milestones, activity counts, budget and risk checkpoints."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/3234fa54-755e-4144-b371-9657a7d802f3.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/3234fa54-755e-4144-b371-9657a7d802f3.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    },
+    {
+      "lesson_id": "ace4d10e-d2a5-498a-b2f5-5d87aa65bb8d",
+      "number": "12.6",
+      "module": "Technology, Growth & Final Practicum",
+      "title": "Final Freight Brokerage Simulation",
+      "video_storyboard": [
+        {
+          "scene": 1,
+          "heading": "Final Freight Brokerage Simulation",
+          "visual": "Freight logistics title card, dark navy and gold",
+          "narration": "Welcome to Final Freight Brokerage Simulation."
+        },
+        {
+          "scene": 2,
+          "heading": "What you need to know",
+          "visual": "Concept diagram or operational example",
+          "narration": "The capstone combines the complete transaction into one documentable workflow. Students must qualify a fictional shipper, obtain shipment details, calculate a defensible quote, vet a carrier, issue a rate confirmation, track milestones, manage an exception and reconcile customer and carrier documents."
+        },
+        {
+          "scene": 3,
+          "heading": "Worked freight example",
+          "visual": "Shipment, carrier, shipper and equipment workflow",
+          "narration": "Scenario: a Chicago packaged-goods manufacturer requests 20 pallets delivered in Dallas. The shipper accepts $2,500; an approved carrier agrees to $2,000. During transit the carrier reports a two-hour delay. Prepare the update, preserve the evidence and submit a POD-backed invoice. Gross profit before overhead is $500 and gross margin is 20%."
+        },
+        {
+          "scene": 4,
+          "heading": "Practice and next action",
+          "visual": "Checklist illustration and recap",
+          "narration": "Submit the tender, rate calculation, carrier screening checklist, accepted confirmation, incident update, POD, invoice and final profit report as a complete portfolio."
+        }
+      ],
+      "audio_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/ace4d10e-d2a5-498a-b2f5-5d87aa65bb8d.wav",
+      "visual_r2": "r2:2d95d514-baa7-4641-b107-6265256a504b/lesson-media/ace4d10e-d2a5-498a-b2f5-5d87aa65bb8d.svg",
+      "note": "Scripts are adapted from course articles; verify regulatory details before release."
+    }
+  ]
+}
