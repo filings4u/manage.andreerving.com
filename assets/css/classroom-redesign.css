@@ -1,0 +1,94 @@
+/* Freight Broker Training — unified student and administrator classroom */
+:root{--rc-navy:#102440;--rc-navy-deep:#071a32;--rc-blue:#1356bb;--rc-gold:#c99b4e;--rc-line:#dce5f0;--rc-muted:#657792}
+*{box-sizing:border-box}
+body.ae-player-page{background:#f4f7fc;color:#122544}
+.ae-player-app{height:100dvh;min-height:680px;overflow:hidden}
+.ae-player-topbar{height:78px;background:linear-gradient(110deg,#0b1e39,#152f53);border-bottom:0;color:#fff;padding:0 24px;gap:22px}
+.ae-player-back{min-width:230px;max-width:275px;color:#fff;gap:8px}
+.rc-brand-wordmark{display:flex;flex-direction:column;justify-content:center;color:white;letter-spacing:-.06em;line-height:1}
+.rc-brand-wordmark strong{font-family:Georgia,serif;font-size:31px;font-weight:900;letter-spacing:-.065em}
+.rc-brand-wordmark small{font-family:Arial,sans-serif;letter-spacing:.42em;font-size:9px;text-align:center;margin-top:5px;color:#fff}
+.ae-player-topcourse{flex:1;text-align:left;min-width:0}
+.ae-player-topcourse strong{color:#fff;font-size:25px;line-height:1.1}
+.ae-player-topcourse span{color:#c1d2e9;font-size:12px}
+.rc-global-nav{display:flex;align-items:center;gap:22px;white-space:nowrap}
+.rc-global-nav a{color:#e3ebf6;font-size:12px;text-decoration:none;font-weight:750}
+.rc-global-nav a:hover{color:#f1c778}
+.ae-player-exit{color:#fff;background:#25476b;border-color:#4b6887;border-radius:5px}
+.ae-player-shell{grid-template-columns:minmax(255px,290px) minmax(0,1fr) minmax(250px,300px);gap:0;min-height:0;background:#f5f7fb}
+.ae-player-outline{background:linear-gradient(#112946,#0c203b);border-right:1px solid #243e5a;color:#f2f6fd;scrollbar-color:#637995 transparent}
+.rc-course-cover{padding:18px 17px 20px;border-bottom:1px solid #ffffff29}
+.rc-cover-illustration{height:116px;border-radius:5px;background:linear-gradient(130deg,#234c71,#102238);display:flex;align-items:center;justify-content:center;gap:15px;color:#d3a856;font-size:58px;overflow:hidden}
+.rc-cover-illustration span{font-size:64px}
+.rc-course-cover h2{font-size:18px;line-height:1.25;margin:12px 0 5px;color:#fff}
+.rc-course-cover p{color:#b9cae1;font-size:11px;margin:0 0 12px}
+.rc-course-cover small{color:#dce5f2;font-size:11px}
+.rc-course-cover .ae-progress-bar{margin-bottom:7px}
+.ae-outline-heading{padding:17px 16px 12px;border-color:#ffffff1c}
+.ae-outline-heading>span{color:#e5bb74}
+.ae-outline-heading h2{color:#fff;font-size:18px;margin:8px 0 12px}
+.ae-outline-heading>.ae-progress-bar,.ae-outline-heading>p{display:none}
+.ae-outline-list{padding:8px 8px 40px}
+.ae-outline-section{margin:0 0 7px}
+.rc-module-toggle{width:100%;border:0;background:#ffffff0b;color:#f0f5fe;display:flex;align-items:center;gap:9px;text-align:left;padding:13px 11px;border-radius:5px;font-size:12px;font-weight:750;line-height:1.4}
+.rc-module-toggle:hover,.rc-module-toggle[aria-expanded=true]{background:#224774}
+.rc-module-toggle .rc-module-index{font-size:11px;color:#edbd77;min-width:18px}
+.rc-module-toggle .rc-module-name{flex:1}
+.rc-module-toggle .rc-module-caret{font-size:18px;line-height:1;color:#adc4de}
+.rc-module-lessons[hidden]{display:none}
+.ae-outline-step{color:#d4e0ef;padding:10px 8px;border-radius:5px;gap:9px}
+.ae-outline-step:hover{background:#1c3b5d}
+.ae-outline-step.active{background:#31598b;color:#fff;box-shadow:inset 3px 0 var(--rc-gold)}
+.ae-step-state{border-color:#6b829e;color:#c9d9ee;border-radius:99px;width:23px;height:23px}
+.ae-outline-step.completed .ae-step-state{background:#1d7955;border-color:#30966b;color:white}
+.ae-step-copy strong{font-size:11px;color:inherit}
+.ae-step-copy small{color:#b3c5db;font-size:10px}
+.ae-player-main{min-width:0;min-height:0;overflow:auto;padding:22px clamp(15px,2vw,28px) 45px;background:#f5f7fb}
+#lesson-view{max-width:none;margin:0}
+.ae-admin-preview-banner{font-size:11px;border-radius:5px;margin:0 0 14px}
+.rc-breadcrumb{font-size:11px;color:#687893;margin-bottom:12px}
+.ae-lesson-heading{padding:0 0 16px}
+.ae-lesson-heading h1{font-size:clamp(24px,2.6vw,36px);color:#102340;margin:8px 0}
+.ae-lesson-heading>span{color:#ad7f39}
+.ae-lesson-heading p{color:#6a7991}
+#lesson-description{font-size:14px;line-height:1.5;color:#334967;margin:5px 0 9px}
+.ae-lesson-media{background:#102440;border-radius:5px;margin:0 0 14px;min-height:unset;overflow:hidden}
+.ae-lesson-media:empty{display:none}
+.ae-lesson-media .rc-visual{display:block;width:100%;aspect-ratio:16/9;object-fit:contain;background:#102440}
+.ae-lesson-media iframe{width:100%;aspect-ratio:16/9}
+.rc-tab-nav{display:flex;gap:6px;overflow-x:auto;border-bottom:1px solid #d6e0ee;margin:0 0 15px;scrollbar-width:thin}
+.rc-tab-nav button{border:0;border-bottom:3px solid transparent;background:transparent;white-space:nowrap;padding:13px 11px;font-weight:750;font-size:11px;color:#53657c;cursor:pointer}
+.rc-tab-nav button.active,.rc-tab-nav button[aria-selected=true]{color:#1557b2;border-bottom-color:#1c62c4}
+.rc-tab-pane[hidden]{display:none!important}
+.rc-tab-pane{border:1px solid var(--rc-line);background:#fff;border-radius:5px;padding:22px 25px;line-height:1.65}
+.rc-tab-pane h2{font-size:18px;color:#142b4a;margin:20px 0 10px}
+.rc-tab-pane h2:first-child{margin-top:0}
+.rc-tab-pane p{font-size:14px;color:#253b57}
+.rc-tab-pane p strong{color:#112a4c}
+#rc-guide-pane{padding:0;border:0;background:transparent}
+.ae-lesson-body{border:1px solid var(--rc-line);background:#fff;border-radius:5px;min-height:250px;padding:24px 26px;line-height:1.8}
+.ae-lesson-body>h2:first-child{margin-top:0}
+.ae-lesson-body p{font-size:14px}
+.ae-lesson-body figure.ae-media-block[data-ae-media]{display:none}
+.rc-audio-player{width:100%;min-width:0;accent-color:#1754a5}
+.rc-audio-player audio{width:100%;max-width:100%;height:48px}
+.rc-muted{font-size:12px;color:var(--rc-muted);line-height:1.55}
+.rc-learning-points{list-style:none;padding:0;margin:0}
+.rc-learning-points li{padding:9px 0;border-bottom:1px solid #e7edf5;font-size:13px}
+.rc-learning-points li::before{content:'✓';color:#15935b;font-weight:900;margin-right:9px}
+.rc-resource-row{display:flex;align-items:center;gap:10px;border-bottom:1px solid #e7edf5;padding:13px 0;font-size:12px;color:#214469}
+.rc-resource-row:last-child{border:0}
+.rc-lesson-rail{background:#f5f7fb;border-left:1px solid #e1e8f0;padding:17px 14px 30px;overflow:auto;scrollbar-width:thin}
+.rc-rail-card{background:white;border:1px solid #dbe4ef;border-radius:5px;padding:17px 16px;margin-bottom:12px}
+.rc-rail-card h3{font-size:15px;font-weight:800;color:#102646;margin:0 0 13px}
+.rc-rail-card p{font-size:12px;color:#60738e;line-height:1.5}
+.rc-rail-progress{height:9px;background:#dbe5f2;border-radius:20px;overflow:hidden}
+.rc-rail-progress span{display:block;background:#2b64bd;width:0;height:100%}
+.rc-rail-primary{width:100%;border:0;background:#1457ba;color:#fff;border-radius:5px;padding:12px;font-size:12px;font-weight:800;cursor:pointer}
+.rc-rail-primary:disabled{background:#9aaac1}
+.rc-next-card{width:100%;border:0;background:transparent;text-align:left;font-weight:750;color:#16477f;line-height:1.6;cursor:pointer}
+.ae-player-footer{border-top:1px solid #d7e1ee;padding-top:16px}
+.ae-player-primary,.ae-player-complete,.ae-player-secondary{border-radius:5px}
+@media(max-width:1180px){.ae-player-shell{grid-template-columns:260px minmax(0,1fr)}.rc-lesson-rail{grid-column:2;grid-row:2;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;border:0;overflow:visible;padding:10px 16px}.rc-rail-card{margin:0}.ae-player-main{grid-column:2}}
+@media(max-width:850px){.rc-global-nav{display:none}.ae-player-topcourse strong{font-size:17px}.ae-player-back{min-width:145px}.rc-brand-wordmark strong{font-size:22px}.rc-brand-wordmark small{font-size:7px}.ae-player-shell{grid-template-columns:230px minmax(0,1fr)}}
+@media(max-width:680px){.ae-player-app{height:auto;min-height:100dvh;overflow:visible}.ae-player-shell{display:flex;flex-direction:column}.ae-player-topbar{min-height:68px;padding:9px 12px}.ae-player-topcourse{display:none}.ae-player-outline{max-height:360px;overflow:auto}.rc-course-cover{display:none}.ae-player-main{overflow:visible;padding:18px 12px}.rc-lesson-rail{display:flex;flex-direction:column;padding:12px;overflow:visible}.rc-tab-pane,.ae-lesson-body{padding:18px}.rc-tab-nav button{font-size:10px}.ae-player-exit{font-size:10px}.rc-module-toggle{font-size:11px}}
