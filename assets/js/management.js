@@ -38,6 +38,7 @@ if(!fromHistory){const url=k==='courses'?'#/lms/courses':'#/admin/'+encodeURICom
 const parent=document.querySelector('[data-section="'+k+'"]')?.closest('.nav-group');if(parent)parent.open=true;
 document.querySelectorAll('[data-section]').forEach(b=>b.classList.toggle('active',b.dataset.section===k));
 const w=document.querySelector('#workspace');if(!w)return;
+w.closest('.main')?.scrollTo({top:0,behavior:'instant'});
 w.innerHTML='<p class="muted">Loading…</p>';
 if(k==='courses'||k==='course_modules'||k==='course_lessons'){section='courses';const studio=createLMS({db,root:w,notify:toast,safe,isCurrent:()=>section==='courses'});return studio.start()}
 if(k==='overview')return overview();
@@ -72,7 +73,33 @@ w.querySelectorAll('[data-jump]').forEach(b=>b.onclick=()=>navigate(b.dataset.ju
 }
 function format(v){if(v==null)return '—';if(typeof v==='boolean')return v?'Yes':'No';if(typeof v==='string'&&/^\d{4}-\d\d-\d\dT/.test(v))return new Date(v).toLocaleDateString();return safe(v)}
 async function loadTable(){const c=configs[section];const q=await db.from(section).select('*').limit(200);if(section!==Object.keys(configs).find(x=>x===section))return;if(q.error){document.querySelector('#workspace').innerHTML=head(c.title,c.subtitle)+'<p class="notice error">Unable to load records: '+safe(q.error.message)+'</p>';return}rows=q.data||[];drawTable()}
-function drawTable(){const c=configs[section],filtered=rows.filter(r=>Object.values(r).some(v=>String(v??'').toLowerCase().includes(search.toLowerCase()))),editable=!!c.fields;document.querySelector('#workspace').innerHTML=head(c.title,c.subtitle,editable?'<button class="btn" id="create">+ Create new</button>':'')+'<div class="panel"><div class="toolbar"><input id="search" type="search" aria-label="Search records" placeholder="Search '+safe(c.title.toLowerCase())+'…" value="'+safe(search)+'"><span class="muted">'+filtered.length+' records</span></div><div class="tablewrap"><table><thead><tr>'+c.cols.map(k=>'<th>'+safe(k.replaceAll('_',' '))+'</th>').join('')+(editable?'<th>Action</th>':'')+'</tr></thead><tbody>'+filtered.map((r,i)=>'<tr>'+c.cols.map(k=>'<td>'+(k==='status'?'<span class="pill '+safe(r[k])+'">'+safe(r[k])+'</span>':format(r[k]))+'</td>').join('')+(editable?'<td class="row-actions"><button data-edit="'+safe(r.id)+'">Edit</button></td>':'')+'</tr>').join('')+'</tbody></table></div>'+(filtered.length?'':'<div class="empty">No matching records.</div>')+'</div>'+(section==='customer_documents'?documentUploader():'');document.querySelector('#create')?.addEventListener('click',()=>openEditor());document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>openEditor(rows.find(r=>r.id===b.dataset.edit)));const input=document.querySelector('#search');input.oninput=()=>{search=input.value;drawTable();const el=document.querySelector('#search');el.focus();el.setSelectionRange(search.length,search.length)};setupUploader()}
+function drawTable(){
+ const c=configs[section],query=search.toLowerCase();
+ const filtered=rows.filter(r=>Object.values(r).some(v=>String(v??'').toLowerCase().includes(query)));
+ const editable=!!c.fields;
+ const total=rows.length;
+ const stateCount=rows.filter(r=>r.status==='published'||r.status==='active'||r.active===true).length;
+ const stateTitle=rows.some(r=>r.status==='published')?'Published':rows.some(r=>r.status==='active'||r.active===true)?'Active':'Records with activity';
+ const highlights='<div class="ae-list-summary"><div class="ae-list-metric"><span>All records</span><strong>'+total+'</strong></div>'+
+  '<div class="ae-list-metric"><span>Showing</span><strong>'+filtered.length+'</strong></div>'+
+  (stateCount?'<div class="ae-list-metric"><span>'+stateTitle+'</span><strong>'+stateCount+'</strong></div>':'')+
+  '<div class="ae-list-summary-copy"><strong>'+safe(c.title)+' workspace</strong><span>Search, review, and '+(editable?'edit':'inspect')+' your connected records.</span></div></div>';
+ const emptyLabel=total?'No records match your search.':'Nothing here yet. '+(editable?'Create your first record to get started.':'Records will appear when available.');
+ document.querySelector('#workspace').innerHTML=head(c.title,c.subtitle,editable?'<button class="btn" id="create">+ Create new</button>':'')+
+ highlights+'<section class="panel ae-records-panel"><div class="ae-panel-heading"><div><span class="ae-editor-eyebrow">MANAGE CONTENT</span><h2>All '+safe(c.title.toLowerCase())+'</h2><p>Open a record to view or edit its details.</p></div></div>'+
+ '<div class="toolbar ae-record-toolbar"><input id="search" type="search" aria-label="Search records" placeholder="Search '+safe(c.title.toLowerCase())+'…" value="'+safe(search)+'"><span class="muted">'+filtered.length+' of '+total+' records</span></div>'+
+ '<div class="tablewrap"><table><thead><tr>'+c.cols.map(k=>'<th>'+safe(k.replaceAll('_',' '))+'</th>').join('')+(editable?'<th>Action</th>':'')+'</tr></thead>'+
+ '<tbody>'+filtered.map(r=>'<tr>'+c.cols.map(k=>'<td>'+(k==='status'?'<span class="pill '+safe(r[k])+'">'+safe(r[k])+'</span>':format(r[k]))+'</td>').join('')+
+ (editable?'<td class="row-actions"><button type="button" data-edit="'+safe(r.id)+'">Open editor →</button></td>':'')+'</tr>').join('')+'</tbody></table></div>'+
+ (filtered.length?'':'<div class="ae-list-empty"><span aria-hidden="true">▤</span><strong>'+safe(emptyLabel)+'</strong>'+(search?'<button type="button" id="clear-record-search">Clear search</button>':'')+'</div>')+'</section>'+
+ (section==='customer_documents'?documentUploader():'');
+ document.querySelector('#create')?.addEventListener('click',()=>openEditor());
+ document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>openEditor(rows.find(r=>r.id===b.dataset.edit)));
+ const input=document.querySelector('#search');
+ input.oninput=()=>{search=input.value;drawTable();const el=document.querySelector('#search');el.focus();el.setSelectionRange(search.length,search.length)};
+ document.querySelector('#clear-record-search')?.addEventListener('click',()=>{search='';drawTable();document.querySelector('#search')?.focus()});
+ setupUploader();
+}
 function documentUploader(){return '<section class="panel"><h2>Upload a private customer document</h2><p class="muted">Customer files are stored privately and linked to an existing customer account.</p><form id="upload" class="form-grid"><label class="field">Customer UUID<input name="user_id" required pattern="[a-fA-F0-9-]{36}"></label><label class="field">Document title<input name="title" required></label><label class="field wide">Choose file (20 MB max)<input name="file" type="file" accept=".pdf,.png,.jpg,.jpeg,.txt,.docx" required></label><button class="btn" type="submit">Upload document</button></form></section>'}
 function setupUploader(){document.querySelector('#upload')?.addEventListener('submit',async e=>{e.preventDefault();const f=e.target,fd=new FormData(f),file=fd.get('file'),uid=String(fd.get('user_id')||''),title=String(fd.get('title')||'').trim();if(!file||file.size>20*1024*1024)return toast('Please select a file under 20 MB.',true);const ext=file.name.split('.').pop().toLowerCase();if(!['pdf','png','jpg','jpeg','txt','docx'].includes(ext))return toast('Unsupported file type.',true);const key=uid+'/'+crypto.randomUUID()+'.'+ext;const up=await db.storage.from('andreerving-customer-documents').upload(key,file,{upsert:false});if(up.error)return toast(up.error.message,true);const rec=await db.from('customer_documents').insert({user_id:uid,title,file_url:key,document_type:ext});if(rec.error)return toast('File stored but record failed: '+rec.error.message,true);toast('Document uploaded');await loadTable()})}
 async function openEditor(row=null){
