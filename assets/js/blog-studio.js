@@ -193,11 +193,11 @@ export function createBlogStudio({db,root,notify,isCurrent,onExit}){
   const p=post||{},isImported=p.migration_status==="pending_import";
   root.innerHTML='<div class="blog-studio-editor">'+
   '<div class="blog-studio-editor-top"><button type="button" id="blog-back">← All posts</button><span class="blog-studio-save-indicator" id="blog-save-indicator">Not saved</span><div class="blog-studio-editor-actions"><button type="button" id="blog-preview" class="btn secondary">Preview</button><button type="button" id="blog-save" class="btn secondary">Save changes</button><button type="button" id="blog-publish" class="btn">Publish article</button></div></div>'+
-  '<form id="blog-form" novalidate><div class="blog-studio-edit-layout"><main class="blog-studio-main">'+
+  '<form id="blog-form" novalidate><div class="blog-studio-edit-layout"><aside class="blog-editor-guide" aria-label="Article setup steps"><div class="blog-editor-guide-heading"><span class="ae-editor-eyebrow">ARTICLE WORKSPACE</span><h2>Build your article</h2><p>Complete each section, then preview and publish.</p></div><nav class="blog-editor-guide-links" aria-label="Article sections"><a href="#blog-writing" class="active"><span>01</span><strong>Write article</strong></a><a href="#blog-summary"><span>02</span><strong>Summary</strong></a><a href="#blog-publishing"><span>03</span><strong>Publishing</strong></a><a href="#blog-image-section"><span>04</span><strong>Cover image</strong></a><a href="#blog-search-settings"><span>05</span><strong>Search settings</strong></a></nav><div class="blog-editor-guide-tip"><strong>Publishing checklist</strong><p>Add the article body and summary. Review your images and link before publishing.</p></div></aside><div class="blog-editor-body"><main class="blog-studio-main">'+
   '<p class="blog-studio-eyebrow">BLOG / ARTICLE EDITOR</p>'+
   '<input class="blog-title-field" id="blog-title" name="title" aria-label="Article title" placeholder="Add your article title" maxlength="240" value="'+E(p.title||"")+'" required>'+
   '<div class="blog-subline"><span id="blog-word-count">0 words</span><span id="blog-reading-time">0 min read</span><span>'+E(post?"Editing article":"New article")+'</span></div>'+
-  '<section class="blog-edit-card"><div class="blog-editor-label"><strong>Article content</strong><span>Write, format, and add images below.</span></div><div class="blog-toolbar" role="toolbar" aria-label="Article formatting">'+
+  '<section class="blog-edit-card" id="blog-writing"><div class="blog-editor-label"><strong>Article content</strong><span>Write, format, and add images below.</span></div><div class="blog-toolbar" role="toolbar" aria-label="Article formatting">'+
   '<select id="blog-block" aria-label="Text style"><option value="p">Paragraph</option><option value="h2">Heading 2</option><option value="h3">Heading 3</option><option value="blockquote">Quote</option></select>'+
   '<button type="button" data-cmd="bold" title="Bold"><strong>B</strong></button><button type="button" data-cmd="italic" title="Italic"><em>I</em></button>'+
   '<button type="button" data-cmd="underline" title="Underline"><u>U</u></button><button type="button" data-cmd="insertUnorderedList" title="Bulleted list">☷</button>'+
@@ -206,16 +206,26 @@ export function createBlogStudio({db,root,notify,isCurrent,onExit}){
   '<button type="button" data-action="divider" title="Horizontal divider">Divider</button>'+
   '<button type="button" data-cmd="undo" title="Undo">↶</button><button type="button" data-cmd="redo" title="Redo">↷</button></div>'+
   '<div id="blog-content" class="blog-rich-editor" contenteditable="true" role="textbox" aria-label="Article content" aria-multiline="true" data-placeholder="Start writing your article here...">'+(p.body_html?cleanBlogHTML(p.body_html):"")+'</div></section>'+
-  '<section class="blog-edit-card blog-excerpt"><h2>Article summary</h2><label for="blog-excerpt">A short introduction shown on the blog homepage</label><textarea id="blog-excerpt" name="excerpt" rows="3" maxlength="520">'+E(p.excerpt||"")+'</textarea></section>'+
-  '</main><aside class="blog-studio-settings"><section class="blog-settings-panel"><h2>Publish settings</h2><label>Status<select id="blog-status"><option value="draft" '+(p.status!=="published"?"selected":"")+'>Draft</option><option value="published" '+(p.status==="published"?"selected":"")+'>Published</option><option value="archived" '+(p.status==="archived"?"selected":"")+'>Archived</option></select></label>'+
+  '<section class="blog-edit-card blog-excerpt" id="blog-summary"><h2>Article summary</h2><label for="blog-excerpt">A short introduction shown on the blog homepage</label><textarea id="blog-excerpt" name="excerpt" rows="3" maxlength="520">'+E(p.excerpt||"")+'</textarea></section>'+
+  '</main><div class="blog-studio-settings"><section class="blog-settings-panel" id="blog-publishing"><h2>Publish settings</h2><label>Status<select id="blog-status"><option value="draft" '+(p.status!=="published"?"selected":"")+'>Draft</option><option value="published" '+(p.status==="published"?"selected":"")+'>Published</option><option value="archived" '+(p.status==="archived"?"selected":"")+'>Archived</option></select></label>'+
   '<label>Author<input id="blog-author" value="'+E(p.author_name||"Andre Erving")+'"></label>'+
   '<label>Category<input id="blog-category" value="'+E(p.category||"Insights")+'" maxlength="90"></label>'+
   '<label>Tags (comma separated)<input id="blog-tags" value="'+E((p.tags||[]).join(", "))+'" maxlength="350"></label>'+
   '<label>Publish date<input id="blog-date" type="datetime-local" value="'+E(p.published_at?new Date(p.published_at).toISOString().slice(0,16):"")+'"></label></section>'+
-  '<section class="blog-settings-panel"><h2>Cover image</h2><div class="blog-cover-preview">'+(p.cover_image_url?'<img src="'+E(p.cover_image_url)+'" alt="Article cover">':'<span>No cover image yet</span>')+'</div><label>Cover image URL<input id="blog-cover" type="url" value="'+E(p.cover_image_url||"")+'" placeholder="https://..."></label><label class="blog-file-upload">Upload image<input type="file" id="blog-cover-upload" accept="image/png,image/jpeg,image/webp"></label></section>'+
-  '<section class="blog-settings-panel"><h2>Search visibility</h2><label>Article URL slug<input id="blog-slug" value="'+E(p.slug||"")+'" required></label><label>SEO title<input id="blog-seo-title" value="'+E(p.seo_title||"")+'" maxlength="70"></label><label>SEO description<textarea id="blog-seo-description" rows="3" maxlength="165">'+E(p.seo_description||"")+'</textarea></label><p class="blog-studio-livepath">andreerving.com/blog-post.html?slug=<span id="blog-slug-display">'+E(p.slug||"new-article")+'</span></p></section>'+
+  '<section class="blog-settings-panel" id="blog-image-section"><h2>Cover image</h2><div class="blog-cover-preview">'+(p.cover_image_url?'<img src="'+E(p.cover_image_url)+'" alt="Article cover">':'<span>No cover image yet</span>')+'</div><label>Cover image URL<input id="blog-cover" type="url" value="'+E(p.cover_image_url||"")+'" placeholder="https://..."></label><label class="blog-file-upload">Upload image<input type="file" id="blog-cover-upload" accept="image/png,image/jpeg,image/webp"></label></section>'+
+  '<section class="blog-settings-panel" id="blog-search-settings"><h2>Search visibility</h2><label>Article URL slug<input id="blog-slug" value="'+E(p.slug||"")+'" required></label><label>SEO title<input id="blog-seo-title" value="'+E(p.seo_title||"")+'" maxlength="70"></label><label>SEO description<textarea id="blog-seo-description" rows="3" maxlength="165">'+E(p.seo_description||"")+'</textarea></label><p class="blog-studio-livepath">andreerving.com/blog-post.html?slug=<span id="blog-slug-display">'+E(p.slug||"new-article")+'</span></p></section>'+
   (p.source_url?'<section class="blog-settings-panel"><h2>Original article</h2><a href="'+E(p.source_url)+'" target="_blank" rel="noopener noreferrer">View original post ↗</a>'+(isImported?'<p class="blog-import-warning">The original text has not been imported. Add the article content before publishing.</p>':'')+'</section>':'')+
-  '</aside></div><p role="alert" id="blog-error" class="blog-error" hidden></p></form></div>';
+  '</div></div></div><p role="alert" id="blog-error" class="blog-error" hidden></p></form></div>';
+  qa(".blog-editor-guide-links a").forEach(link=>{
+   link.addEventListener("click",event=>{
+    event.preventDefault();
+    const destination=q(link.getAttribute("href"));
+    if(!destination)return;
+    qa(".blog-editor-guide-links a").forEach(item=>item.classList.toggle("active",item===link));
+    destination.scrollIntoView({behavior:"smooth",block:"start"});
+    if(link.getAttribute("href")==="#blog-writing")editor.focus({preventScroll:true});
+   });
+  });
   editor=q("#blog-content");
   q("#blog-form").addEventListener("submit",event=>{event.preventDefault();save("draft")});
   updateStats();
