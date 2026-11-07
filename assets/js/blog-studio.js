@@ -11,7 +11,7 @@ const safeStyle=value=>{
   "font-family":v=>/^(Arial|Georgia|Verdana|Tahoma|Times New Roman|Courier New|Helvetica|serif|sans-serif|monospace)(, ?(serif|sans-serif|monospace))?$/i.test(v),
   "font-size":v=>/^(1[0-9]|2[0-9]|3[0-6])px$/.test(v),
   "line-height":v=>/^(1|1\.[0-9]|2|2\.[0-5])$/.test(v),
-  "margin-bottom":v=>/^(0|[0-9]|[1-6][0-9])px$/.test(v),\n  "width":v=>/^(25|50|75|100)%$/.test(v),
+  "margin-bottom":v=>/^(0|[0-9]|[1-6][0-9])px$/.test(v),  "width":v=>/^(25|50|75|100)%$/.test(v),
   "text-align":v=>/^(left|center|right|justify)$/.test(v),
   "text-decoration":v=>/^(underline|line-through|none)$/.test(v)
  };
