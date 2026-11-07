@@ -435,7 +435,7 @@ export function createBlogStudio({db,root,notify,isCurrent,onExit}){
    const out=selected?await db.from("blog_posts").update(data).eq("id",selected.id).select().single():await db.from("blog_posts").insert(data).select().single();
    if(out.error)throw out.error;
    selected=out.data;dirty=false;q("#blog-save-indicator").textContent=status==="published"?"Published successfully":"All changes saved";
-   notify(status==="published"?"Article published to andreerving.com":"Draft saved");
+   notify(status==="published"?"Article published. Its search-ready page syncs automatically within the next scheduled publishing cycle.":"Draft saved");
    q("#blog-status").value=status;
    history.replaceState(null,"","#/admin/blog_posts/edit/"+selected.id);
   }catch(error){if(indicator)indicator.textContent="Save failed";errorText(error.message||"Unable to save article")}finally{saveBusy=false;buttons.forEach(b=>b.disabled=false)}
