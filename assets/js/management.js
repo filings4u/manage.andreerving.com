@@ -21,7 +21,7 @@ customer_documents:{title:'Documents',subtitle:'Upload private documents to cust
 ebook_documents:{title:'eBook library',subtitle:'Upload downloadable eBooks linked to website offerings',cols:['title','offering_id','file_name','updated_at'],label:'title'},
 support_tickets:{title:'Support inbox',subtitle:'Respond to student and customer support requests',cols:['subject','category','status','created_at'],label:'subject'},
 };
-let user=null,section='overview',rows=[],editing=null,search='',lookups={courses:[],modules:[]},busy=false,adminOps=null,realtimeChannel=null;
+let user=null,section='overview',rows=[],editing=null,search='',listPage=1,lookups={courses:[],modules:[]},busy=false,adminOps=null,realtimeChannel=null;
 const navGroups=[
 {name:'Website',items:[['blog_posts','Blog & articles','✎'],['site_pages','CMS pages','▤'],['site_prices','Pricing','$'],['ebook_documents','eBook documents','▣'],['course_extensions','Course extensions','◷'],['website_inquiries','Inquiries','✉'],['newsletter_signups','Newsletter','◎']]},
 {name:'Customer portal',items:[['customer_profiles','Customer CRM','♙'],['orders','Orders & invites','▥'],['course_enrollments','Enrollments','✓'],['customer_documents','Private files','▢'],['support_tickets','Support inbox','✉']]},
@@ -135,6 +135,7 @@ async function loadTable(){const c=configs[section];
 function drawTable(){
  const c=configs[section],query=search.toLowerCase();
  const filtered=rows.filter(r=>Object.values(r).some(v=>String(v??'').toLowerCase().includes(query)));
+ const pageCount=Math.max(1,Math.ceil(filtered.length/10));listPage=Math.max(1,Math.min(listPage,pageCount));const visible=filtered.slice((listPage-1)*10,listPage*10);
  const editable=!!c.fields;
  const total=rows.length;
  const stateCount=rows.filter(r=>r.status==='published'||r.status==='active'||r.active===true).length;
@@ -148,15 +149,16 @@ function drawTable(){
  highlights+'<section class="panel ae-records-panel"><div class="ae-panel-heading"><div><span class="ae-editor-eyebrow">MANAGE CONTENT</span><h2>All '+safe(c.title.toLowerCase())+'</h2><p>Open a record to view or edit its details.</p></div></div>'+
  '<div class="toolbar ae-record-toolbar"><input id="search" type="search" aria-label="Search records" placeholder="Search '+safe(c.title.toLowerCase())+'…" value="'+safe(search)+'"><span class="muted">'+filtered.length+' of '+total+' records</span></div>'+
  '<div class="tablewrap"><table><thead><tr>'+c.cols.map(k=>'<th>'+safe(k.replaceAll('_',' '))+'</th>').join('')+(editable?'<th>Action</th>':'')+'</tr></thead>'+
- '<tbody>'+filtered.map(r=>'<tr>'+c.cols.map(k=>'<td>'+(k==='status'?'<span class="pill '+safe(r[k])+'">'+safe(r[k])+'</span>':format(r[k]))+'</td>').join('')+
+ '<tbody>'+visible.map(r=>'<tr>'+c.cols.map(k=>'<td>'+(k==='status'?'<span class="pill '+safe(r[k])+'">'+safe(r[k])+'</span>':format(r[k]))+'</td>').join('')+
  (editable?'<td class="row-actions"><button type="button" data-edit="'+safe(r.id)+'">Open editor →</button></td>':'')+'</tr>').join('')+'</tbody></table></div>'+
- (filtered.length?'':'<div class="ae-list-empty"><span aria-hidden="true">▤</span><strong>'+safe(emptyLabel)+'</strong>'+(search?'<button type="button" id="clear-record-search">Clear search</button>':'')+'</div>')+'</section>'+
+ (filtered.length?'':'<div class="ae-list-empty"><span aria-hidden="true">▤</span><strong>'+safe(emptyLabel)+'</strong>'+(search?'<button type="button" id="clear-record-search">Clear search</button>':'')+'</div>')+'<nav class="ae-pagination" aria-label="Record pages"><button type="button" id="records-prev" '+(listPage===1?'disabled':'')+'>Previous</button><span>Page '+listPage+' of '+pageCount+'</span><button type="button" id="records-next" '+(listPage===pageCount?'disabled':'')+'>Next</button></nav></section>'+
  (section==='customer_documents'?documentUploader():'');
  document.querySelector('#create')?.addEventListener('click',()=>openEditor());
  document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>openEditor(rows.find(r=>r.id===b.dataset.edit)));
  const input=document.querySelector('#search');
- input.oninput=()=>{search=input.value;drawTable();const el=document.querySelector('#search');el.focus();el.setSelectionRange(search.length,search.length)};
+ input.oninput=()=>{search=input.value;listPage=1;drawTable();const el=document.querySelector('#search');el.focus();el.setSelectionRange(search.length,search.length)};
  document.querySelector('#clear-record-search')?.addEventListener('click',()=>{search='';drawTable();document.querySelector('#search')?.focus()});
+ document.querySelector('#records-prev')?.addEventListener('click',()=>{listPage--;drawTable()});document.querySelector('#records-next')?.addEventListener('click',()=>{listPage++;drawTable()});
  setupUploader();
 }
 function documentUploader(){return '<section class="panel"><h2>Upload a private customer document</h2><p class="muted">Customer files are stored privately and linked to an existing customer account.</p><form id="upload" class="form-grid"><label class="field">Customer UUID<input name="user_id" required pattern="[a-fA-F0-9-]{36}"></label><label class="field">Document title<input name="title" required></label><label class="field wide">Choose file (20 MB max)<input name="file" type="file" accept=".pdf,.png,.jpg,.jpeg,.txt,.docx" required></label><button class="btn" type="submit">Upload document</button></form></section>'}
