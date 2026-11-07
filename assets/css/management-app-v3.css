@@ -91,3 +91,10 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-ser
 .ae-crm-table tbody tr.ae-crm-clickable td:first-child strong{color:#194e93}
 .ae-crm-stat:nth-child(1){grid-column:auto}
 .ae-extension-row button:disabled{opacity:.65}
+
+/* Brand images are selected according to the surface background. */
+.login-box .ae-management-login-logo{display:block;width:min(100%,315px);height:auto;max-height:105px;object-fit:contain;object-position:left center;margin:0 0 21px}
+.sidebar .brand{display:flex;flex-direction:column;align-items:flex-start;gap:7px;padding:9px 8px 23px}
+.sidebar .ae-management-sidebar-logo{display:block;width:min(100%,204px);height:auto;max-height:66px;object-fit:contain;object-position:left center}
+.sidebar .ae-management-brand-label{color:#98badc;font-size:10px;font-weight:850;letter-spacing:.12em;padding-left:4px}
+@media(max-width:700px){.sidebar .brand{padding:8px;gap:6px}.sidebar .ae-management-sidebar-logo{max-width:180px;max-height:49px}}
