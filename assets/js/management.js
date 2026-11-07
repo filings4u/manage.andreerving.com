@@ -1,6 +1,7 @@
 import {createLMS} from './lms.js?v=no-browser-alerts-20261106';
 import {createManagementOperations} from './management-operations.js?v=crm-full-width-20261107';
 import {createBlogStudio,cleanBlogHTML} from './blog-studio.js?v=categories-20261107b';
+import {createPodcastStudio} from './podcast-studio.js?v=20261107b';
 import{createClient}from'https://esm.sh/@supabase/supabase-js@2.58.0';
 const db=createClient('https://gnfyidajbectlppsekzj.supabase.co','sb_publishable_DGt4HrHAwWyMt-0Xtzlfog_F18RnOyf');
 const app=document.querySelector('#app'),safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -23,7 +24,7 @@ support_tickets:{title:'Support inbox',subtitle:'Respond to student and customer
 };
 let user=null,section='overview',rows=[],editing=null,search='',listPage=1,lookups={courses:[],modules:[]},busy=false,adminOps=null,realtimeChannel=null;
 const navGroups=[
-{name:'Website',items:[['blog_posts','Blog & articles','✎'],['site_pages','CMS pages','▤'],['site_prices','Pricing','$'],['ebook_documents','eBook documents','▣'],['course_extensions','Course extensions','◷'],['website_inquiries','Inquiries','✉'],['newsletter_signups','Newsletter','◎']]},
+{name:'Website',items:[['blog_posts','Blog & articles','✎'],['podcast_episodes','Podcasts','♫'],['site_pages','CMS pages','▤'],['site_prices','Pricing','$'],['ebook_documents','eBook documents','▣'],['course_extensions','Course extensions','◷'],['website_inquiries','Inquiries','✉'],['newsletter_signups','Newsletter','◎']]},
 {name:'Customer portal',items:[['customer_profiles','Customer CRM','♙'],['orders','Orders & invites','▥'],['course_enrollments','Enrollments','✓'],['customer_documents','Private files','▢'],['support_tickets','Support inbox','✉']]},
 {name:'Learning management',items:[['courses','Courses & programs','◈']]}
 ];
@@ -74,6 +75,9 @@ w.closest('.main')?.scrollTo({top:0,behavior:'instant'});
 w.innerHTML='<p class="muted">Loading…</p>';
 if(k==='courses'||k==='course_modules'||k==='course_lessons'){section='courses';const studio=createLMS({db,root:w,notify:toast,safe,isCurrent:()=>section==='courses'});return studio.start()}
 if(k==='overview')return overview();
+if(k==='podcast_episodes'){
+ const studio=createPodcastStudio({db,root:w,notify:toast,isCurrent:name=>section===name});return studio.start();
+}
 if(k==='blog_posts'){
  const studio=createBlogStudio({db,root:w,notify:toast,isCurrent:name=>section===name,onExit:()=>navigate('blog_posts')});
  const match=location.hash.match(/^#\/admin\/blog_posts\/edit\/([a-f0-9-]{36})$/i);
