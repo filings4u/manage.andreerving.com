@@ -242,7 +242,7 @@ export function createBlogStudio({db,root,notify,isCurrent,onExit}){
   '<label>Focus search phrase<input id="blog-seo-focus" value="'+E(p.seo_focus_keyword||"")+'" maxlength="140" placeholder="e.g. Finding shippers for freight brokers"></label>'+
   '<label>Social sharing title<input id="blog-og-title" value="'+E(p.seo_og_title||"")+'" maxlength="120" placeholder="Defaults to SEO title"></label>'+
   '<label>Social sharing description<textarea id="blog-og-description" maxlength="500" rows="3" placeholder="Defaults to SEO description">'+E(p.seo_og_description||"")+'</textarea></label>'+
-  '<label>Social sharing image URL<input id="blog-og-image" type="url" value="'+E(p.seo_og_image_url||"")+'" placeholder="https://..."></label>'+
+  '<label>Social sharing image URL<input id="blog-og-image" type="url" value="'+E(p.seo_og_image_url||"")+'" placeholder="https://..."></label><label class="blog-file-upload">Upload social sharing image<input id="blog-og-upload" type="file" accept="image/png,image/jpeg,image/webp"></label>'+
   '<label>Cover image description for accessibility<input id="blog-image-alt" maxlength="220" value="'+E(p.seo_image_alt||"")+'" placeholder="Describe what is visible in the cover image"></label>'+
   '<label class="blog-index-setting"><input type="checkbox" id="blog-indexable" '+(p.seo_indexable===false?"":"checked")+'> Allow search engines to index this published article</label>'+
   '<div class="blog-search-preview"><small>Search result preview</small><strong id="blog-search-preview-title">'+E(p.seo_title||p.title||"Article headline")+'</strong><span id="blog-search-preview-link">andreerving.com/blog/'+E(p.slug||"new-article")+'.html</span><p id="blog-search-preview-description">'+E(p.seo_description||p.excerpt||"Write a detailed description for search results.")+'</p></div>'+
@@ -335,6 +335,9 @@ export function createBlogStudio({db,root,notify,isCurrent,onExit}){
   qa("[data-cmd]").forEach(b=>b.addEventListener("mousedown",e=>e.preventDefault()));
   qa("[data-cmd]").forEach(b=>b.onclick=()=>format(b.dataset.cmd));
   qa("[data-action]").forEach(b=>{b.onmousedown=e=>e.preventDefault();b.onclick=()=>insert(b.dataset.action)});
+  q("#blog-og-upload").onchange=async e=>{
+   try{const file=e.target.files?.[0];if(!file)return;const url=await uploadImage(file);q("#blog-og-image").value=url;mark();notify("Social sharing image uploaded")}catch(err){errorText(err.message)}
+  };
   q("#blog-cover-upload").onchange=async e=>{
    try{const file=e.target.files?.[0];if(!file)return;const url=await uploadImage(file);q("#blog-cover").value=url;q("#blog-cover").dispatchEvent(new Event("change"));mark();notify("Cover image uploaded")}catch(err){errorText(err.message)}
   };
