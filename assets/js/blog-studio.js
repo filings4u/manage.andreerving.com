@@ -79,10 +79,41 @@ export function createBlogStudio({db,root,notify,isCurrent,onExit}){
  }
  function showImport(){
   const overlay=document.createElement("div");overlay.className="blog-studio-overlay";
-  overlay.innerHTML='<section role="dialog" aria-modal="true" aria-labelledby="import-title" class="blog-studio-dialog"><button type="button" class="blog-studio-close" aria-label="Close">×</button><p class="blog-studio-eyebrow">IMPORT</p><h2 id="import-title">Import articles from Wix</h2><p>The 20 previously discovered posts have already been created as draft records. Their original article bodies have not been retrieved.</p><p>For each article, open its record, paste the original Wix content into the editor, and save. Posts are never published automatically.</p><p>If you export Wix posts as a CSV, you can import titles, excerpts, content and published dates into matching existing posts without duplicates.</p><label>Wix CSV file<input id="blog-csv" type="file" accept=".csv,text/csv"></label><div id="blog-import-status" role="status"></div><button id="blog-csv-import" class="btn">Import CSV as drafts</button></section>';
+  overlay.innerHTML='<section role="dialog" aria-modal="true" aria-labelledby="import-title" class="blog-studio-dialog"><button type="button" class="blog-studio-close" aria-label="Close">×</button><p class="blog-studio-eyebrow">IMPORT</p><h2 id="import-title">Import articles from Wix</h2><p>The 20 previously discovered posts have already been created as draft records. Their original article bodies have not been retrieved.</p><p>For each article, open its record, paste the original Wix content into the editor, and save. Posts are never published automatically.</p><div class="blog-studio-auto-import"><h3>Import from original article URLs</h3><p>Try the original Wix addresses already linked to these 20 drafts. The importer only fills empty drafts and never publishes automatically.</p><button type="button" id="blog-import-originals" class="btn">Import original Wix articles</button><p class="blog-studio-import-progress" id="blog-auto-status" role="status" aria-live="polite"></p></div><p>Alternatively, import a Wix CSV export below if the original pages are unavailable.</p><label>Wix CSV file<input id="blog-csv" type="file" accept=".csv,text/csv"></label><div id="blog-import-status" role="status"></div><button id="blog-csv-import" class="btn">Import CSV as drafts</button></section>';
   document.body.append(overlay);
   overlay.querySelector(".blog-studio-close").onclick=()=>overlay.remove();
   overlay.onclick=e=>{if(e.target===overlay)overlay.remove()};
+
+  overlay.querySelector("#blog-import-originals").onclick=async()=>{
+   const button=overlay.querySelector("#blog-import-originals");
+   const progress=overlay.querySelector("#blog-auto-status");
+   const pending=posts.filter(p=>p.migration_status==="pending_import"&&!p.body_html?.trim()&&p.source_url);
+   if(!pending.length){progress.textContent="No pending source URLs remain.";return}
+   button.disabled=true;
+   let imported=0,unavailable=0,skipped=0;
+   try{
+    const {data:{session},error}=await db.auth.getSession();
+    if(error||!session?.access_token)throw Error("Sign in again before importing articles.");
+    for(let i=0;i<pending.length;i++){
+     if(!document.body.contains(overlay))break;
+     progress.textContent="Checking original article "+(i+1)+" of "+pending.length+": "+pending[i].title;
+     try{
+      const response=await fetch("https://gnfyidajbectlppsekzj.supabase.co/functions/v1/andre-blog-import",{
+       method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+session.access_token},
+       body:JSON.stringify({id:pending[i].id})});
+      const result=await response.json().catch(()=>({}));
+      if(!response.ok)throw Error(result.error||"Import request unavailable");
+      if(result.status==="imported")imported++;
+      else if(result.status==="skipped")skipped++;
+      else unavailable++;
+     }catch(error){unavailable++;console.warn("Original article import unavailable",pending[i].title,error)}
+    }
+    progress.textContent="Import finished: "+imported+" drafts received content, "+skipped+" skipped and "+unavailable+" originals unavailable. Review imported articles before publishing.";
+    notify(imported?imported+" original articles imported as drafts":"Original content could not be imported automatically. Use Wix CSV export.");
+    // Keep this result visible; the listing can be refreshed after closing the dialog.
+    overlay.querySelector(".blog-studio-close").onclick=()=>{overlay.remove();list()};
+   }catch(error){progress.textContent=error.message||"Import failed"}finally{button.disabled=false}
+  };
   overlay.querySelector("#blog-csv-import").onclick=async()=>{
    const file=overlay.querySelector("#blog-csv").files?.[0];if(!file)return overlay.querySelector("#blog-import-status").textContent="Select a CSV export.";
    if(file.size>4*1024*1024)return overlay.querySelector("#blog-import-status").textContent="CSV must be under 4 MB.";
