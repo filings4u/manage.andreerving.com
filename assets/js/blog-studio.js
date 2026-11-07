@@ -43,6 +43,20 @@ export function cleanBlogHTML(input){
  }
  walk(holder);return holder.innerHTML;
 }
+function stripDuplicateCover(html,cover){
+ if(!cover)return html;
+ const parsed=new DOMParser().parseFromString("<div>"+String(html||"")+"</div>","text/html");
+ const main=parsed.body.firstElementChild;
+ const fingerprint=value=>{try{const u=new URL(value,location.origin);return u.hostname.toLowerCase()+decodeURIComponent(u.pathname).toLowerCase()}catch{return ""}};
+ const target=fingerprint(cover);if(!target)return html;
+ for(const img of [...main.querySelectorAll("img")]){
+  if(fingerprint(img.getAttribute("src"))!==target)continue;
+  const parent=img.closest("figure");
+  if(parent&&parent.querySelectorAll("img").length===1)parent.remove();
+  else img.remove();
+ }
+ return main.innerHTML;
+}
 export function createBlogStudio({db,root,notify,isCurrent,onExit}){
  let selected=null,posts=[],draftTimer=null,dirty=false,editor=null,saveBusy=false,preview=false,savedRange=null;
  const active=()=>isCurrent("blog_posts");
@@ -209,7 +223,7 @@ export function createBlogStudio({db,root,notify,isCurrent,onExit}){
   '<button type="button" data-action="video" title="Embed YouTube or Vimeo video">Video</button><button type="button" data-action="table" title="Insert table">Table</button>'+
   '<button type="button" data-action="divider" title="Horizontal divider">Divider</button>'+
   '<button type="button" data-cmd="undo" title="Undo">↶</button><button type="button" data-cmd="redo" title="Redo">↷</button></div>'+
-  '<div id="blog-content" class="blog-rich-editor" contenteditable="true" role="textbox" aria-label="Article content" aria-multiline="true" data-placeholder="Start writing your article here...">'+(p.body_html?cleanBlogHTML(p.body_html):"")+'</div></section>'+
+  '<div id="blog-content" class="blog-rich-editor" contenteditable="true" role="textbox" aria-label="Article content" aria-multiline="true" data-placeholder="Start writing your article here...">'+(p.body_html?stripDuplicateCover(cleanBlogHTML(p.body_html),p.cover_image_url):"")+'</div></section>'+
   '<section class="blog-edit-card blog-excerpt" id="blog-summary"><h2>Article summary</h2><label for="blog-excerpt">A short introduction shown on the blog homepage</label><textarea id="blog-excerpt" name="excerpt" rows="3" maxlength="520">'+E(p.excerpt||"")+'</textarea></section>'+
   '</main><div class="blog-studio-settings"><section class="blog-settings-panel" id="blog-publishing"><h2>Publish settings</h2><label>Status<select id="blog-status"><option value="draft" '+(p.status!=="published"?"selected":"")+'>Draft</option><option value="published" '+(p.status==="published"?"selected":"")+'>Published</option><option value="archived" '+(p.status==="archived"?"selected":"")+'>Archived</option></select></label>'+
   '<label>Author<input id="blog-author" value="'+E(p.author_name||"Andre Erving")+'"></label>'+
@@ -330,7 +344,7 @@ export function createBlogStudio({db,root,notify,isCurrent,onExit}){
  }
  function errorText(text){const e=q("#blog-error");if(e){e.hidden=false;e.textContent=text}notify(text,true)}
  function payload(status){
-  const title=q("#blog-title").value.trim(),slug=slugify(q("#blog-slug").value||title),html=cleanBlogHTML(editor.innerHTML),plain=new DOMParser().parseFromString(html,"text/html").body.textContent.trim();
+  const title=q("#blog-title").value.trim(),slug=slugify(q("#blog-slug").value||title),html=stripDuplicateCover(cleanBlogHTML(editor.innerHTML),q("#blog-cover").value),plain=new DOMParser().parseFromString(html,"text/html").body.textContent.trim();
   if(!title||!slug)throw Error("Article title and URL slug are required.");
   if(status==="published"&&plain.length<80)throw Error("Add the complete article content before publishing. At least 80 characters are required.");
   if(status==="published"&& !q("#blog-excerpt").value.trim())throw Error("Add an article summary before publishing.");
@@ -353,7 +367,7 @@ export function createBlogStudio({db,root,notify,isCurrent,onExit}){
   }catch(error){if(indicator)indicator.textContent="Save failed";errorText(error.message||"Unable to save article")}finally{saveBusy=false;buttons.forEach(b=>b.disabled=false)}
  }
  function previewPost(){
-  const content=cleanBlogHTML(editor.innerHTML),title=q("#blog-title").value||"Untitled article",cover=safeURL(q("#blog-cover").value,true);
+  const content=stripDuplicateCover(cleanBlogHTML(editor.innerHTML),q("#blog-cover").value),title=q("#blog-title").value||"Untitled article",cover=safeURL(q("#blog-cover").value,true);
   const overlay=document.createElement("div");overlay.className="blog-studio-overlay blog-preview-overlay";
   overlay.innerHTML='<div class="blog-preview-dialog"><div class="blog-preview-top"><strong>Article preview</strong><button type="button" aria-label="Close preview">×</button></div><article class="blog-preview-article">'+(cover?'<img class="blog-preview-cover" src="'+E(cover)+'" alt="Article cover">':'')+'<p class="blog-studio-eyebrow">'+E(q("#blog-category").value)+'</p><h1>'+E(title)+'</h1><p class="blog-preview-meta">By '+E(q("#blog-author").value||"Andre Erving")+'</p><div class="blog-preview-copy">'+content+'</div></article></div>';
   document.body.append(overlay);overlay.querySelector("button").onclick=()=>overlay.remove();overlay.onclick=e=>{if(e.target===overlay)overlay.remove()};
