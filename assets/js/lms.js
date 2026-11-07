@@ -765,14 +765,14 @@ export function createLMS({db,root,notify,safe,isCurrent}){
     const select=root.querySelector("#ae-module");if(select)select.value=parentModule;
   }
   function openEnrollment(record=null){
-    const c=current();if(!c)return;
+    const c=current();if(!c)return;s.tab="students";
     let returnedCustomer="";
     if(!record){try{const back=JSON.parse(sessionStorage.getItem("ae_enrollment_return")||"null");if(back?.courseId===c.id&&/^[a-f0-9-]{36}$/i.test(back.userId||""))returnedCustomer=back.userId}catch{}}
 
     s.nextEditRoute="enrollment/"+(record?.id||"new")+"/"+c.id;
     const fields='<div class="form-grid">'+(record?'<p class="field wide">Customer: '+esc(s.customers.find(x=>x.id===record.user_id)?.email||record.user_id)+'</p>':select("Select customer","user_id",[["","Choose a customer"],...s.customers.map(p=>[p.id,p.full_name?p.full_name+" ("+p.email+")":p.email])],returnedCustomer))+
       select("Access status","status",[["active","Active"],["completed","Completed"],["cancelled","Cancelled"],["expired","Expired"]],record?.status||"active")+
-      input("Expiration date (optional; defaults to course access term)","expires_at",record?.expires_at?.slice(0,10)||(c.access_days?new Date(Date.now()+Number(c.access_days)*86400000).toISOString().slice(0,10):""),"date")+'</div><p class="muted">Enrolling a student grants access. It does not create a payment or purchase record.</p>';
+      input("Expiration date (optional; defaults to course access term)","expires_at",record?(record.expires_at?.slice(0,10)||""):(c.access_days?new Date(Date.now()+Number(c.access_days)*86400000).toISOString().slice(0,10):""),"date")+'</div><p class="muted">Enrolling a student grants access. It does not create a payment or purchase record.</p>';
     modal(record?"Manage enrollment":"Enroll student",fields,async fd=>{
       const status=String(fd.get("status")||"active"),expires=String(fd.get("expires_at")||"");
       const data={status,expires_at:expires?new Date(expires+"T23:59:59Z").toISOString():null};
