@@ -29,12 +29,19 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
    finally{if(button)button.disabled=false}
   });
  };
+ function returnToEnrollment(customerId=""){
+   let state;try{state=JSON.parse(sessionStorage.getItem("ae_enrollment_return")||"null")}catch{}
+   if(!/^[a-f0-9-]{36}$/i.test(state?.courseId||"")){notify("No course enrollment return path is available.",true);return}
+   if(customerId&&/^[a-f0-9-]{36}$/i.test(customerId)){state.userId=customerId;sessionStorage.setItem("ae_enrollment_return",JSON.stringify(state))}
+   history.replaceState(null,"","#/lms/edit/enrollment/new/"+state.courseId);location.reload();
+ }
  async function customers(){
   const res=await api("list_customers");
   if(!isCurrent("customer_profiles"))return;
   const people=res.items||[];
+  const backEnrollment=(()=>{try{return JSON.parse(sessionStorage.getItem("ae_enrollment_return")||"null")}catch{return null}})();
   root.innerHTML=head("Customer CRM","Manage complete customer profiles, purchases, courses, documents, and support.")+
-   '<div class="ae-mgmt-header-actions"><button type="button" class="btn" id="crm-add">Create customer account</button></div>'+
+   '<div class="ae-mgmt-header-actions"><button type="button" class="btn" id="crm-add">Create customer account</button>'+(backEnrollment?.courseId?'<button type="button" class="btn secondary ae-return-enroll" data-return-enrollment>Back to course enrollment</button>':'')+'</div>'+
    '<section class="panel ae-mgmt-panel"><div class="ae-mgmt-panel-heading"><div><span class="ae-mini-eyebrow">CUSTOMER RELATIONSHIPS</span><h2>Customer directory</h2></div><span class="ae-mgmt-counter">'+people.length+' customers</span></div>'+
    '<label class="ae-mgmt-search-label">Search customer records<input id="crm-search" type="search" placeholder="Find a customer by name, email, or phone"></label>'+
    '<div class="tablewrap"><table class="ae-crm-table"><thead><tr><th>Customer</th><th>Email</th><th>Phone</th><th>Created</th><th></th></tr></thead><tbody id="crm-rows"></tbody></table></div></section>';
@@ -50,6 +57,11 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
   }
   draw();root.querySelector("#crm-search").oninput=e=>draw(e.target.value);
   root.querySelector("#crm-add").onclick=()=>customerForm();
+  root.querySelector('[data-return-enrollment]')?.addEventListener("click",()=>returnToEnrollment());
+  if(backEnrollment?.courseId&&!root.querySelector(".ae-crm-return-note")){
+    const note=document.createElement("p");note.className="ae-crm-return-note";note.textContent="Create the customer account first, then select Back to course enrollment to assign their course.";
+    root.querySelector(".ae-mgmt-header-actions")?.after(note);
+  }
  }
  function customerForm(existing=null,details=null){
   const isEdit=Boolean(existing?.id),p=existing||{},d=details||{};
@@ -92,6 +104,11 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
    '<section class="ae-customer-next"><strong>One email. One customer.</strong><p>The email address is the unique customer identity. Purchases and course enrollments belong to the existing record.</p></section>'+
    '</aside></div>'+
    '<div class="ae-customer-actionbar"><div><strong>'+(isEdit?"Update customer details":"Ready to create this customer?")+'</strong><span>'+(isEdit?"Changes are saved to the customer CRM.":"No account invitation will be emailed until you choose to send one.")+'</span></div><div class="ae-customer-actions"><button class="btn secondary" type="button" id="crm-back">Cancel</button><button class="btn" type="submit">'+(isEdit?"Save customer changes":"Create customer account")+'</button></div></div></form>';
+  const returning=(()=>{try{return JSON.parse(sessionStorage.getItem("ae_enrollment_return")||"null")}catch{return null}})();
+  if(returning?.courseId){
+    const bar=root.querySelector(".ae-customer-actions");
+    if(bar){const btn=document.createElement("button");btn.type="button";btn.className="btn secondary ae-return-enroll";btn.textContent="Back to course enrollment";btn.onclick=()=>returnToEnrollment();bar.prepend(btn);}
+  }
   root.querySelector("#crm-back").onclick=()=>isEdit?profile(p.id):customers();
   onSubmit("#crm-create",async fd=>{
    const payload=Object.fromEntries(fd);
@@ -112,6 +129,7 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
   if(!data||!isCurrent("customer_profiles")||selectedCustomer!==uid)return;
   const p=data.profile,items=data.enrollments||[],orders=data.orders||[],courses=new Map((data.courses||[]).map(c=>[c.id,c]));
   const rows=data.orderItems||[],documents=data.documents||[],tickets=data.tickets||[];
+  const returning=(()=>{try{return JSON.parse(sessionStorage.getItem("ae_enrollment_return")||"null")}catch{return null}})();
   root.innerHTML=head(p.full_name||p.email,"Customer CRM / Full account record")+
    '<div class="ae-mgmt-header-actions"><button class="btn secondary" id="crm-back">All customers</button><button class="btn secondary" id="crm-edit">Edit customer details</button>'+
    '<button class="btn" id="crm-enroll">Assign a course</button><button class="btn secondary" id="crm-order">Create an order</button><button class="btn secondary" id="crm-invite">Send account invitation</button></div>'+
@@ -129,6 +147,11 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
    (tickets.map(t=>'<p class="ae-crm-item">'+escapeHtml(t.subject)+' <small>'+escapeHtml(t.status)+'</small></p>').join("")||'<p class="muted">No support requests.</p>')+'</section></div>';
   root.querySelector("#crm-back").onclick=customers;
   root.querySelector("#crm-edit").onclick=()=>customerForm(p,data.crmDetails||{});
+  if(returning?.courseId){
+    const actions=root.querySelector(".ae-mgmt-header-actions");
+    const btn=document.createElement("button");btn.type="button";btn.className="btn ae-return-enroll";btn.textContent="Enroll this customer in the course";btn.onclick=()=>returnToEnrollment(uid);
+    actions?.prepend(btn);
+  }
   root.querySelector("#crm-enroll").onclick=async()=>{await navigateTo("course_enrollments");await enrollments(uid)};
   root.querySelector("#crm-order").onclick=async()=>{await navigateTo("orders");await ordersPage(uid,p.email)};
   root.querySelector("#crm-invite").onclick=async()=>{await navigateTo("orders");inviteForm({email:p.email})};
