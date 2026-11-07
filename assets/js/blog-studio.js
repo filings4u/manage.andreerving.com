@@ -58,7 +58,7 @@ function stripDuplicateCover(html,cover){
  return main.innerHTML;
 }
 export function createBlogStudio({db,root,notify,isCurrent,onExit}){
- let selected=null,posts=[],draftTimer=null,dirty=false,editor=null,saveBusy=false,preview=false,savedRange=null;
+ let selected=null,posts=[],categories=[],blogPage=1,draftTimer=null,dirty=false,editor=null,saveBusy=false,preview=false,savedRange=null;
  const active=()=>isCurrent("blog_posts");
  const q=selector=>root.querySelector(selector);
  const qa=selector=>[...root.querySelectorAll(selector)];
@@ -69,6 +69,7 @@ export function createBlogStudio({db,root,notify,isCurrent,onExit}){
   if(!active())return;
   if(response.error){root.innerHTML=banner("Blog Studio","Manage articles and publishing.")+'<p role="alert">'+E(response.error.message)+'</p>';return}
   posts=response.data||[];
+   const categoriesResponse=await db.from('blog_categories').select('name').order('name');categories=categoriesResponse.data?.map(x=>x.name)||[];
   const published=posts.filter(x=>x.status==="published").length,importing=posts.filter(x=>x.migration_status==="pending_import").length;
   root.innerHTML=banner("Blog Studio","Write, import, organize and publish articles directly to andreerving.com.")+
     '<div class="blog-studio-overview"><div><span>All posts</span><strong>'+posts.length+'</strong></div><div><span>Published</span><strong>'+published+'</strong></div><div><span>Awaiting original content</span><strong>'+importing+'</strong></div></div>'+
@@ -78,10 +79,13 @@ export function createBlogStudio({db,root,notify,isCurrent,onExit}){
   function draw(){
    const query=q("#blog-search").value.toLowerCase(),state=q("#blog-filter").value;
    const subset=posts.filter(p=>(p.title+" "+p.excerpt+" "+p.category).toLowerCase().includes(query)&&(state==="all"||p.status===state||state==="pending_import"&&p.migration_status==="pending_import"));
-   q("#blog-results").innerHTML=subset.map(p=>'<button class="blog-studio-row" data-blog-id="'+E(p.id)+'"><span class="blog-studio-row-title">'+E(p.title)+'<small>'+E(p.category||"Insights")+' · Last updated '+humanDate(p.updated_at)+'</small></span><span class="blog-studio-status '+E(p.migration_status==="pending_import"?"pending":p.status)+'">'+E(p.migration_status==="pending_import"?"Awaiting import":p.status)+'</span><span class="blog-studio-row-arrow">Edit →</span></button>').join("")||'<p class="blog-studio-empty">No articles match your search.</p>';
+   const pages=Math.max(1,Math.ceil(subset.length/10));blogPage=Math.min(blogPage,pages);const visible=subset.slice((blogPage-1)*10,blogPage*10);
+   q("#blog-results").innerHTML=visible.map(p=>'<button class="blog-studio-row" data-blog-id="'+E(p.id)+'"><span class="blog-studio-row-title">'+E(p.title)+'<small>'+E(p.category||"Insights")+' · Last updated '+humanDate(p.updated_at)+'</small></span><span class="blog-studio-status '+E(p.migration_status==="pending_import"?"pending":p.status)+'">'+E(p.migration_status==="pending_import"?"Awaiting import":p.status)+'</span><span class="blog-studio-row-arrow">Edit →</span></button>').join("")||'<p class="blog-studio-empty">No articles match your search.</p>';
+   q('#blog-results').insertAdjacentHTML('beforeend','<nav class="ae-pagination" aria-label="Article pages"><button type="button" id="blog-prev" '+(blogPage===1?'disabled':'')+'>Previous</button><span>Page '+blogPage+' of '+pages+'</span><button type="button" id="blog-next" '+(blogPage===pages?'disabled':'')+'>Next</button></nav>');
+   q('#blog-prev').onclick=()=>{blogPage--;draw()};q('#blog-next').onclick=()=>{blogPage++;draw()};
    qa("[data-blog-id]").forEach(b=>b.onclick=()=>open(posts.find(p=>p.id===b.dataset.blogId)));
   }
-  q("#blog-search").oninput=draw;q("#blog-filter").onchange=draw;draw();
+  q("#blog-search").oninput=()=>{blogPage=1;draw()};q("#blog-filter").onchange=()=>{blogPage=1;draw()};draw();
   q("#blog-new").onclick=()=>open(null);
   q("#blog-import-help").onclick=()=>showImport();
  }
@@ -227,7 +231,7 @@ export function createBlogStudio({db,root,notify,isCurrent,onExit}){
   '<section class="blog-edit-card blog-excerpt" id="blog-summary"><h2>Article summary</h2><label for="blog-excerpt">A short introduction shown on the blog homepage</label><textarea id="blog-excerpt" name="excerpt" rows="3" maxlength="520">'+E(p.excerpt||"")+'</textarea></section>'+
   '</main><div class="blog-studio-settings"><section class="blog-settings-panel" id="blog-publishing"><h2>Publish settings</h2><label>Status<select id="blog-status"><option value="draft" '+(p.status!=="published"?"selected":"")+'>Draft</option><option value="published" '+(p.status==="published"?"selected":"")+'>Published</option><option value="archived" '+(p.status==="archived"?"selected":"")+'>Archived</option></select></label>'+
   '<label>Author<input id="blog-author" value="'+E(p.author_name||"Andre Erving")+'"></label>'+
-  '<label>Category<input id="blog-category" value="'+E(p.category||"Insights")+'" maxlength="90"></label>'+
+  '<label>Category<select id="blog-category">'+[...new Set([p.category||"Insights",...categories,...posts.map(x=>x.category).filter(Boolean)])].sort().map(name=>'<option value="'+E(name)+'" '+(name===(p.category||"Insights")?'selected':'')+'>'+E(name)+'</option>').join('')+'</select></label><button type="button" id="blog-create-category" class="btn secondary">+ Create category</button><div id="blog-new-category-fields" hidden><label>New category name<input id="blog-new-category-name" maxlength="90" placeholder="e.g. Business growth"></label><button type="button" class="btn" id="blog-save-category">Save category</button><p id="blog-category-message" role="status"></p></div>'+
   '<label>Tags (comma separated)<input id="blog-tags" value="'+E((p.tags||[]).join(", "))+'" maxlength="350"></label>'+
   '<label>Publish date<input id="blog-date" type="datetime-local" value="'+E(p.published_at?new Date(p.published_at).toISOString().slice(0,16):"")+'"></label></section>'+
   '<section class="blog-settings-panel" id="blog-image-section"><h2>Cover image</h2><div class="blog-cover-preview">'+(p.cover_image_url?'<img src="'+E(p.cover_image_url)+'" alt="Article cover">':'<span>No cover image yet</span>')+'</div><label>Cover image URL<input id="blog-cover" type="url" value="'+E(p.cover_image_url||"")+'" placeholder="https://..."></label><label class="blog-file-upload">Upload image<input type="file" id="blog-cover-upload" accept="image/png,image/jpeg,image/webp"></label></section>'+
@@ -245,6 +249,16 @@ export function createBlogStudio({db,root,notify,isCurrent,onExit}){
   '<p class="blog-studio-livepath">Article URL: andreerving.com/blog/<span id="blog-slug-display">'+E(p.slug||"new-article")+'.html</span></p></section>'+
   (p.source_url?'<section class="blog-settings-panel"><h2>Original article</h2><a href="'+E(p.source_url)+'" target="_blank" rel="noopener noreferrer">View original post ↗</a>'+(isImported?'<p class="blog-import-warning">The original text has not been imported. Add the article content before publishing.</p>':'')+'</section>':'')+
   '</div></div></div><p role="alert" id="blog-error" class="blog-error" hidden></p></form></div>';
+  q('#blog-create-category').onclick=()=>{q('#blog-new-category-fields').hidden=false;q('#blog-new-category-name').focus()};
+  q('#blog-save-category').onclick=async()=>{
+   const name=q('#blog-new-category-name').value.trim().replace(/\s+/g,' ');
+   if(name.length<2||name.length>90){q('#blog-category-message').textContent='Enter a category name between 2 and 90 characters.';return}
+   const {error}=await db.from('blog_categories').insert({name,slug:slugify(name)});
+   if(error){q('#blog-category-message').textContent=error.code==='23505'?'This category already exists.':error.message;return}
+   categories=[...new Set([...categories,name])].sort();
+   const opt=document.createElement('option');opt.value=name;opt.textContent=name;q('#blog-category').append(opt);q('#blog-category').value=name;
+   q('#blog-new-category-fields').hidden=true;mark();notify('Category created');
+  };
   qa(".blog-editor-guide-links a").forEach(link=>{
    link.addEventListener("click",event=>{
     event.preventDefault();
