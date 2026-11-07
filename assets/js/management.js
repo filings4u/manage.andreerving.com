@@ -1,13 +1,13 @@
 import {createLMS} from './lms.js?v=no-browser-alerts-20261106';
 import {createManagementOperations} from './management-operations.js?v=crm-full-width-20261107';
-import {createBlogStudio} from './blog-studio.js?v=rich-seo-final-20261107f';
+import {createBlogStudio,cleanBlogHTML} from './blog-studio.js?v=rich-seo-final-20261107f';
 import{createClient}from'https://esm.sh/@supabase/supabase-js@2.58.0';
 const db=createClient('https://gnfyidajbectlppsekzj.supabase.co','sb_publishable_DGt4HrHAwWyMt-0Xtzlfog_F18RnOyf');
 const app=document.querySelector('#app'),safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const configs={
 course_extensions:{title:'Course extensions',subtitle:'Manage 30-day access extension pricing',cols:['course_id','amount','enabled'],label:'course_id'},
 blog_posts:{title:'Blog posts',subtitle:'Create, edit and publish articles',fields:{title:'text',slug:'text',excerpt:'textarea',body_html:'textarea',cover_image_url:'url',author_name:'text',status:['draft','published','archived'],published_at:'datetime-local',source_url:'url',migration_status:['native','pending_import','imported','verified']},cols:['title','status','updated_at'],label:'title'},
-site_pages:{title:'Website pages',subtitle:'Manage reusable CMS pages',fields:{title:'text',slug:'text',body_html:'textarea',status:['draft','published','archived']},cols:['title','slug','status'],label:'title'},
+site_pages:{title:'Website pages',subtitle:'Edit main website content and search settings',fields:{title:'text',slug:'text',body_html:'textarea',status:['draft','published','archived'],seo_title:'text',seo_description:'textarea',seo_keywords:'text',canonical_url:'url',social_title:'text',social_description:'textarea',social_image_url:'url',featured_image_url:'url',seo_indexable:'checkbox'},cols:['title','slug','status'],label:'title'},
 courses:{title:'Courses',subtitle:'Build and publish your training catalog',fields:{title:'text',slug:'text',short_description:'textarea',description:'textarea',category:'text',featured_image_url:'url',price:'number',compare_at_price:'number',purchase_url:'url',access_days:'number',certificate_enabled:'checkbox',status:['draft','published','archived'],sort_order:'number'},cols:['title','category','price','status'],label:'title'},
 course_modules:{title:'Course modules',subtitle:'Organize modules within a course',fields:{course_id:'course',title:'text',description:'textarea',sort_order:'number'},cols:['title','course_id','sort_order'],label:'title'},
 course_lessons:{title:'Lessons',subtitle:'Create content inside course modules',fields:{course_id:'course',module_id:'module',title:'text',lesson_type:['text','video','download','quiz'],content_html:'textarea',video_url:'url',resource_url:'url',duration_minutes:'number',sort_order:'number',is_preview:'checkbox'},cols:['title','lesson_type','duration_minutes'],label:'title'},
@@ -187,8 +187,43 @@ w.innerHTML='<div class="ae-editor-workspace ae-admin-editor"><div class="ae-edi
 w.querySelector('#editor-back').onclick=w.querySelector('#editor-cancel').onclick=e=>{e.preventDefault();navigate(area)};
 const course=w.querySelector('[name=course_id]');if(course)course.onchange=()=>updateModuleSelect(w,course.value);
 w.querySelector('form').onsubmit=save;
+ if(area==='site_pages')setupPageVisualEditor(w,row);
 }
-function field(name,type,row){const value=row?.[name],label=safe(name.replaceAll('_',' ')),wide=['textarea','course','module'].includes(type)?' wide':'',input=Array.isArray(type)?'<select name="'+name+'">'+type.map(v=>'<option value="'+safe(v)+'" '+(value===v?'selected':'')+'>'+safe(v.replaceAll('_',' '))+'</option>').join('')+'</select>':type==='course'?'<select name="'+name+'" required>'+lookups.courses.map(v=>'<option value="'+safe(v.id)+'" '+(value===v.id?'selected':'')+'>'+safe(v.title)+'</option>').join('')+'</select>':type==='module'?'<select name="'+name+'" required>'+lookups.modules.filter(m=>m.course_id===(row?.course_id||lookups.courses[0]?.id)).map(v=>'<option value="'+safe(v.id)+'" '+(value===v.id?'selected':'')+'>'+safe(v.title)+'</option>').join('')+'</select>':type==='textarea'?'<textarea name="'+name+'">'+safe(value)+'</textarea>':type==='checkbox'?'<input type="checkbox" name="'+name+'" '+(value?'checked':'')+'>':'<input name="'+name+'" type="'+type+'" '+(['title','slug','price_key','label'].includes(name)?'required':'')+' value="'+safe(type==='datetime-local'&&value?String(value).slice(0,16):value??'')+'">';return '<label class="field'+wide+'">'+label+input+'</label>'}
+function setupPageVisualEditor(w,row){
+ const form=w.querySelector('#record-form'),raw=form.elements.namedItem('body_html');
+ const original=document.createElement('div');original.innerHTML=row?.body_html||'';
+ const hero=original.querySelector('[data-cms-target="hero"] p');
+ const body=original.querySelector('[data-cms-target="body"]');
+ const prose=body?.innerHTML||[...original.childNodes].filter(n=>n.nodeType!==1||!n.matches?.('[data-cms-target="hero"]')).map(n=>n.outerHTML||n.textContent).join('');
+ const panel=document.createElement('div');panel.className='ae-page-visual';
+ panel.innerHTML='<div class="ae-page-visual-label"><strong>Page introduction</strong><span>Edit the message shown below the main page heading.</span></div><div id="ae-page-hero" class="ae-page-editable" role="textbox" aria-label="Page introduction" contenteditable="true" data-placeholder="Enter the introduction…">'+cleanBlogHTML(hero?.innerHTML||'')+'</div><div class="ae-page-visual-label"><strong>Page content</strong><span>Write and format your website content below.</span></div><div class="ae-page-toolbar"><button type="button" data-command="bold">Bold</button><button type="button" data-command="italic">Italic</button><button type="button" data-command="formatBlock" data-arg="h2">Heading</button><button type="button" data-command="insertUnorderedList">List</button><button type="button" id="ae-add-page-photo">Add photo</button><input id="ae-page-photo" type="file" accept="image/png,image/jpeg,image/webp" hidden></div><div id="ae-page-content" class="ae-page-editable ae-page-body" role="textbox" aria-label="Page content" contenteditable="true" data-placeholder="Add page content…">'+cleanBlogHTML(prose)+'</div>';
+ raw.closest('label').hidden=true;raw.closest('label').insertAdjacentElement('beforebegin',panel);
+ const h=panel.querySelector('#ae-page-hero'),b=panel.querySelector('#ae-page-content');
+ const sync=()=>{const intro=cleanBlogHTML(h.innerHTML).trim(),copy=cleanBlogHTML(b.innerHTML).trim();raw.value=(intro?'<div data-cms-target="hero"><p>'+intro+'</p></div>':'')+(copy?'<div data-cms-target="body">'+copy+'</div>':'')};
+ h.oninput=sync;b.oninput=sync;
+ panel.querySelectorAll('[data-command]').forEach(btn=>btn.onclick=()=>{b.focus();document.execCommand(btn.dataset.command,false,btn.dataset.arg||null);sync()});
+ const upload=async file=>{
+  if(!file||!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>10*1024*1024)throw Error('Choose a JPG, PNG, or WebP image under 10 MB');
+  const key='cms/'+crypto.randomUUID()+'.'+file.type.split('/')[1].replace('jpeg','jpg');
+  const {error}=await db.storage.from('Andre Erving Public').upload(key,file,{contentType:file.type,upsert:false});
+  if(error)throw error;
+  return db.storage.from('Andre Erving Public').getPublicUrl(key).data.publicUrl;
+ };
+ panel.querySelector('#ae-add-page-photo').onclick=()=>panel.querySelector('#ae-page-photo').click();
+ panel.querySelector('#ae-page-photo').onchange=async e=>{try{const url=await upload(e.target.files[0]);b.focus();document.execCommand('insertImage',false,url);sync();toast('Page image uploaded')}catch(err){toast(err.message,true)}};
+ for(const name of ['social_image_url','featured_image_url']){
+  const input=form.elements.namedItem(name);if(!input)continue;
+  const picker=document.createElement('input');picker.type='file';picker.accept='image/png,image/jpeg,image/webp';picker.className='ae-image-picker';
+  const button=document.createElement('button');button.type='button';button.className='btn secondary';button.textContent='Upload image';
+  input.insertAdjacentElement('afterend',picker);picker.insertAdjacentElement('afterend',button);
+  button.onclick=()=>picker.click();picker.onchange=async()=>{try{input.value=await upload(picker.files[0]);toast('Image uploaded')}catch(err){toast(err.message,true)}};
+ }
+ const seo=document.createElement('div');seo.className='ae-page-serp-preview';seo.innerHTML='<small>Google search preview</small><strong></strong><span></span><p></p>';
+ const description=form.elements.namedItem('seo_description');description?.closest('label')?.insertAdjacentElement('afterend',seo);
+ const update=()=>{seo.querySelector('strong').textContent=form.elements.namedItem('seo_title')?.value||form.elements.namedItem('title')?.value||'Website page';seo.querySelector('span').textContent='andreerving.com/'+(form.elements.namedItem('slug')?.value||'')+'.html';seo.querySelector('p').textContent=description?.value||'Add a description for search results.'};
+ form.querySelectorAll('[name=seo_title],[name=seo_description],[name=title],[name=slug]').forEach(input=>input.addEventListener('input',update));update();
+}
+function field(name,type,row){const value=row?.[name],names={body_html:'Website content',seo_title:'Search title',seo_description:'Search description',seo_keywords:'Focus keywords',canonical_url:'Canonical page URL',social_title:'Social sharing title',social_description:'Social sharing description',social_image_url:'Social sharing image',featured_image_url:'Featured page image',seo_indexable:'Allow search indexing'},label=safe(names[name]||name.replaceAll('_',' ')),wide=['textarea','course','module'].includes(type)?' wide':'',input=Array.isArray(type)?'<select name="'+name+'">'+type.map(v=>'<option value="'+safe(v)+'" '+(value===v?'selected':'')+'>'+safe(v.replaceAll('_',' '))+'</option>').join('')+'</select>':type==='course'?'<select name="'+name+'" required>'+lookups.courses.map(v=>'<option value="'+safe(v.id)+'" '+(value===v.id?'selected':'')+'>'+safe(v.title)+'</option>').join('')+'</select>':type==='module'?'<select name="'+name+'" required>'+lookups.modules.filter(m=>m.course_id===(row?.course_id||lookups.courses[0]?.id)).map(v=>'<option value="'+safe(v.id)+'" '+(value===v.id?'selected':'')+'>'+safe(v.title)+'</option>').join('')+'</select>':type==='textarea'?'<textarea name="'+name+'">'+safe(value)+'</textarea>':type==='checkbox'?'<input type="checkbox" name="'+name+'" '+(value?'checked':'')+'>':'<input name="'+name+'" type="'+type+'" '+(['title','slug','price_key','label'].includes(name)?'required':'')+' value="'+safe(type==='datetime-local'&&value?String(value).slice(0,16):value??'')+'">';return '<label class="field'+wide+'">'+label+input+'</label>'}
 function updateModuleSelect(modal,courseId){const old=modal.querySelector('[name=module_id]');if(!old)return;old.innerHTML=lookups.modules.filter(x=>x.course_id===courseId).map(x=>'<option value="'+safe(x.id)+'">'+safe(x.title)+'</option>').join('')}
 async function save(e){e.preventDefault();if(busy)return;const form=e.target,c=configs[section],data={};for(const [name,type]of Object.entries(c.fields)){const input=form.elements.namedItem(name);let value=type==='checkbox'?input.checked:input.value.trim();if(type==='number')value=value===''?null:Number(value);if(type==='datetime-local')value=value?new Date(value).toISOString():null;if(['url','datetime-local'].includes(type)&&value==='')value=null;data[name]=value}
 if(data.slug&&!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(data.slug))return formError('Use lowercase letters, numbers and hyphens in the slug.');
