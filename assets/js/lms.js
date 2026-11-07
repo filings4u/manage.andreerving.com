@@ -243,7 +243,7 @@ export function createLMS({db,root,notify,safe,isCurrent}){
 
     by("lms-enroll")?.addEventListener("click",()=>{
       sessionStorage.setItem("ae_enrollment_return",JSON.stringify({courseId:s.courseId}));
-      location.hash="#/admin/customer_profiles";
+      history.replaceState(null,"","#/admin/customer_profiles");location.reload();
     });
     all("[data-enrollment]").forEach(b=>b.onclick=()=>openEnrollment(s.enrollments.find(e=>e.id===b.dataset.enrollment)));
     all("[data-access-toggle]").forEach(b=>b.onclick=async()=>{
@@ -766,15 +766,18 @@ export function createLMS({db,root,notify,safe,isCurrent}){
   }
   function openEnrollment(record=null){
     const c=current();if(!c)return;
+    let returnedCustomer="";
+    if(!record){try{const back=JSON.parse(sessionStorage.getItem("ae_enrollment_return")||"null");if(back?.courseId===c.id&&/^[a-f0-9-]{36}$/i.test(back.userId||""))returnedCustomer=back.userId}catch{}}
+
     s.nextEditRoute="enrollment/"+(record?.id||"new")+"/"+c.id;
-    const fields='<div class="form-grid">'+(record?'<p class="field wide">Customer: '+esc(s.customers.find(x=>x.id===record.user_id)?.email||record.user_id)+'</p>':select("Select customer","user_id",[["","Choose a customer"],...s.customers.map(p=>[p.id,p.full_name?p.full_name+" ("+p.email+")":p.email])],""))+
+    const fields='<div class="form-grid">'+(record?'<p class="field wide">Customer: '+esc(s.customers.find(x=>x.id===record.user_id)?.email||record.user_id)+'</p>':select("Select customer","user_id",[["","Choose a customer"],...s.customers.map(p=>[p.id,p.full_name?p.full_name+" ("+p.email+")":p.email])],returnedCustomer))+
       select("Access status","status",[["active","Active"],["completed","Completed"],["cancelled","Cancelled"],["expired","Expired"]],record?.status||"active")+
       input("Expiration date (optional)","expires_at",record?.expires_at?.slice(0,10)||"","date")+'</div><p class="muted">Enrolling a student grants access. It does not create a payment or purchase record.</p>';
     modal(record?"Manage enrollment":"Enroll student",fields,async fd=>{
       const status=String(fd.get("status")||"active"),expires=String(fd.get("expires_at")||"");
       const data={status,expires_at:expires?new Date(expires+"T23:59:59Z").toISOString():null};
       if(!record){data.user_id=String(fd.get("user_id")||"");data.course_id=c.id;if(!s.customers.some(p=>p.id===data.user_id))throw Error("Select a valid customer");if(s.enrollments.some(e=>e.course_id===c.id&&e.user_id===data.user_id))throw Error("Enrollment exists. Manage it using the existing student row.");}
-      await save("course_enrollments",data,record?.id);notify(record?"Enrollment updated":"Student enrolled");
+      await save("course_enrollments",data,record?.id);if(!record)sessionStorage.removeItem("ae_enrollment_return");notify(record?"Enrollment updated":"Student enrolled");
     });
   }
   async function changeStatus(status){
