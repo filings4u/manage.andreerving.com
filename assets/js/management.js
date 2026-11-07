@@ -89,7 +89,7 @@ else{const match=rows.find(r=>r.id===editorMatch[3]);if(match)await openEditor(m
 function head(title,subtitle,action=''){return '<div class="head"><div><div class="eyebrow">ANDRE ERVING / MANAGEMENT</div><h1>'+safe(title)+'</h1><div class="muted">'+safe(subtitle)+'</div></div>'+action+'</div>'}
 async function count(table){const {count,error}=await db.from(table).select('*',{count:'exact',head:true});return error?'—':count??0}
 async function overview(){
-const result=await Promise.allSettled(['courses','blog_posts','customer_profiles','orders','website_inquiries','course_enrollments','customer_documents'].map(count));
+const result=await Promise.allSettled(['courses','blog_posts','customer_profiles','orders','course_enrollments','customer_documents'].map(count));
 if(section!=='overview')return;
 const vals=result.map(x=>x.status==='fulfilled'?x.value:'—');
 const stats=[['Courses',vals[0]],['Blog posts',vals[1]],['Customers',vals[2]],['Orders',vals[3]]];
@@ -107,7 +107,23 @@ w.innerHTML=head('Workspace overview','Your main website and customer portal, in
 w.querySelectorAll('[data-jump]').forEach(b=>b.onclick=()=>navigate(b.dataset.jump));
 }
 function format(v){if(v==null)return '—';if(typeof v==='boolean')return v?'Yes':'No';if(typeof v==='string'&&/^\d{4}-\d\d-\d\dT/.test(v))return new Date(v).toLocaleDateString();return safe(v)}
-async function loadTable(){const c=configs[section];const q=await db.from(section).select('*').limit(200);if(section!==Object.keys(configs).find(x=>x===section))return;if(q.error){document.querySelector('#workspace').innerHTML=head(c.title,c.subtitle)+'<p class="notice error">Unable to load records: '+safe(q.error.message)+'</p>';return}rows=q.data||[];drawTable()}
+async function loadTable(){const c=configs[section];
+ if(section==='website_inquiries'||section==='newsletter_signups'){
+  const current=section;
+  const {data:{session},error}=await db.auth.getSession();
+  if(error||!session?.access_token){toast('Your management session expired. Please sign in again.',true);return}
+  try{
+   const response=await fetch('https://gnfyidajbectlppsekzj.supabase.co/functions/v1/andre-management-operations',{
+    method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+session.access_token},
+    body:JSON.stringify({action:section==='website_inquiries'?'list_website_inquiries':'list_newsletter_signups'})});
+   const result=await response.json().catch(()=>({}));
+   if(!response.ok)throw Error(result.error||'Unable to load protected records');
+   if(section!==current)return;
+   rows=result.items||[];drawTable();
+  }catch(err){if(section===current)document.querySelector('#workspace').innerHTML=head(c.title,c.subtitle)+'<p class="notice error">'+safe(err.message)+'</p>'}
+  return;
+ }
+ const q=await db.from(section).select('*').limit(200);if(section!==Object.keys(configs).find(x=>x===section))return;if(q.error){document.querySelector('#workspace').innerHTML=head(c.title,c.subtitle)+'<p class="notice error">Unable to load records: '+safe(q.error.message)+'</p>';return}rows=q.data||[];drawTable()}
 function drawTable(){
  const c=configs[section],query=search.toLowerCase();
  const filtered=rows.filter(r=>Object.values(r).some(v=>String(v??'').toLowerCase().includes(query)));
