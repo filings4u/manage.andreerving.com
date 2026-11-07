@@ -234,7 +234,7 @@ export function createBlogStudio({db,root,notify,isCurrent,onExit}){
   if(!title||!slug)throw Error("Article title and URL slug are required.");
   if(status==="published"&&plain.length<80)throw Error("Add the complete article content before publishing (at least 80 characters).");
   const date=q("#blog-date").value;
-  return {title,slug,excerpt:q("#blog-excerpt").value.trim(),body_html:html,author_name:q("#blog-author").value.trim()||"Andre Erving",category:q("#blog-category").value.trim()||"Insights",tags:q("#blog-tags").value.split(",").map(x=>x.trim()).filter(Boolean).slice(0,20),seo_title:q("#blog-seo-title").value.trim()||null,seo_description:q("#blog-seo-description").value.trim()||null,cover_image_url:safeURL(q("#blog-cover").value.trim(),true)||null,status,published_at:status==="published"?(date?new Date(date).toISOString():selected?.published_at||new Date().toISOString()):null,migration_status:plain?"verified":"pending_import"};
+  return {title,slug,excerpt:q("#blog-excerpt").value.trim(),body_html:html,author_name:q("#blog-author").value.trim()||"Andre Erving",category:q("#blog-category").value.trim()||"Insights",tags:q("#blog-tags").value.split(",").map(x=>x.trim()).filter(Boolean).slice(0,20),seo_title:q("#blog-seo-title").value.trim()||null,seo_description:q("#blog-seo-description").value.trim()||null,cover_image_url:safeURL(q("#blog-cover").value.trim(),true)||null,status,published_at:date?new Date(date).toISOString():status==="published"?(selected?.published_at||new Date().toISOString()):(selected?.published_at||null),migration_status:plain?"verified":"pending_import"};
  }
  async function save(status){
   if(saveBusy)return;saveBusy=true;
