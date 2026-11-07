@@ -84,6 +84,43 @@ export function createBlogStudio({db,root,notify,isCurrent,onExit}){
   overlay.querySelector(".blog-studio-close").onclick=()=>overlay.remove();
   overlay.onclick=e=>{if(e.target===overlay)overlay.remove()};
 
+  // Import a single Wix article directly from its URL without creating a placeholder first.
+  const urlPanel=document.createElement("div");
+  urlPanel.className="blog-studio-url-import";
+  urlPanel.innerHTML='<h3>Import an article from a link</h3><p>Paste the address of an individual post from your previous Wix blog. The article will be saved as a draft for review.</p><form id="blog-import-url-form"><label for="blog-original-url">Original blog article URL</label><div class="blog-import-url-row"><input id="blog-original-url" type="url" inputmode="url" placeholder="https://roselandcompanies.wixsite.com/my-site-21/post/..." required><button class="btn" type="submit">Import article</button></div><p role="status" aria-live="polite" id="blog-original-url-status"></p></form>';
+  overlay.querySelector(".blog-studio-auto-import").before(urlPanel);
+  const urlForm=urlPanel.querySelector("#blog-import-url-form");
+  urlForm.addEventListener("submit",async event=>{
+   event.preventDefault();
+   const input=urlForm.querySelector("#blog-original-url"),status=urlForm.querySelector("#blog-original-url-status"),button=urlForm.querySelector("button");
+   let url;
+   try{
+    url=new URL(input.value.trim());
+    if(url.protocol!=="https:"||!["roselandcompanies.wixsite.com","andreerving.com","www.andreerving.com"].includes(url.hostname.toLowerCase())||!url.pathname.includes("/post/"))throw Error("Please paste an individual article link from your original Wix blog.");
+   }catch{status.textContent="Please paste an individual article link, not the main blog page.";status.dataset.error="true";return}
+   status.textContent="Fetching original article and saving a draft…";status.dataset.error="false";button.disabled=true;
+   try{
+    const {data:{session},error}=await db.auth.getSession();
+    if(error||!session?.access_token)throw Error("Sign in again before importing articles.");
+    const response=await fetch("https://gnfyidajbectlppsekzj.supabase.co/functions/v1/andre-blog-import",{
+     method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+session.access_token},
+     body:JSON.stringify({url:url.href})
+    });
+    const result=await response.json().catch(()=>({}));
+    if(!response.ok||result.status==="failed")throw Error(result.error||"The article could not be imported.");
+    status.textContent=result.message||"Import complete.";
+    if(result.status==="imported"&&result.id){
+     notify("Article imported as a draft. Review it before publishing.");
+     overlay.remove();
+     const record=await db.from("blog_posts").select("*").eq("id",result.id).single();
+     if(record.error)throw record.error;
+     open(record.data);
+    }
+   }catch(error){
+    status.textContent=error.message||"Unable to import this article.";
+    status.dataset.error="true";
+   }finally{button.disabled=false}
+  });
   overlay.querySelector("#blog-import-originals").onclick=async()=>{
    const button=overlay.querySelector("#blog-import-originals");
    const progress=overlay.querySelector("#blog-auto-status");
