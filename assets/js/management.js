@@ -1,5 +1,5 @@
 import {createLMS} from './lms.js?v=no-browser-alerts-20261106';
-import {createManagementOperations} from './management-operations.js?v=dedup-customer-routing-20261107';
+import {createManagementOperations} from './management-operations.js?v=crm-full-width-20261107';
 import {createBlogStudio} from './blog-studio.js?v=blog-studio-release-20261107b';
 import{createClient}from'https://esm.sh/@supabase/supabase-js@2.58.0';
 const db=createClient('https://gnfyidajbectlppsekzj.supabase.co','sb_publishable_DGt4HrHAwWyMt-0Xtzlfog_F18RnOyf');
