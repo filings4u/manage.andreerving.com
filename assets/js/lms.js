@@ -570,6 +570,32 @@ export function createLMS({db,root,notify,safe,isCurrent}){
       catch(err){const n=by("lms-form-error");n.textContent=err.message||String(err);n.classList.remove("hidden");submit.disabled=false}
       finally{s.busy=false}
     };
+    if(isCourse){
+      const field=form.elements.namedItem("featured_image_url"),wrapper=field?.closest(".field");
+      if(wrapper){
+        const picker=document.createElement("div");picker.className="ae-course-cover-upload";
+        picker.innerHTML='<div class="ae-cover-preview" role="img" aria-label="Course cover image preview"></div><div class="ae-cover-upload-actions"><label class="btn secondary ae-cover-picker">Upload cover image<input type="file" accept="image/png,image/jpeg,image/webp" hidden></label><small>JPG, PNG or WebP · maximum 8 MB. Save the course to apply.</small><span class="ae-cover-upload-feedback" role="status" aria-live="polite"></span></div>';
+        wrapper.append(picker);
+        const preview=picker.querySelector(".ae-cover-preview"),fileInput=picker.querySelector('input[type="file"]'),feedback=picker.querySelector(".ae-cover-upload-feedback");
+        const updateCover=()=>{const url=field.value.trim();preview.style.backgroundImage=/^https:\/\//i.test(url)?'url("'+url.replaceAll('"','%22')+'")':"";preview.classList.toggle("empty",!url)};
+        field.addEventListener("input",updateCover);updateCover();
+        fileInput.addEventListener("change",async()=>{
+          const file=fileInput.files?.[0];if(!file)return;
+          if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size>8*1024*1024){feedback.textContent="Select a JPG, PNG or WebP image under 8 MB.";fileInput.value="";return}
+          fileInput.disabled=true;feedback.textContent="Uploading your image…";
+          try{
+            const ext=({"image/jpeg":"jpg","image/png":"png","image/webp":"webp"})[file.type],path="courses/covers/"+crypto.randomUUID()+"."+ext;
+            const result=await db.storage.from("Andre Erving Public").upload(path,file,{cacheControl:"3600",upsert:false,contentType:file.type});
+            if(result.error)throw result.error;
+            const url=db.storage.from("Andre Erving Public").getPublicUrl(path).data.publicUrl;
+            if(!url)throw Error("Unable to create image URL.");
+            field.value=url;field.dispatchEvent(new Event("input",{bubbles:true}));field.dispatchEvent(new Event("change",{bubbles:true}));
+            feedback.textContent="Image uploaded. Save your course to apply it.";updateCover();
+          }catch(error){feedback.textContent=error.message||"Upload failed."}
+          finally{fileInput.disabled=false;fileInput.value=""}
+        });
+      }
+    }
     window.AEUnsaved?.watch(form,{title:isCourse?'course':'course settings',save:async()=>{
       if(!form.isConnected||!form.reportValidity())return false;
       form.requestSubmit();
