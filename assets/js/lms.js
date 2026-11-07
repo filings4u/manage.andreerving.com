@@ -161,12 +161,12 @@ export function createLMS({db,root,notify,safe,isCurrent}){
         const folded=s.collapsed?.has(m.id);
         return '<article class="lms-builder-section" data-module="'+esc(m.id)+'" data-drop-module="'+esc(m.id)+'">'+
           '<header class="lms-builder-section-header"><span draggable="true" class="lms-drag-handle" data-drag-module="'+esc(m.id)+'" tabindex="0" title="Drag section to reorder" aria-label="Drag section">⠿</span>'+
-          '<button type="button" class="lms-collapse" data-toggle-module="'+esc(m.id)+'" aria-expanded="'+(!folded)+'">'+(folded?'›':'⌄')+'</button>'+
+          '<button type="button" class="lms-collapse" data-toggle-module="'+esc(m.id)+'" aria-expanded="'+(!folded)+'">'+'<svg class="ae-ui-chevron '+(folded?'is-collapsed':'')+'" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>'+
           '<button type="button" class="lms-section-name" data-edit-module="'+esc(m.id)+'">'+esc(m.title)+'</button>'+
           '<span class="lms-lesson-count">'+own.length+' '+(own.length===1?'lesson':'lessons')+'</span>'+
           '<span class="lms-inline-spacer"></span><button type="button" class="lms-dots" data-toggle-section-menu="'+esc(m.id)+'" aria-label="Section options">···</button>'+
           '<div class="lms-section-popover" data-section-menu="'+esc(m.id)+'" hidden><button type="button" data-edit-module="'+esc(m.id)+'">Edit section</button><button type="button" data-duplicate-module="'+esc(m.id)+'">Duplicate section</button><button type="button" data-delete-module="'+esc(m.id)+'">Delete section</button></div>'+
-          '<button type="button" class="lms-collapse-end" data-toggle-module="'+esc(m.id)+'" title="Expand or collapse">'+(folded?'⌄':'⌃')+'</button></header>'+
+          '<button type="button" class="lms-collapse-end" data-toggle-module="'+esc(m.id)+'" title="Expand or collapse">'+'<svg class="ae-ui-chevron '+(folded?'is-collapsed':'')+'" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button></header>'+
           '<div class="lms-builder-section-content" '+(folded?'hidden':'')+'><div class="lms-lesson-dropzone" data-lessons-for="'+esc(m.id)+'">'+
           (own.map(l=>'<div class="lms-step" data-lesson="'+esc(l.id)+'" data-drop-lesson="'+esc(l.id)+'" data-in-module="'+esc(m.id)+'">'+
             '<span class="lms-lesson-drag lms-drag-handle" draggable="true" data-drag-lesson="'+esc(l.id)+'" tabindex="0" title="Drag to reorder or move to another section" aria-label="Drag lesson">⠿</span>'+
