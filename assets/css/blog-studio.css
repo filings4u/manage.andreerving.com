@@ -90,3 +90,38 @@
 .blog-studio-auto-import p{font-size:12px;line-height:1.6}
 .blog-studio-auto-import button{margin:4px 0}
 .blog-studio-import-progress{font-weight:700;color:#26517e;white-space:normal;overflow-wrap:anywhere}
+
+/* Blog Studio editorial redesign: compact full-width management workspace */
+.ae-blog-workspace{width:100%;max-width:none!important;padding:18px 22px 42px!important}
+.blog-studio-head{margin-bottom:18px}.blog-studio-head h1{font-size:26px;line-height:1.2;margin:3px 0 5px}
+.blog-studio-overview{gap:12px;margin-bottom:14px}
+.blog-studio-overview>div{padding:14px 18px;gap:3px;border-radius:10px}
+.blog-studio-overview strong{font-size:24px}
+.blog-studio-list{padding:20px!important;border-radius:10px}
+.blog-studio-filters{margin:15px 0 12px}
+.blog-studio-row{padding:13px 12px}
+.blog-studio-editor{max-width:none;margin:0}
+.blog-studio-editor-top{top:60px;gap:12px;margin-bottom:15px;padding:11px 14px;border-radius:10px}
+.blog-studio-edit-layout{grid-template-columns:minmax(0,1fr) 290px;gap:16px}
+.blog-studio-main{padding:2px 0;min-width:0}
+.blog-studio-main>.blog-studio-eyebrow{margin:4px 0 7px}
+.blog-title-field{font-size:clamp(21px,2vw,29px)!important;line-height:1.3!important;padding:8px 0 13px!important;letter-spacing:-.02em!important;font-weight:800!important}
+.blog-subline{margin:10px 0 15px}
+.blog-edit-card{border-radius:10px;margin-bottom:14px;display:flex;flex-direction:column;min-width:0}
+.blog-editor-label{display:flex;align-items:center;gap:12px;padding:14px 18px 9px;background:#fff}
+.blog-editor-label strong{font-size:13px;color:#122f52}
+.blog-editor-label span{font-size:12px;color:#71849b}
+.blog-toolbar{order:0;position:relative;top:auto;z-index:2;display:flex!important;gap:5px;background:#f6f8fb;padding:8px 12px;border-bottom:1px solid #dbe4f0}
+.blog-toolbar button,.blog-toolbar select{min-height:33px}
+.blog-rich-editor{order:1;display:block!important;min-height:340px!important;max-height:none!important;padding:22px 24px!important;line-height:1.65;font-size:14px!important;background:#fff;cursor:text;white-space:normal}
+.blog-rich-editor:empty:before{content:"Write your article here. Select a style above to add headings, lists, links or images."}
+.blog-rich-editor h2{font-size:21px}.blog-rich-editor h3{font-size:17px}
+.blog-settings-panel{padding:16px;border-radius:10px}
+.blog-settings-panel label{margin-bottom:12px;gap:6px}
+.blog-settings-panel :is(input,select,textarea){min-height:37px}
+.blog-excerpt{padding:16px}.blog-excerpt textarea{min-height:85px}
+.blog-preview-article{padding:32px 24px}
+.blog-preview-article h1{font-size:clamp(24px,2.8vw,36px)}
+@media(max-width:1150px){.blog-studio-edit-layout{grid-template-columns:minmax(0,1fr) 255px}}
+@media(max-width:900px){.blog-studio-edit-layout{grid-template-columns:1fr}.blog-studio-settings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.blog-studio-editor-top{position:relative;top:auto}}
+@media(max-width:650px){.ae-blog-workspace{padding:14px 12px 30px!important}.blog-studio-settings{grid-template-columns:1fr}.blog-rich-editor{min-height:290px!important;padding:16px!important}.blog-editor-label{align-items:flex-start;flex-direction:column;gap:2px}}
