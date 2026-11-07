@@ -12,26 +12,6 @@ const safeVideoURL=value=>{try{const u=new URL(String(value));if(u.protocol!=="h
 export function cleanBlogHTML(input){
  const parsed=new DOMParser().parseFromString("<div>"+String(input||"")+"</div>","text/html");
  const holder=parsed.body.firstElementChild;
- function clean(node){
-  for(const child of [...node.childNodes]){
-   if(child.nodeType===8){child.remove();continue}
-   if(child.nodeType===3)continue;
-   if(child.nodeType!==1){child.remove();continue}
-   if(!allowedTags.has(child.tagName)){child.replaceWith(...[...child.childNodes]);continue}
-   [...child.attributes].forEach(a=>child.removeAttribute(a.name));
-   if(child.tagName==="FONT"){const n=parsed.createElement("span");const settings=[fontColor?"color:"+fontColor:"",fontFace?"font-family:"+fontFace:"",fontSize?("font-size:"+({1:12,2:14,3:16,4:18,5:24,6:30,7:36}[Number(fontSize)]||16)+"px"):""].filter(Boolean).join(";");const sanitized=safeStyle(settings);if(sanitized)n.setAttribute("style",sanitized);n.append(...[...child.childNodes]);child.replaceWith(n);walk(n);continue}\n   if(child.tagName==="IFRAME"){const embed=safeVideoURL(iframeSrc);if(!embed){child.remove();continue}child.setAttribute("src",embed);child.setAttribute("title","Embedded article video");child.setAttribute("loading","lazy");child.setAttribute("referrerpolicy","strict-origin-when-cross-origin");child.setAttribute("allow","accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture");child.setAttribute("allowfullscreen","");continue}\n   const css=safeStyle(style);if(css)child.setAttribute("style",css);\n   if(child.tagName==="IMG"){
-    const src=safeURL(child.getAttribute("src")||"",true);
-    if(!src){child.remove();continue}
-    child.setAttribute("src",src);child.setAttribute("loading","lazy");
-    child.setAttribute("alt",String(child.getAttribute("alt")||"").slice(0,200));
-   }
-   if(child.tagName==="A"){
-    const href=safeURL(child.getAttribute("href")||"");
-    if(href){child.setAttribute("href",href);child.setAttribute("rel","noopener noreferrer")}
-   }
-   clean(child);
-  }
- }
  // Preserve safe URLs and image descriptions before stripping other attributes.
  function walk(node){
   for(const child of [...node.childNodes]){
