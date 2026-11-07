@@ -84,8 +84,8 @@ export function createManagementOperations({db,root,notify,head,isCurrent}){
    items.map(e=>'<tr><td>'+escapeHtml(courses.get(e.course_id)?.title||e.course_id)+'</td><td>'+escapeHtml(e.status)+'</td><td>'+formatDate(e.enrolled_at)+'</td><td>'+formatDate(e.expires_at)+'</td><td><button class="ae-inline-btn" data-access="'+escapeHtml(e.id)+'">Change access</button></td></tr>').join("")+
    '</tbody></table></div></section>'+
    '<section class="panel ae-mgmt-panel"><h2>Purchase and billing history</h2><p class="muted">Only recorded order details are displayed. Card numbers and payment credentials are never stored in this portal.</p>'+
-   '<div class="tablewrap"><table><thead><tr><th>Order</th><th>Date</th><th>Products or services</th><th>Total</th><th>Status</th></tr></thead><tbody>'+
-   orders.map(o=>'<tr><td><strong>'+escapeHtml(o.order_number)+'</strong></td><td>'+formatDate(o.created_at)+'</td><td>'+escapeHtml(rows.filter(x=>x.order_id===o.id).map(x=>x.item_name).join(", ")||"Not recorded")+'</td><td>'+money(o.total)+'</td><td>'+escapeHtml(o.status)+'</td></tr>').join("")+'</tbody></table></div></section>'+
+   '<div class="tablewrap"><table><thead><tr><th>Order</th><th>Date</th><th>Products or services</th><th>Total</th><th>Payment reference</th><th>Status</th></tr></thead><tbody>'+
+   orders.map(o=>'<tr><td><strong>'+escapeHtml(o.order_number)+'</strong></td><td>'+formatDate(o.created_at)+'</td><td>'+escapeHtml(rows.filter(x=>x.order_id===o.id).map(x=>x.item_name).join(", ")||"Not recorded")+'</td><td>'+money(o.total)+'</td><td>'+escapeHtml(o.external_payment_id||'Not available')+'</td><td>'+escapeHtml(o.status)+'</td></tr>').join("")+'</tbody></table></div></section>'+
    '<div class="ae-mgmt-two"><section class="panel ae-mgmt-panel"><h2>Customer documents</h2>'+
    (documents.map(d=>'<p class="ae-crm-item">'+escapeHtml(d.title)+' <small>'+formatDate(d.created_at)+'</small></p>').join("")||'<p class="muted">No documents yet.</p>')+
    '</section><section class="panel ae-mgmt-panel"><h2>Support history</h2>'+
