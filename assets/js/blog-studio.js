@@ -5,10 +5,19 @@ const humanDate=d=>d?new Date(d).toLocaleDateString("en-US",{month:"short",day:"
 const allowedTags=new Set(["P","BR","H2","H3","H4","STRONG","B","EM","I","U","S","UL","OL","LI","BLOCKQUOTE","A","IMG","HR","DIV","SPAN","FIGURE","FIGCAPTION","PRE","CODE","TABLE","TBODY","THEAD","TR","TD","TH","IFRAME","FONT","SUP","SUB"]);
 const safeURL=(s,images=false)=>{if(!String(s||"").trim())return null;try{const u=new URL(s,location.origin);return (["https:","http:"].includes(u.protocol)||!images&&u.protocol==="mailto:")?u.href:null}catch{return null}};
 const safeStyle=value=>{
- const allowed={color:v=>/^#[0-9a-f]{3,8}$/i.test(v)||/^rgb(a)?\\([0-9., %]+\\)$/i.test(v), "background-color":v=>/^#[0-9a-f]{3,8}$/i.test(v)||/^rgb(a)?\\([0-9., %]+\\)$/i.test(v), "font-family":v=>/^(Arial|Georgia|Verdana|Tahoma|Times New Roman|Courier New|Helvetica|serif|sans-serif|monospace)(, ?(serif|sans-serif|monospace))?$/i.test(v), "font-size":v=>/^(1[0-9]|2[0-9]|3[0-6])px$/.test(v), "line-height":v=>/^(1|1\\.[0-9]|2|2\\.[0-5])$/.test(v), "margin-bottom":v=>/^(0|[0-9]|[1-6][0-9])px$/.test(v), "text-align":v=>/^(left|center|right|justify)$/.test(v), "text-decoration":v=>/^(underline|line-through|none)$/.test(v)};
+ const allowed={
+  color:v=>/^#[0-9a-f]{3,8}$/i.test(v)||/^rgba?\([0-9., %]+\)$/i.test(v),
+  "background-color":v=>/^#[0-9a-f]{3,8}$/i.test(v)||/^rgba?\([0-9., %]+\)$/i.test(v),
+  "font-family":v=>/^(Arial|Georgia|Verdana|Tahoma|Times New Roman|Courier New|Helvetica|serif|sans-serif|monospace)(, ?(serif|sans-serif|monospace))?$/i.test(v),
+  "font-size":v=>/^(1[0-9]|2[0-9]|3[0-6])px$/.test(v),
+  "line-height":v=>/^(1|1\.[0-9]|2|2\.[0-5])$/.test(v),
+  "margin-bottom":v=>/^(0|[0-9]|[1-6][0-9])px$/.test(v),
+  "text-align":v=>/^(left|center|right|justify)$/.test(v),
+  "text-decoration":v=>/^(underline|line-through|none)$/.test(v)
+ };
  return String(value||"").split(";").map(part=>part.trim()).filter(Boolean).map(part=>{const index=part.indexOf(":");if(index===-1)return "";const key=part.slice(0,index).trim().toLowerCase(),val=part.slice(index+1).trim();return allowed[key]?.(val)?key+":"+val:""}).filter(Boolean).join(";");
 };
-const safeVideoURL=value=>{try{const u=new URL(String(value));if(u.protocol!=="https:")return null;if(["www.youtube-nocookie.com","www.youtube.com"].includes(u.hostname)&&/^\\/embed\\/[a-zA-Z0-9_-]{11}$/.test(u.pathname))return "https://www.youtube-nocookie.com"+u.pathname;if(u.hostname==="player.vimeo.com"&&/^\\/video\\/\\d+$/.test(u.pathname))return u.origin+u.pathname;return null}catch{return null}};
+const safeVideoURL=value=>{try{const u=new URL(String(value));if(u.protocol!=="https:")return null;if(["www.youtube-nocookie.com","www.youtube.com"].includes(u.hostname)&&/^\/embed\/[a-zA-Z0-9_-]{11}$/.test(u.pathname))return "https://www.youtube-nocookie.com"+u.pathname;if(u.hostname==="player.vimeo.com"&&/^\/video\/\d+$/.test(u.pathname))return u.origin+u.pathname;return null}catch{return null}};
 export function cleanBlogHTML(input){
  const parsed=new DOMParser().parseFromString("<div>"+String(input||"")+"</div>","text/html");
  const holder=parsed.body.firstElementChild;
