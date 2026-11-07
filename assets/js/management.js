@@ -1,7 +1,7 @@
-import {createLMS} from './lms.js?v=no-browser-alerts-20261106';
+import {createLMS} from './lms.js?v=unsaved-20261107';
 import {createManagementOperations} from './management-operations.js?v=crm-full-width-20261107';
-import {createBlogStudio,cleanBlogHTML} from './blog-studio.js?v=categories-20261107b';
-import {createPodcastStudio} from './podcast-studio.js?v=20261107b';
+import {createBlogStudio,cleanBlogHTML} from './blog-studio.js?v=unsaved-20261107';
+import {createPodcastStudio} from './podcast-studio.js?v=upload-unsaved-20261107';
 import {createUnsavedGuard} from './unsaved-guard.js?v=20261107';
 import{createClient}from'https://esm.sh/@supabase/supabase-js@2.58.0';
 const db=createClient('https://gnfyidajbectlppsekzj.supabase.co','sb_publishable_DGt4HrHAwWyMt-0Xtzlfog_F18RnOyf');
