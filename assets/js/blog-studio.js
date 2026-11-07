@@ -124,7 +124,7 @@ export function createBlogStudio({db,root,notify,isCurrent,onExit}){
   selected=post;preview=false;dirty=false;
   const p=post||{},isImported=p.migration_status==="pending_import";
   root.innerHTML='<div class="blog-studio-editor">'+
-  '<div class="blog-studio-editor-top"><button type="button" id="blog-back">← All posts</button><span class="blog-studio-save-indicator" id="blog-save-indicator">Not saved</span><div class="blog-studio-editor-actions"><button type="button" id="blog-preview" class="btn secondary">Preview</button><button type="button" id="blog-save" class="btn secondary">Save draft</button><button type="button" id="blog-publish" class="btn">Publish article</button></div></div>'+
+  '<div class="blog-studio-editor-top"><button type="button" id="blog-back">← All posts</button><span class="blog-studio-save-indicator" id="blog-save-indicator">Not saved</span><div class="blog-studio-editor-actions"><button type="button" id="blog-preview" class="btn secondary">Preview</button><button type="button" id="blog-save" class="btn secondary">Save changes</button><button type="button" id="blog-publish" class="btn">Publish article</button></div></div>'+
   '<form id="blog-form" novalidate><div class="blog-studio-edit-layout"><main class="blog-studio-main">'+
   '<p class="blog-studio-eyebrow">ANDRE ERVING / CONTENT STUDIO</p>'+
   '<input class="blog-title-field" id="blog-title" name="title" aria-label="Article title" placeholder="Add your article title" maxlength="240" value="'+E(p.title||"")+'" required>'+
@@ -157,8 +157,9 @@ export function createBlogStudio({db,root,notify,isCurrent,onExit}){
   q("#blog-slug").addEventListener("input",()=>{q("#blog-slug").dataset.manual="true";q("#blog-slug-display").textContent=slugify(q("#blog-slug").value)});
   q("#blog-cover").onchange=()=>{q(".blog-cover-preview").innerHTML=q("#blog-cover").value?'<img src="'+E(q("#blog-cover").value)+'" alt="Article cover">':'No cover image yet'};
   q("#blog-back").onclick=()=>{if(dirty&&!confirm("Leave this article? Unsaved changes will be lost."))return;onExit()};
-  q("#blog-save").onclick=()=>save("draft");
+  q("#blog-save").onclick=()=>save(q("#blog-status").value==="archived"?"archived":q("#blog-status").value==="published"?"published":"draft");
   q("#blog-publish").onclick=()=>save("published");
+  q("#blog-status").onchange=()=>{q("#blog-publish").textContent=q("#blog-status").value==="published"?"Update published article":"Publish article"};
   q("#blog-preview").onclick=()=>previewPost();
   q("#blog-block").onchange=()=>format("formatBlock",q("#blog-block").value);
   qa("[data-cmd]").forEach(b=>b.addEventListener("mousedown",e=>e.preventDefault()));
@@ -213,7 +214,7 @@ export function createBlogStudio({db,root,notify,isCurrent,onExit}){
    if(out.error)throw out.error;
    selected=out.data;dirty=false;q("#blog-save-indicator").textContent="Saved just now";
    notify(status==="published"?"Article published to andreerving.com":"Draft saved");
-   if(status==="published")q("#blog-status").value="published";
+   q("#blog-status").value=status;
    history.replaceState(null,"","#/admin/blog_posts/edit/"+selected.id);
   }catch(error){errorText(error.message||"Unable to save article")}finally{saveBusy=false;buttons.forEach(b=>b.disabled=false)}
  }
