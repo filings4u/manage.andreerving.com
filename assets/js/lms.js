@@ -455,7 +455,7 @@ export function createLMS({db,root,notify,safe,isCurrent}){
       '<div class="ae-editor-topline"><button id="lms-editor-back" type="button" class="ae-editor-back">← Courses & Programs</button><span class="ae-editor-toptrail">/ '+esc(isCourse?'Course setup':'Management')+'</span></div>'+
       '<div class="ae-editor-hero"><div><span class="ae-editor-eyebrow">ANDRE ERVING / LEARNING MANAGEMENT</span><h1>'+esc(isCourse?(e.title==="Create new course"?"Create a course":e.title):e.title)+'</h1><p>'+(isCourse?'Build your course in a few organized steps. Save it as a draft, then add lessons and publish when ready.':'Update this part of your learning program without leaving the management workspace.')+'</p></div><span class="ae-editor-state">● &nbsp; '+(e.title.toLowerCase().includes("create")?'New':'Editing')+'</span></div>'+
       '<div class="ae-editor-body"><aside class="ae-editor-guide" id="ae-editor-guide"></aside><section class="ae-editor-formcard"><form id="lms-form"><div class="form-grid" id="ae-original-fields">'+e.markup+'</div><div class="ae-editor-footer"><span class="ae-editor-save-note" id="ae-editor-step-note">Changes are saved only when you select Save</span><div class="ae-editor-footer-buttons"><button class="btn secondary" type="button" id="ae-prev-step" hidden>← Previous</button><button class="btn" type="button" id="ae-next-step" hidden>Continue →</button><button class="btn ae-editor-submit" id="ae-final-save" type="submit">'+(isCourse?'Save course':'Save changes')+'</button><button class="btn secondary" type="button" id="lms-cancel">Cancel</button></div></div><p class="notice error hidden" id="lms-form-error" role="alert"></p></form></section></div></div>';
-    const close=()=>{s.editor=null;openRoute(s.courseId?"course/"+s.courseId+"/"+s.tab:"courses");render()};
+    const close=async()=>{if(!await window.AEUnsaved?.confirm())return;window.AEUnsaved?.clear();s.editor=null;openRoute(s.courseId?"course/"+s.courseId+"/"+s.tab:"courses");render()};
     by("lms-editor-back").onclick=close;by("lms-cancel").onclick=close;
     const form=by("lms-form");
     const source=by("ae-original-fields");
@@ -551,10 +551,21 @@ export function createLMS({db,root,notify,safe,isCurrent}){
       ev.preventDefault();if(s.busy)return;
       if(isCourse&&!form.validateSteps())return;
       const submit=by("ae-final-save");s.busy=true;submit.disabled=true;
-      try{await e.onSubmit(new FormData(form),form);s.editor=null;openRoute(s.courseId?"course/"+s.courseId+"/"+s.tab:"courses");await refresh()}
+      try{await e.onSubmit(new FormData(form),form);window.AEUnsaved?.clean();s.editor=null;openRoute(s.courseId?"course/"+s.courseId+"/"+s.tab:"courses");await refresh()}
       catch(err){const n=by("lms-form-error");n.textContent=err.message||String(err);n.classList.remove("hidden");submit.disabled=false}
       finally{s.busy=false}
     };
+    window.AEUnsaved?.watch(form,{title:isCourse?'course':'course settings',save:async()=>{
+      if(!form.isConnected||!form.reportValidity())return false;
+      form.requestSubmit();
+      for(let i=0;i<100;i++){
+        await new Promise(resolve=>setTimeout(resolve,125));
+        if(!window.AEUnsaved?.isDirty())return true;
+        if(!form.isConnected)return true;
+        if(!root.querySelector('#lms-form-error')?.classList.contains('hidden'))return false;
+      }
+      return false;
+    }});
     return form;
   }
   function modal(title,markup,onSubmit){
@@ -705,7 +716,7 @@ export function createLMS({db,root,notify,safe,isCurrent}){
         const q=lesson?db.from("course_lessons").update(data).eq("id",lesson.id):db.from("course_lessons").insert(data);
         const result=await q.select("id").single();
         if(result.error)throw result.error;
-        s.editor=null;s.tab="curriculum";openRoute("course/"+course.id+"/curriculum");
+        window.AEUnsaved?.clean();s.editor=null;s.tab="curriculum";openRoute("course/"+course.id+"/curriculum");
         notify(lesson?"Lesson updated":"Lesson created");
         await refresh();
       }
