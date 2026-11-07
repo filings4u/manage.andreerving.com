@@ -197,3 +197,9 @@
  .blog-editor-guide{top:132px!important;max-height:calc(100dvh - 145px)!important}
  #blog-writing,#blog-summary,#blog-publishing,#blog-image-section,#blog-search-settings{scroll-margin-top:190px!important}
 }
+
+/* Each guided section has its own scroll position for accurate active highlighting. */
+.blog-studio-settings{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:15px!important}
+.blog-studio-settings #blog-search-settings{grid-column:auto!important}
+.blog-studio-settings .blog-settings-panel{max-width:none}
+#blog-search-settings label{max-width:760px}
