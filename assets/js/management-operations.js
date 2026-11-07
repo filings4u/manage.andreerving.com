@@ -7,7 +7,7 @@ const validUUID=value=>/^[a-f0-9-]{36}$/i.test(String(value));
 function optionList(items,placeholder,valueFn,labelFn){
  return '<option value="">'+placeholder+'</option>'+items.map(x=>'<option value="'+escapeHtml(valueFn(x))+'">'+escapeHtml(labelFn(x))+'</option>').join("");
 }
-export function createManagementOperations({db,root,notify,head,isCurrent}){
+export function createManagementOperations({db,root,notify,head,isCurrent,navigateTo}){
  let selectedCustomer=null,watch=null;
  async function api(action,input={}){
   const {data:{session},error}=await db.auth.getSession();
@@ -91,9 +91,9 @@ export function createManagementOperations({db,root,notify,head,isCurrent}){
    '</section><section class="panel ae-mgmt-panel"><h2>Support history</h2>'+
    (tickets.map(t=>'<p class="ae-crm-item">'+escapeHtml(t.subject)+' <small>'+escapeHtml(t.status)+'</small></p>').join("")||'<p class="muted">No support requests.</p>')+'</section></div>';
   root.querySelector("#crm-back").onclick=customers;
-  root.querySelector("#crm-enroll").onclick=()=>enrollments(uid);
-  root.querySelector("#crm-order").onclick=()=>ordersPage(uid,p.email);
-  root.querySelector("#crm-invite").onclick=()=>inviteForm({email:p.email});
+  root.querySelector("#crm-enroll").onclick=async()=>{await navigateTo("course_enrollments");await enrollments(uid)};
+  root.querySelector("#crm-order").onclick=async()=>{await navigateTo("orders");await ordersPage(uid,p.email)};
+  root.querySelector("#crm-invite").onclick=async()=>{await navigateTo("orders");inviteForm({email:p.email})};
   root.querySelectorAll("[data-access]").forEach(b=>b.onclick=()=>changeAccess(b.dataset.access,uid,items,courses));
  }
  async function enrollments(prefill=""){
@@ -165,7 +165,7 @@ export function createManagementOperations({db,root,notify,head,isCurrent}){
  function inviteForm({email="",orderId=""}={}){
   root.innerHTML=head("Send account invitation","Send a secure access link to a customer without requiring a password from staff.")+
    '<section class="panel ae-mgmt-panel ae-narrow"><h2>Customer invitation</h2><form class="ae-mgmt-form" id="ae-send-invite">'+
-   '<label>Customer email<input type="email" name="email" required value="'+escapeHtml(email)+'"></label>'+
+   '<label>Customer email<input type="email" name="email" required maxlength="254" value="'+escapeHtml(email)+'" '+(orderId?'readonly aria-readonly="true"':'')+'></label>'+
    '<label>Related order ID <span class="ae-form-hint">Optional.</span><input name="orderId" value="'+escapeHtml(orderId)+'"></label>'+
    '<div class="ae-mgmt-actions"><button class="btn" type="submit">Send invitation</button><button class="btn secondary" type="button" id="ae-invite-cancel">Cancel</button></div></form></section>';
   root.querySelector("#ae-invite-cancel").onclick=()=>ordersPage();
