@@ -1,4 +1,4 @@
-import {createLMS} from './lms.js?v=course-benefits-access-20261107g';
+import {createLMS} from './lms.js?v=course-access-final-20261107h';
 import {createManagementOperations} from './management-operations.js?v=customer-return-20261107g';
 import {createBlogStudio,cleanBlogHTML} from './blog-studio.js?v=unsaved-20261107';
 import {createPodcastStudio} from './podcast-studio.js?v=upload-unsaved-20261107';
