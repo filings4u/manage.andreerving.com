@@ -291,7 +291,8 @@ export function createBlogStudio({db,root,notify,isCurrent,onExit}){
   editor=q("#blog-content");
   q("#blog-form").addEventListener("submit",event=>{event.preventDefault();save("draft")});
   updateStats();
-  const mark=()=>{dirty=true;q("#blog-save-indicator").textContent="Unsaved changes";updateStats()};
+  const mark=()=>{dirty=true;window.AEUnsaved?.mark();q("#blog-save-indicator").textContent="Unsaved changes";updateStats()};
+  window.AEUnsaved?.watch(q("#blog-form"),{title:"blog article",save:()=>save(q("#blog-status").value==="published"?"published":"draft")});
   qa("#blog-form input,#blog-form textarea,#blog-form select").forEach(el=>el.addEventListener("input",mark));
   editor.addEventListener("input",mark);
   const rememberSelection=()=>{const sel=window.getSelection();if(sel?.rangeCount&&editor.contains(sel.anchorNode))savedRange=sel.getRangeAt(0).cloneRange()};
@@ -312,7 +313,7 @@ export function createBlogStudio({db,root,notify,isCurrent,onExit}){
   ["#blog-seo-description","#blog-seo-title","#blog-title","#blog-excerpt","#blog-slug"].forEach(selector=>q(selector).addEventListener("input",updateSEO));
   updateSEO();
   q("#blog-cover").onchange=()=>{q(".blog-cover-preview").innerHTML=q("#blog-cover").value?'<img src="'+E(q("#blog-cover").value)+'" alt="Article cover">':'No cover image yet'};
-  q("#blog-back").onclick=()=>{if(dirty){errorText("You have unsaved changes. Save this draft before leaving.");return}onExit()};
+  q("#blog-back").onclick=async()=>{if(!await window.AEUnsaved?.confirm())return;window.AEUnsaved?.clear();onExit()};
   q("#blog-save").onclick=()=>save(q("#blog-status").value==="archived"?"archived":q("#blog-status").value==="published"?"published":"draft");
   q("#blog-publish").onclick=()=>save("published");
   q("#blog-status").onchange=()=>{q("#blog-publish").textContent=q("#blog-status").value==="published"?"Update published article":"Publish article"};
@@ -451,11 +452,11 @@ export function createBlogStudio({db,root,notify,isCurrent,onExit}){
    const data=payload(status);
    const out=selected?await db.from("blog_posts").update(data).eq("id",selected.id).select().single():await db.from("blog_posts").insert(data).select().single();
    if(out.error)throw out.error;
-   selected=out.data;dirty=false;q("#blog-save-indicator").textContent=status==="published"?"Published successfully":"All changes saved";
+   selected=out.data;dirty=false;window.AEUnsaved?.clean();q("#blog-save-indicator").textContent=status==="published"?"Published successfully":"All changes saved";
    notify(status==="published"?"Article published. Its search-ready page syncs automatically within the next scheduled publishing cycle.":"Draft saved");
    q("#blog-status").value=status;
-   history.replaceState(null,"","#/admin/blog_posts/edit/"+selected.id);
-  }catch(error){if(indicator)indicator.textContent="Save failed";errorText(error.message||"Unable to save article")}finally{saveBusy=false;buttons.forEach(b=>b.disabled=false)}
+   history.replaceState(null,"","#/admin/blog_posts/edit/"+selected.id);return true;
+  }catch(error){if(indicator)indicator.textContent="Save failed";errorText(error.message||"Unable to save article");return false}finally{saveBusy=false;buttons.forEach(b=>b.disabled=false)}
  }
  function previewPost(){
   const content=stripDuplicateCover(cleanBlogHTML(editor.innerHTML),q("#blog-cover").value),title=q("#blog-title").value||"Untitled article",cover=safeURL(q("#blog-cover").value,true);
