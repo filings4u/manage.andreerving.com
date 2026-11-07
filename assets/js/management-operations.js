@@ -51,20 +51,57 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
   draw();root.querySelector("#crm-search").oninput=e=>draw(e.target.value);
   root.querySelector("#crm-add").onclick=()=>customerForm();
  }
- function customerForm(){
-  root.innerHTML=head("Create customer account","Create a customer record in Supabase Auth without sending an invitation until you choose to.")+
-   '<section class="panel ae-mgmt-panel ae-narrow"><h2>Customer details</h2><form class="ae-mgmt-form" id="crm-create">'+
-   '<label>First name<input name="firstName" required maxlength="80" autocomplete="given-name"></label>'+
-   '<label>Last name<input name="lastName" required maxlength="80" autocomplete="family-name"></label>'+
-   '<label>Phone number<input name="phone" type="tel" maxlength="32"></label>'+
-   '<label>Email address<input name="email" type="email" required maxlength="254" autocomplete="email"></label>'+
-   '<div class="ae-mgmt-actions"><button class="btn" type="submit">Create account</button><button class="btn secondary" type="button" id="crm-back">Back to customers</button></div>'+
-   '</form></section>';
-  root.querySelector("#crm-back").onclick=customers;
+ function customerForm(existing=null,details=null){
+  const isEdit=Boolean(existing?.id),p=existing||{},d=details||{};
+  const given=(p.full_name||"").split(" ")[0]||"",family=(p.full_name||"").split(" ").slice(1).join(" ")||"";
+  const val=(v)=>escapeHtml(v||"");
+  const field=(label,name,value="",opts={})=>'<label class="ae-customer-field '+(opts.wide?"wide":"")+'"><span>'+label+(opts.required?' <em>*</em>':"")+'</span><input name="'+name+'" type="'+(opts.type||"text")+'" value="'+val(value)+'" maxlength="'+(opts.max||140)+'" '+(opts.required?"required ":"")+(opts.autocomplete?'autocomplete="'+opts.autocomplete+'" ':"")+(opts.placeholder?'placeholder="'+opts.placeholder+'" ':'')+(opts.readonly?"readonly ":"")+'></label>';
+  const choice=(label,name,values,selected)=>'<label class="ae-customer-field"><span>'+label+'</span><select name="'+name+'">'+values.map(x=>'<option value="'+val(x)+'" '+(x===(selected||"")?"selected":"")+'>'+val(x)+'</option>').join("")+'</select></label>';
+  root.innerHTML=head(isEdit?"Edit customer profile":"Create customer account",isEdit?"Update customer details and CRM information. Email identity is managed separately.":"Create a complete customer record. One email identifies one customer across orders, courses, and documents.")+
+   '<form id="crm-create" class="ae-customer-form">'+
+   '<div class="ae-customer-layout"><div class="ae-customer-main">'+
+   '<section class="panel ae-customer-section"><div class="ae-customer-section-head"><span>01</span><div><h2>Personal information</h2><p>Identify the person associated with this customer account.</p></div></div><div class="ae-customer-fields">'+
+   field("First name","firstName",given,{required:true,autocomplete:"given-name",max:80})+
+   field("Last name","lastName",family,{required:true,autocomplete:"family-name",max:80})+
+   field("Email address","email",p.email,{required:true,type:"email",autocomplete:"email",max:254,readonly:isEdit})+
+   field("Primary phone","phone",p.phone,{type:"tel",autocomplete:"tel",max:32})+
+   field("Alternate phone","alternate_phone",d.alternate_phone,{type:"tel",max:32})+
+   choice("Preferred contact method","preferred_contact",["No preference","Email","Phone"],d.preferred_contact||"No preference")+
+   '</div></section>'+
+   '<section class="panel ae-customer-section"><div class="ae-customer-section-head"><span>02</span><div><h2>Business and organization</h2><p>Add professional details for coaching, training, or consulting customers.</p></div></div><div class="ae-customer-fields">'+
+   field("Company or organization","company",d.company,{autocomplete:"organization"})+
+   field("Job title","job_title",d.job_title,{autocomplete:"organization-title"})+
+   choice("Customer type","customer_type",["Individual","Business","Organization"],d.customer_type||"Individual")+
+   field("Customer source","acquisition_source",d.acquisition_source,{placeholder:"Website, referral, event, or other"})+
+   '</div></section>'+
+   '<section class="panel ae-customer-section"><div class="ae-customer-section-head"><span>03</span><div><h2>Address information</h2><p>Optional mailing and billing contact information. Payment cards are not stored here.</p></div></div><div class="ae-customer-fields">'+
+   field("Street address","address_line1",d.address_line1,{wide:true,autocomplete:"address-line1"})+
+   field("Apartment, suite, or unit","address_line2",d.address_line2,{wide:true,autocomplete:"address-line2"})+
+   field("City","city",d.city,{autocomplete:"address-level2"})+
+   field("State or region","state",d.state,{autocomplete:"address-level1"})+
+   field("ZIP or postal code","postal_code",d.postal_code,{autocomplete:"postal-code"})+
+   field("Country","country",d.country||"United States",{autocomplete:"country-name"})+
+   '</div></section></div>'+
+   '<aside class="ae-customer-side">'+
+   '<section class="panel ae-customer-section"><div class="ae-customer-section-head"><span>04</span><div><h2>Account settings</h2><p>Set internal classification without sending an invitation automatically.</p></div></div><div class="ae-customer-fields one">'+
+   choice("CRM status","account_status",["Active","Prospect","Inactive"],d.account_status||"Active")+
+   '<div class="ae-customer-info"><strong>Account access</strong><p>Customer sign-in stays protected by Supabase authentication. Use the dedicated account invitation action after creating the record.</p></div>'+
+   '</div></section>'+
+   '<section class="panel ae-customer-section"><div class="ae-customer-section-head"><span>05</span><div><h2>Internal CRM notes</h2><p>These notes are restricted to management staff.</p></div></div>'+
+   '<label class="ae-customer-field"><span>Notes and follow-up information</span><textarea name="internal_notes" rows="8" maxlength="3000" placeholder="Relevant customer background, follow-up reminders, or account administration notes...">'+val(d.internal_notes)+'</textarea></label></section>'+
+   '<section class="ae-customer-next"><strong>One email. One customer.</strong><p>The email address is the unique customer identity. Purchases and course enrollments belong to the existing record.</p></section>'+
+   '</aside></div>'+
+   '<div class="ae-customer-actionbar"><div><strong>'+(isEdit?"Update customer details":"Ready to create this customer?")+'</strong><span>'+(isEdit?"Changes are saved to the customer CRM.":"No account invitation will be emailed until you choose to send one.")+'</span></div><div class="ae-customer-actions"><button class="btn secondary" type="button" id="crm-back">Cancel</button><button class="btn" type="submit">'+(isEdit?"Save customer changes":"Create customer account")+'</button></div></div></form>';
+  root.querySelector("#crm-back").onclick=()=>isEdit?profile(p.id):customers();
   onSubmit("#crm-create",async fd=>{
-   const value=await api("create_account",Object.fromEntries(fd));
-   notify(value.existing?"Existing account found":"Customer account created");
-   await profile(value.userId);
+   const payload=Object.fromEntries(fd);
+   if(isEdit){
+    await api("update_customer_details",{userId:p.id,...payload});
+    notify("Customer CRM information updated");await profile(p.id);return;
+   }
+   const result=await api("create_account",payload);
+   notify(result.existing?"An existing account was found. Its records were preserved.":"Customer account created");
+   await profile(result.userId);
   });
  }
  async function profile(uid){
@@ -76,7 +113,7 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
   const p=data.profile,items=data.enrollments||[],orders=data.orders||[],courses=new Map((data.courses||[]).map(c=>[c.id,c]));
   const rows=data.orderItems||[],documents=data.documents||[],tickets=data.tickets||[];
   root.innerHTML=head(p.full_name||p.email,"Customer CRM / Full account record")+
-   '<div class="ae-mgmt-header-actions"><button class="btn secondary" id="crm-back">All customers</button>'+
+   '<div class="ae-mgmt-header-actions"><button class="btn secondary" id="crm-back">All customers</button><button class="btn secondary" id="crm-edit">Edit customer details</button>'+
    '<button class="btn" id="crm-enroll">Assign a course</button><button class="btn secondary" id="crm-order">Create an order</button><button class="btn secondary" id="crm-invite">Send account invitation</button></div>'+
    '<div class="ae-crm-overview">'+
    [['Customer email',p.email],['Phone',p.phone||"Not provided"],['Purchases',orders.length],['Courses',items.length]].map(x=>'<section class="ae-crm-stat"><span>'+escapeHtml(x[0])+'</span><strong>'+escapeHtml(x[1])+'</strong></section>').join("")+'</div>'+
@@ -91,6 +128,7 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
    '</section><section class="panel ae-mgmt-panel"><h2>Support history</h2>'+
    (tickets.map(t=>'<p class="ae-crm-item">'+escapeHtml(t.subject)+' <small>'+escapeHtml(t.status)+'</small></p>').join("")||'<p class="muted">No support requests.</p>')+'</section></div>';
   root.querySelector("#crm-back").onclick=customers;
+  root.querySelector("#crm-edit").onclick=()=>customerForm(p,data.crmDetails||{});
   root.querySelector("#crm-enroll").onclick=async()=>{await navigateTo("course_enrollments");await enrollments(uid)};
   root.querySelector("#crm-order").onclick=async()=>{await navigateTo("orders");await ordersPage(uid,p.email)};
   root.querySelector("#crm-invite").onclick=async()=>{await navigateTo("orders");inviteForm({email:p.email})};
