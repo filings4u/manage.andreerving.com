@@ -25,7 +25,7 @@ export async function downloadInquiryPDF(r,button){
   const {jsPDF}=await import('https://esm.sh/jspdf@2.5.2');
   const pdf=new jsPDF({format:'letter',unit:'pt',compress:true});
   const left=45,right=567,bottom=735;let y=45;
-  const write=(t,x,y,size=11,bold=false,color=[17,43,76])=>{pdf.setFont('helvetica',bold?'bold':'normal');pdf.setFontSize(size);pdf.setTextColor(...color);pdf.text(String(t),x,y)};
+  const write=(t,x,y,size=11,bold=false,color=[17,43,76])=>{pdf.setFont('helvetica',bold?'bold':'normal');pdf.setFontSize(size);pdf.setTextColor(...color);pdf.text(Array.isArray(t)?t:String(t),x,y)};
   const ensure=height=>{if(y+height>bottom){pdf.addPage();y=48}};
   try{
    const img=new Image();img.src=new URL('assets/img/logo.png',document.baseURI).href;await img.decode();
