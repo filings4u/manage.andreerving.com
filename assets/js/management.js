@@ -156,9 +156,14 @@ async function ebookWorkspace(){
  w.innerHTML=head('eBook document library','Upload PDF and EPUB files for verified customer downloads.')+
  '<section class="panel ae-ebook-upload-panel"><div class="ae-ebook-panel-heading"><span class="ae-ebook-section-label">DOCUMENT UPLOAD</span><h2>Upload an eBook</h2></div><p class="muted">Select the matching website title. The file will be private and accessible only after a verified order.</p>'+
  '<form id="ebook-upload" class="form-grid ae-ebook-form"><label class="field wide">eBook<select name="offering_id" required><option value="">Choose an eBook</option>'+items.map(p=>'<option value="'+safe(p.price_key.slice(9))+'">'+safe(p.label)+' — '+(Number(p.amount)===0?'Free':'USD '+Number(p.amount).toFixed(2))+'</option>').join('')+'</select></label>'+
- '<label class="field wide">PDF or EPUB, maximum 50 MB<input name="file" type="file" accept=".pdf,.epub" required></label><div class="ae-ebook-form-footer"><p id="ebook-upload-message" role="status" class="muted"></p><button class="btn ae-ebook-submit" type="submit">Upload eBook</button></div></form></section>'+
+ '<div class="field wide"><label for="ae-ebook-file">PDF or EPUB, maximum 50 MB</label><div class="ae-file-chooser"><input id="ae-ebook-file" name="file" type="file" accept=".pdf,.epub" required><label class="ae-file-trigger" for="ae-ebook-file">Choose PDF or EPUB</label><span class="ae-file-name" id="ae-ebook-filename">No document selected</span></div></div><div class="ae-ebook-form-footer"><p id="ebook-upload-message" role="status" class="muted"></p><button class="btn ae-ebook-submit" type="submit">Upload eBook</button></div></form></section>'+
  '<section class="panel ae-ebook-list-panel"><div class="ae-ebook-list-heading"><div><span class="ae-ebook-section-label">EBOOK LIBRARY</span><h2>Uploaded documents</h2></div><span class="ae-ebook-count">'+(docs.data||[]).length+' of '+items.length+' uploaded</span></div><div class="tablewrap"><table><thead><tr><th>eBook</th><th>Price</th><th>File</th><th>Updated</th><th>Actions</th></tr></thead><tbody>'+
  items.map(p=>{const id=p.price_key.slice(9),d=existing.get(id);return '<tr><td>'+safe(p.label)+'</td><td>'+(Number(p.amount)===0?'Free':'USD '+Number(p.amount).toFixed(2))+'</td><td>'+(d?safe(d.file_name):'<span class="muted">Not uploaded</span>')+'</td><td>'+(d?format(d.updated_at):'—')+'</td><td>'+(d?'<div class="ae-ebook-actions"><button class="btn secondary ae-ebook-preview" type="button" data-ebook-preview="'+safe(id)+'">Preview</button><button class="btn secondary ae-ebook-remove" type="button" data-ebook-remove="'+safe(id)+'">Remove</button></div>':'—')+'</td></tr>'}).join('')+'</tbody></table></div></section>';
+ const ebookFileInput=w.querySelector('#ae-ebook-file');
+ ebookFileInput?.addEventListener('change',()=>{
+  const file=ebookFileInput.files?.[0];
+  w.querySelector('#ae-ebook-filename').textContent=file?file.name:'No document selected';
+ });
  const form=w.querySelector('#ebook-upload');
  form.onsubmit=async event=>{
   event.preventDefault();
