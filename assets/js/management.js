@@ -31,7 +31,31 @@ const toast=(message,error=false)=>{document.querySelector('.toast')?.remove();c
 function brandedConfirm(title,message,{destructive=false,confirmText="Continue"}={}){
 return new Promise(resolve=>{const node=document.createElement('div');node.className='ae-confirm-backdrop';node.innerHTML='<section class="ae-confirm-card" role="alertdialog" aria-modal="true" aria-labelledby="ae-confirm-title"><div class="ae-confirm-brand">AE <span>ANDRE ERVING MANAGEMENT</span></div><h2 id="ae-confirm-title"></h2><p class="ae-confirm-message"></p><div class="ae-confirm-actions"><button class="btn secondary" data-no>Cancel</button><button class="btn '+(destructive?'danger':'')+'" data-yes></button></div></section>';node.querySelector('h2').textContent=title;node.querySelector('.ae-confirm-message').textContent=message;node.querySelector('[data-yes]').textContent=confirmText;document.body.append(node);const done=value=>{document.removeEventListener('keydown',keyHandler);node.remove();resolve(value)};const keyHandler=e=>{if(e.key==='Escape')done(false)};document.addEventListener('keydown',keyHandler);node.querySelector('[data-no]').onclick=()=>done(false);node.querySelector('[data-yes]').onclick=()=>done(true);node.querySelector('[data-no]').focus()});
 }
-async function authenticate(){const {data,error}=await db.auth.getUser();user=error?null:data.user;if(user){const a=await db.from('admin_profiles').select('active,role').eq('id',user.id).maybeSingle();if(a.error||!a.data?.active){renderLogin('This account is not authorized to access management. Sign out or use an authorized staff account.',true);return}}if(!user){renderLogin();return}renderShell();const match=location.hash.match(/^#\/admin\/([a-z_]+)/);const target=match&&configs[match[1]]?match[1]:location.hash.startsWith('#/lms/')?'courses':'overview';await navigate(target,{fromHistory:true})}
+function connectManagementUpdates(){
+ if(realtimeChannel){db.removeChannel(realtimeChannel);realtimeChannel=null}
+ if(!user)return;
+ let queued=false;
+ const refresh=()=>{
+  if(queued||!user||!['orders','course_enrollments','support_tickets'].includes(section))return;
+  if(document.querySelector('#workspace form:focus-within'))return;
+  queued=true;
+  setTimeout(async()=>{
+   queued=false;
+   if(!user||document.querySelector('#workspace form:focus-within'))return;
+   try{
+    if(section==='orders')await adminOps?.ordersPage();
+    else if(section==='course_enrollments')await adminOps?.enrollments();
+    else if(section==='support_tickets')await supportWorkspace();
+   }catch(e){console.warn('Management realtime refresh error',e)}
+  },350);
+ };
+ realtimeChannel=db.channel('andre-operations-'+user.id)
+ .on('postgres_changes',{event:'*',schema:'public',table:'orders'},refresh)
+ .on('postgres_changes',{event:'*',schema:'public',table:'course_enrollments'},refresh)
+ .on('postgres_changes',{event:'*',schema:'public',table:'support_tickets'},refresh)
+ .subscribe();
+}
+async function authenticate(){const {data,error}=await db.auth.getUser();user=error?null:data.user;if(user){const a=await db.from('admin_profiles').select('active,role').eq('id',user.id).maybeSingle();if(a.error||!a.data?.active){user=null;renderLogin('This account is not authorized to access management. Sign out or use an authorized staff account.',true);return}}if(!user){renderLogin();return}renderShell();connectManagementUpdates();const match=location.hash.match(/^#\/admin\/([a-z_]+)/);const target=match&&configs[match[1]]?match[1]:location.hash.startsWith('#/lms/')?'courses':'overview';await navigate(target,{fromHistory:true})}
 function renderLogin(message='',authenticated=false){app.innerHTML='<main class="login-bg"><div class="login-box"><div class="logo">AE</div><p class="eyebrow">ANDRE ERVING MANAGEMENT</p><h1>Staff sign in</h1><p class="muted">Your operations, publishing and training workspace.</p>'+(message?'<p class="notice error">'+safe(message)+'</p>':'')+(authenticated?'<button class="btn secondary" id="logout">Sign out</button>':'<form id="login"><label>Email address<input name="email" type="email" autocomplete="username" required></label><label>Password<input name="password" type="password" autocomplete="current-password" required></label><button class="btn" type="submit">Sign in securely</button></form>')+'</div></main>';document.querySelector('#logout')?.addEventListener('click',logout);document.querySelector('#login')?.addEventListener('submit',async e=>{e.preventDefault();const b=e.target.querySelector('button');b.disabled=true;const {error}=await db.auth.signInWithPassword({email:e.target.email.value,password:e.target.password.value});b.disabled=false;if(error)toast('Sign-in failed: '+error.message,true);else await authenticate()})}
 function renderShell(){const navMarkup='<div class="nav-primary">'+menuButton(['overview','Overview','◫'])+'</div>'+navGroups.map((group,i)=>'<details class="nav-group" data-group="'+i+'" '+(i===0?'open':'')+'><summary>'+safe(group.name)+'</summary><div class="nav-items">'+group.items.map(menuButton).join('')+'</div></details>').join('');app.innerHTML='<div class="shell"><aside class="sidebar"><div class="brand"><div class="logo">AE</div><div><strong>ANDRE ERVING</strong><small>MANAGEMENT</small></div></div><nav class="nav" aria-label="Management navigation">'+navMarkup+'</nav><div class="side-bottom">'+safe(user.email)+'</div></aside><div class="main"><header class="topbar"><div><strong>Operations command center</strong><div class="small">Main website + customer portal</div></div><div class="top-actions"><a class="btn secondary" href="https://andreerving.com" target="_blank" rel="noopener noreferrer">Website ↗</a><a class="btn secondary" href="https://app.andreerving.com/" target="_blank" rel="noopener noreferrer">Customer app ↗</a><button class="btn secondary" id="logout">Sign out</button></div></header><main class="workspace" id="workspace"></main></div></div>';document.querySelectorAll('[data-section]').forEach(b=>b.onclick=e=>{e.preventDefault();navigate(b.dataset.section)});document.querySelectorAll('.nav-group').forEach(group=>group.addEventListener('toggle',()=>{if(group.open)document.querySelectorAll('.nav-group').forEach(other=>{if(other!==group)other.open=false})}));document.querySelector('#logout').onclick=logout}
 async function logout(){if(realtimeChannel){await db.removeChannel(realtimeChannel);realtimeChannel=null}adminOps?.stop();await db.auth.signOut();user=null;renderLogin()}
