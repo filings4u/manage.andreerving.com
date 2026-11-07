@@ -3,6 +3,7 @@ import {createManagementOperations} from './management-operations.js?v=customer-
 import {createBlogStudio,cleanBlogHTML} from './blog-studio.js?v=unsaved-20261107';
 import {createPodcastStudio} from './podcast-studio.js?v=upload-unsaved-20261107';
 import {createUnsavedGuard} from './unsaved-guard.js?v=20261107';
+import {showInquiry,downloadInquiryPDF} from './inquiry-workspace.js?v=20261107a';
 import{createClient}from'https://esm.sh/@supabase/supabase-js@2.58.0';
 const db=createClient('https://gnfyidajbectlppsekzj.supabase.co','sb_publishable_DGt4HrHAwWyMt-0Xtzlfog_F18RnOyf');
 const unsaved=createUnsavedGuard();window.AEUnsaved=unsaved;
@@ -156,13 +157,15 @@ function drawTable(){
  document.querySelector('#workspace').innerHTML=head(c.title,c.subtitle,editable?'<button class="btn" id="create">+ Create new</button>':'')+
  highlights+'<section class="panel ae-records-panel"><div class="ae-panel-heading"><div><span class="ae-editor-eyebrow">MANAGE CONTENT</span><h2>All '+safe(c.title.toLowerCase())+'</h2><p>Open a record to view or edit its details.</p></div></div>'+
  '<div class="toolbar ae-record-toolbar"><input id="search" type="search" aria-label="Search records" placeholder="Search '+safe(c.title.toLowerCase())+'…" value="'+safe(search)+'"><span class="muted">'+filtered.length+' of '+total+' records</span></div>'+
- '<div class="tablewrap"><table><thead><tr>'+c.cols.map(k=>'<th>'+safe(k.replaceAll('_',' '))+'</th>').join('')+(editable?'<th>Action</th>':'')+'</tr></thead>'+
+ '<div class="tablewrap"><table><thead><tr>'+c.cols.map(k=>'<th>'+safe(k.replaceAll('_',' '))+'</th>').join('')+(editable||section==='website_inquiries'?'<th>Actions</th>':'')+'</tr></thead>'+
  '<tbody>'+visible.map(r=>'<tr>'+c.cols.map(k=>'<td>'+(k==='status'?'<span class="pill '+safe(r[k])+'">'+safe(r[k])+'</span>':format(r[k]))+'</td>').join('')+
- (editable?'<td class="row-actions"><button type="button" data-edit="'+safe(r.id)+'">Open editor →</button></td>':'')+'</tr>').join('')+'</tbody></table></div>'+
+ (editable?'<td class="row-actions"><button type="button" data-edit="'+safe(r.id)+'">Open editor →</button></td>':section==='website_inquiries'?'<td class="ae-inquiry-table-actions"><button type="button" class="btn secondary" data-inquiry-view="'+safe(r.id)+'">View</button><button type="button" class="btn secondary" data-inquiry-download="'+safe(r.id)+'">Download PDF</button></td>':'')+'</tr>').join('')+'</tbody></table></div>'+
  (filtered.length?'':'<div class="ae-list-empty"><span aria-hidden="true">▤</span><strong>'+safe(emptyLabel)+'</strong>'+(search?'<button type="button" id="clear-record-search">Clear search</button>':'')+'</div>')+'<nav class="ae-pagination" aria-label="Record pages"><button type="button" id="records-prev" '+(listPage===1?'disabled':'')+'>Previous</button><span>Page '+listPage+' of '+pageCount+'</span><button type="button" id="records-next" '+(listPage===pageCount?'disabled':'')+'>Next</button></nav></section>'+
  (section==='customer_documents'?documentUploader():'');
  document.querySelector('#create')?.addEventListener('click',()=>openEditor());
  document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>openEditor(rows.find(r=>r.id===b.dataset.edit)));
+ document.querySelectorAll('[data-inquiry-view]').forEach(b=>b.onclick=()=>showInquiry(rows.find(r=>r.id===b.dataset.inquiryView)));
+ document.querySelectorAll('[data-inquiry-download]').forEach(b=>b.onclick=()=>downloadInquiryPDF(rows.find(r=>r.id===b.dataset.inquiryDownload),b));
  const input=document.querySelector('#search');
  input.oninput=()=>{search=input.value;listPage=1;drawTable();const el=document.querySelector('#search');el.focus();el.setSelectionRange(search.length,search.length)};
  document.querySelector('#clear-record-search')?.addEventListener('click',()=>{search='';drawTable();document.querySelector('#search')?.focus()});
