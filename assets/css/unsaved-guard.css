@@ -1,0 +1,17 @@
+/* Branded unsaved-change confirmation — all management workspaces */
+.ae-unsaved-backdrop{position:fixed;inset:0;z-index:999999;background:rgba(7,22,43,.68);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;padding:18px}
+.ae-unsaved-dialog{width:min(100%,490px);border:1px solid #d9e2ed;background:#fff;border-radius:18px;box-shadow:0 25px 100px #03152966;padding:30px;color:#102e4b;font-family:inherit}
+.ae-unsaved-brand{display:flex;align-items:center;gap:11px;color:#173353;font-size:12px;font-weight:850;letter-spacing:.03em}
+.ae-unsaved-brand>span:last-child{display:grid;gap:2px}.ae-unsaved-brand small{font-size:9px;letter-spacing:.14em;color:#b4821e}
+.ae-unsaved-monogram{width:41px;height:41px;display:grid;place-items:center;background:#fff;color:#173f9d;border:3px solid #1544b4;border-radius:11px;font-weight:900;font-size:19px;box-shadow:3px 3px 0 #d99d1d}
+.ae-unsaved-warning{display:grid;place-items:center;margin:24px 0 14px;width:49px;height:49px;border-radius:14px;background:#fff3d6;color:#ac7614;font-size:25px;font-weight:900}
+.ae-unsaved-dialog h2{font-size:25px;letter-spacing:-.04em;line-height:1.2;margin:0 0 10px;color:#102b49}
+.ae-unsaved-dialog p{font-size:13px;line-height:1.7;color:#62778e;margin:0}
+.ae-unsaved-dialog p strong{color:#233f5d}
+.ae-unsaved-message{min-height:18px;padding-top:10px;color:#af4b32!important;font-size:12px!important}
+.ae-unsaved-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:19px}
+.ae-unsaved-actions button{border:1px solid #cddbe9;background:#fff;border-radius:9px;padding:12px 10px;font-size:12px;font-weight:800;cursor:pointer;color:#234563}
+.ae-unsaved-actions .ae-unsaved-save{grid-column:1/-1;grid-row:1;background:linear-gradient(115deg,#d7a12d,#c48d1e);border-color:#c58e1f;color:#fff;font-size:13px}
+.ae-unsaved-actions .ae-unsaved-discard{color:#ac4937;border-color:#e8c8bd;background:#fffafa}
+.ae-unsaved-actions button:disabled{opacity:.48;cursor:not-allowed}
+@media(max-width:460px){.ae-unsaved-dialog{padding:23px}.ae-unsaved-actions{grid-template-columns:1fr}.ae-unsaved-actions .ae-unsaved-save{grid-column:auto}}
