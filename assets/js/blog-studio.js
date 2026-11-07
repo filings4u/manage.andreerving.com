@@ -3,7 +3,7 @@ const E=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt
 const slugify=s=>String(s||"").toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,140);
 const humanDate=d=>d?new Date(d).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}):"Not published";
 const allowedTags=new Set(["P","BR","H2","H3","H4","STRONG","B","EM","I","U","S","UL","OL","LI","BLOCKQUOTE","A","IMG","HR","DIV","SPAN","FIGURE","FIGCAPTION","PRE","CODE","TABLE","TBODY","THEAD","TR","TD","TH"]);
-const safeURL=(s,images=false)=>{try{const u=new URL(s,location.origin);return (["https:","http:"].includes(u.protocol)||!images&&u.protocol==="mailto:")?u.href:null}catch{return null}};
+const safeURL=(s,images=false)=>{if(!String(s||"").trim())return null;try{const u=new URL(s,location.origin);return (["https:","http:"].includes(u.protocol)||!images&&u.protocol==="mailto:")?u.href:null}catch{return null}};
 export function cleanBlogHTML(input){
  const parsed=new DOMParser().parseFromString("<div>"+String(input||"")+"</div>","text/html");
  const holder=parsed.body.firstElementChild;
