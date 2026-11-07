@@ -132,7 +132,7 @@ export function createLessonStudio({root,course,modules,lesson=null,lessons=[],m
  let article=active==="text"?safeHtml(initial.content):"",notes=active==="video"||active==="download"?safeHtml(initial.content):"";
  let uploadedUID=/^cfstream:[0-9a-f]{32}$/i.test(initial.video)?initial.video.slice(9):null;
  let file=null,resourceFile=null,resourceName="",blobURL=null,mediaBusy=false;
- const changed=()=>{$("ae-studio-status").textContent="Unsaved changes"};
+ const changed=()=>{$("ae-studio-status").textContent="Unsaved changes";window.AEUnsaved?.mark()};
  const clearURL=()=>{if(blobURL){URL.revokeObjectURL(blobURL);blobURL=null}};
  const capture=()=>{
   if(active==="text"&&$("ae-rich"))article=safeHtml($("ae-rich").innerHTML);
@@ -217,11 +217,11 @@ export function createLessonStudio({root,course,modules,lesson=null,lessons=[],m
   if(action===active)return;
   capture();clearURL();active=action;render();changed();
  });
- const exitStudio=async()=>{if($("ae-studio-status").textContent==="Unsaved changes"&&!await studioDialog('Discard changes','Your unsaved lesson edits will be lost.',{confirmLabel:'Discard changes'}))return;clearURL();onCancel()};
+ const exitStudio=async()=>{if(!await window.AEUnsaved?.confirm())return;window.AEUnsaved?.clear();clearURL();onCancel()};
  $("ae-studio-back").onclick=exitStudio;
- $("ae-add-chapter").onclick=async()=>{if($("ae-studio-status").textContent==="Unsaved changes"&&!await studioDialog('Discard changes','Your unsaved lesson edits will be lost.',{confirmLabel:'Discard changes'}))return;clearURL();onAddChapter?.()};
- $("ae-add-lesson").onclick=async()=>{if($("ae-studio-status").textContent==="Unsaved changes"&&!await studioDialog('Discard changes','Your unsaved lesson edits will be lost.',{confirmLabel:'Discard changes'}))return;clearURL();onAddLesson?.($("ae-module").value)};
- root.querySelectorAll("[data-studio-lesson]").forEach(btn=>btn.onclick=async()=>{if(btn.dataset.studioLesson===lesson?.id)return;if($("ae-studio-status").textContent==="Unsaved changes"&&!await studioDialog('Discard changes','Your unsaved lesson edits will be lost.',{confirmLabel:'Discard changes'}))return;clearURL();onOpenLesson?.(btn.dataset.studioLesson)});
+ $("ae-add-chapter").onclick=async()=>{if(!await window.AEUnsaved?.confirm())return;window.AEUnsaved?.clear();clearURL();onAddChapter?.()};
+ $("ae-add-lesson").onclick=async()=>{if(!await window.AEUnsaved?.confirm())return;window.AEUnsaved?.clear();clearURL();onAddLesson?.($("ae-module").value)};
+ root.querySelectorAll("[data-studio-lesson]").forEach(btn=>btn.onclick=async()=>{if(btn.dataset.studioLesson===lesson?.id)return;if(!await window.AEUnsaved?.confirm())return;window.AEUnsaved?.clear();clearURL();onOpenLesson?.(btn.dataset.studioLesson)});
  // Defer preview callback lookup until the user clicks it. The handler is
  // initialized below; resolving it eagerly prevented render() from ever running.
  $("ae-top-preview").onclick=()=>$("ae-open-preview").click();
@@ -271,9 +271,18 @@ export function createLessonStudio({root,course,modules,lesson=null,lessons=[],m
        content_html:active==="quiz"?quizPrefix+JSON.stringify({version:1,questions}):active==="text"?article:notes,
        video_url:videoURL,resource_url:resourceURL,
        duration_minutes:Number($("ae-duration").value)||0,is_preview:$("ae-preview").checked,allow_download:$("ae-allow-download").checked};
-     await onSave(payload);clearURL();if($("ae-studio-status"))$("ae-studio-status").textContent="Saved";
+     await onSave(payload);window.AEUnsaved?.clean();clearURL();if($("ae-studio-status"))$("ae-studio-status").textContent="Saved";
    }catch(ex){if($("ae-studio-status"))$("ae-studio-status").textContent="Could not save";notify(ex.message||String(ex),true)}
    finally{if(button.isConnected)button.disabled=false}
  };
  render();
+ window.AEUnsaved?.watch(root,{title:"course lesson",save:async()=>{
+  const button=$("ae-studio-save");if(!button)return false;button.click();
+  for(let i=0;i<110;i++){
+   await new Promise(r=>setTimeout(r,130));
+   if(!window.AEUnsaved?.isDirty())return true;
+   if($("ae-studio-status")?.textContent==="Could not save")return false;
+  }
+  return false;
+ }});
 }
