@@ -73,3 +73,13 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-ser
 @media(max-width:1250px){.ae-crm-overview{grid-template-columns:repeat(2,minmax(0,1fr))}.ae-extension-row{grid-template-columns:1fr 1fr 90px 90px}}
 @media(max-width:900px){.ae-mgmt-two{grid-template-columns:1fr}.ae-extension-row{grid-template-columns:1fr 1fr}.ae-extension-row .btn{justify-self:start}.topbar{padding:0 16px}}
 @media(max-width:700px){.shell{display:block;height:auto;overflow:visible}.sidebar{width:100%;height:auto;padding:12px}.sidebar .brand{padding:8px 10px}.sidebar .nav{display:flex;overflow:auto;gap:6px}.sidebar .nav-primary,.sidebar .nav-group{flex:none}.sidebar .nav-btn{white-space:nowrap}.sidebar .side-bottom{display:none}.shell>.main{height:auto;min-height:calc(100dvh - 80px);overflow:visible}.topbar{height:auto;min-height:60px;padding:12px;gap:10px}.topbar .top-actions{display:flex;gap:5px;flex-wrap:wrap}.workspace{padding:20px 13px 40px}.ae-mgmt-panel{padding:18px 15px!important}.ae-mgmt-form,.ae-extension-row,.ae-crm-overview{grid-template-columns:1fr}.ae-mgmt-actions{grid-column:1}.ae-mgmt-panel .tablewrap{overflow:auto}}
+
+/* Branded, accessible document picker instead of the platform's gray file input. */
+.ae-ebook-workspace .ae-file-chooser{display:flex;align-items:center;gap:13px;position:relative;min-height:49px;border:1px solid #d4dfec;background:#fff;border-radius:9px;padding:5px 10px}
+.ae-ebook-workspace .ae-file-chooser:focus-within{border-color:#bd963d;box-shadow:0 0 0 3px #ead7a5aa}
+.ae-ebook-workspace .ae-file-chooser .ae-file-native,.ae-ebook-workspace .ae-file-chooser input[type=file]{position:absolute!important;inset:auto!important;width:1px!important;height:1px!important;opacity:0!important;overflow:hidden!important;pointer-events:none!important;clip-path:inset(50%)!important}
+.ae-ebook-workspace .ae-file-chooser .ae-file-trigger{flex:none;display:inline-flex;align-items:center;min-height:35px;padding:8px 14px;background:#f0f5fc;color:#214b7c;border:1px solid #cbdbea;border-radius:7px;font-size:11px;font-weight:850;cursor:pointer;line-height:1.4}
+.ae-ebook-workspace .ae-file-chooser .ae-file-trigger:hover{background:#e2edfa;border-color:#9ebedb}
+.ae-ebook-workspace .ae-file-chooser .ae-file-name{min-width:0;flex:1;font-size:12px;font-weight:550;color:#657a92;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ae-ebook-workspace .ae-file-chooser:has(input:valid) .ae-file-name{color:#163957;font-weight:700}
+@media(max-width:500px){.ae-ebook-workspace .ae-file-chooser{flex-wrap:wrap;padding:9px}.ae-ebook-workspace .ae-file-chooser .ae-file-name{flex-basis:100%}}
