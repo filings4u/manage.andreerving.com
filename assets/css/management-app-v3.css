@@ -102,3 +102,30 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-ser
 .login-box .ae-management-login-links{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;margin:19px 0 0}
 .login-box .ae-management-login-links a{color:#2054a2;font-weight:750;font-size:12px;text-decoration:none}
 .login-box .ae-management-login-links a:hover{text-decoration:underline}
+
+/* Management navigation correction: readable actions on the light header and stable sidebar. */
+.shell .topbar{display:flex;align-items:center;justify-content:space-between;gap:20px;background:#fff;border-bottom:1px solid #dbe5f0;min-height:72px;padding:12px clamp(20px,2vw,32px)}
+.shell .topbar>div:first-child{min-width:0}
+.shell .topbar .top-actions{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:9px;margin-left:auto;min-width:0}
+.shell .topbar .top-actions :is(a.btn,button.btn).secondary{display:inline-flex;justify-content:center;align-items:center;gap:6px;background:#fff!important;color:#15385e!important;border:1px solid #cfdaea!important;border-radius:9px;box-shadow:none;opacity:1!important;font-size:12px!important;line-height:1.3;font-weight:750;min-height:39px;padding:9px 14px!important;text-decoration:none!important;white-space:nowrap}
+.shell .topbar .top-actions :is(a.btn,button.btn).secondary:hover{color:#fff!important;background:#174b99!important;border-color:#174b99!important}
+.shell .topbar .top-actions :is(a.btn,button.btn).secondary:focus-visible{outline:3px solid #d4a43e;outline-offset:2px}
+.shell .sidebar{display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden}
+.shell .sidebar .brand{flex:none;border-bottom:1px solid #ffffff24;margin:0 0 12px}
+.shell .sidebar .nav{flex:1 0 auto;min-height:0;overflow:visible}
+.shell .sidebar .nav-primary{padding:5px 0 8px}
+.shell .sidebar .nav-group{margin:6px 0 0;border-top:1px solid #ffffff20;padding:9px 0 3px}
+.shell .sidebar .nav-group>summary{display:flex;align-items:center;justify-content:space-between;gap:9px;cursor:pointer;list-style:none;min-height:40px;padding:9px 7px;font-size:10px;line-height:1.4;letter-spacing:.065em;color:#97b9df;font-weight:850}
+.shell .sidebar .nav-group>summary::-webkit-details-marker{display:none}
+.shell .sidebar .nav-group>summary::after{content:'+';font-size:17px;font-weight:500;color:#a6c5e9;flex:none}
+.shell .sidebar .nav-group[open]>summary::after{content:'−'}
+.shell .sidebar .nav-group>summary:hover{color:#fff}
+.shell .sidebar .nav-group>summary:focus-visible{outline:2px solid #dfab48;border-radius:7px}
+.shell .sidebar .nav-btn{display:flex;align-items:center;gap:11px;padding:11px 12px;min-height:43px;white-space:normal;color:#d9e7f5;font-size:12px;font-weight:700}
+.shell .sidebar .nav-btn:hover{background:#24415f;color:#fff}
+.shell .sidebar .nav-btn.active{background:#27507a;color:#fff;box-shadow:inset 3px 0 #dba42e}
+.shell .sidebar .ae-nav-icon{display:flex;align-items:center;justify-content:center;flex:none;width:17px;min-width:17px;color:#bad6fb;font-size:13px}
+.shell .sidebar .ae-nav-text{min-width:0;line-height:1.45}
+.shell .sidebar .side-bottom{flex:none;margin-top:14px}
+@media(max-width:1000px){.shell .topbar{align-items:flex-start}.shell .topbar .top-actions{max-width:62%}.shell .topbar .top-actions :is(a.btn,button.btn).secondary{padding:8px 10px!important;font-size:11px!important}}
+@media(max-width:700px){.shell .topbar{align-items:center;flex-wrap:wrap}.shell .topbar .top-actions{margin-left:0;max-width:100%;justify-content:flex-start;width:100%}.shell .sidebar{overflow-x:auto}.shell .sidebar .nav{flex-direction:column;overflow:visible}.shell .sidebar .nav-primary,.shell .sidebar .nav-group{width:100%}.shell .sidebar .nav-group>summary{min-height:35px}.shell .sidebar .nav-btn{white-space:normal}}
