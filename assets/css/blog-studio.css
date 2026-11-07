@@ -203,3 +203,17 @@
 .blog-studio-settings #blog-search-settings{grid-column:auto!important}
 .blog-studio-settings .blog-settings-panel{max-width:none}
 #blog-search-settings label{max-width:760px}
+
+/* In-editor dialogs replace browser prompts for links, media and tables. */
+.blog-editor-insert-panel{background:#fff;border-radius:13px;width:min(100%,530px);max-height:90vh;overflow:auto;padding:24px;color:#18385a;box-shadow:0 25px 70px #091b3670}
+.blog-editor-insert-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.blog-editor-insert-header h2{font-size:19px;margin:0;color:#142f50}
+.blog-insert-close{background:transparent;border:0;color:#344f6c;font-size:26px;cursor:pointer}
+.blog-editor-insert-panel form{display:grid;gap:14px}
+.blog-editor-insert-panel label{display:grid;gap:7px;font-size:12px;font-weight:800;color:#385573}
+.blog-editor-insert-panel :is(input,select){width:100%;border:1px solid #ccdaec;padding:11px 12px;border-radius:8px;font-size:13px}
+.blog-editor-insert-panel input[type=file]{padding:7px}
+.blog-editor-insert-or{font-size:11px;color:#7589a0;margin:-5px 0}
+.blog-editor-insert-panel form>p{font-size:12px;line-height:1.4;color:#627990;margin:0}
+.blog-editor-insert-status{color:#b02b2b!important;font-weight:800}
+.blog-editor-insert-actions{display:flex;justify-content:flex-end;gap:9px;border-top:1px solid #e5eaf0;padding-top:15px}
