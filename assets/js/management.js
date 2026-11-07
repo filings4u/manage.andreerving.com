@@ -1,4 +1,4 @@
-import {createLMS} from './lms.js?v=enrollment-preserve-20261107k';
+import {createLMS} from './lms.js?v=enrollment-final-20261107m';
 import {createManagementOperations} from './management-operations.js?v=customer-return-20261107g';
 import {createBlogStudio,cleanBlogHTML} from './blog-studio.js?v=unsaved-20261107';
 import {createPodcastStudio} from './podcast-studio.js?v=upload-unsaved-20261107';
