@@ -1,5 +1,6 @@
 import {createLMS} from './lms.js?v=no-browser-alerts-20261106';
 import {createManagementOperations} from './management-operations.js?v=dedup-customer-routing-20261107';
+import {createBlogStudio} from './blog-studio.js?v=blog-studio-20261107';
 import{createClient}from'https://esm.sh/@supabase/supabase-js@2.58.0';
 const db=createClient('https://gnfyidajbectlppsekzj.supabase.co','sb_publishable_DGt4HrHAwWyMt-0Xtzlfog_F18RnOyf');
 const app=document.querySelector('#app'),safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -73,6 +74,12 @@ w.closest('.main')?.scrollTo({top:0,behavior:'instant'});
 w.innerHTML='<p class="muted">Loading…</p>';
 if(k==='courses'||k==='course_modules'||k==='course_lessons'){section='courses';const studio=createLMS({db,root:w,notify:toast,safe,isCurrent:()=>section==='courses'});return studio.start()}
 if(k==='overview')return overview();
+if(k==='blog_posts'){
+ const studio=createBlogStudio({db,root:w,notify:toast,isCurrent:name=>section===name,onExit:()=>navigate('blog_posts')});
+ const match=location.hash.match(/^#\/admin\/blog_posts\/edit\/([a-f0-9-]{36})$/i);
+ if(match){return db.from('blog_posts').select('*').eq('id',match[1]).maybeSingle().then(({data,error})=>{if(section==='blog_posts'){if(data)studio.open(data);else{toast(error?.message||'Article unavailable',true);studio.list()}}})}
+ return studio.list();
+}
 if(k==='customer_profiles')return adminOps.customers();
 if(k==='orders')return adminOps.ordersPage();
 if(k==='course_enrollments')return adminOps.enrollments();
