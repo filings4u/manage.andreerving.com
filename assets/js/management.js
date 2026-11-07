@@ -23,8 +23,8 @@ support_tickets:{title:'Support inbox',subtitle:'Respond to student and customer
 };
 let user=null,section='overview',rows=[],editing=null,search='',lookups={courses:[],modules:[]},busy=false,adminOps=null,realtimeChannel=null;
 const navGroups=[
-{name:'Website · andreerving.com',items:[['blog_posts','Blog & articles','✎'],['site_pages','CMS pages','▤'],['site_prices','Pricing','$'],['ebook_documents','eBook documents','▣'],['course_extensions','Course extensions','◷'],['website_inquiries','Inquiries','✉'],['newsletter_signups','Newsletter','◎']]},
-{name:'Customer app · app.andreerving.com',items:[['customer_profiles','Customer CRM','♙'],['orders','Orders & invites','▥'],['course_enrollments','Enrollments','✓'],['customer_documents','Private files','▢'],['support_tickets','Support inbox','✉']]},
+{name:'Website',items:[['blog_posts','Blog & articles','✎'],['site_pages','CMS pages','▤'],['site_prices','Pricing','$'],['ebook_documents','eBook documents','▣'],['course_extensions','Course extensions','◷'],['website_inquiries','Inquiries','✉'],['newsletter_signups','Newsletter','◎']]},
+{name:'Customer portal',items:[['customer_profiles','Customer CRM','♙'],['orders','Orders & invites','▥'],['course_enrollments','Enrollments','✓'],['customer_documents','Private files','▢'],['support_tickets','Support inbox','✉']]},
 {name:'Learning management',items:[['courses','Courses & programs','◈']]}
 ];
 function menuButton([key,label,icon]){return '<a class="nav-btn" href="'+(key==="courses"?"#/lms/courses":"#/admin/"+encodeURIComponent(key))+'" data-section="'+key+'"><span class="ae-nav-icon" aria-hidden="true">'+icon+'</span><span class="ae-nav-text">'+safe(label)+'</span></a>';}
