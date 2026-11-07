@@ -41,8 +41,12 @@ export function createManagementOperations({db,root,notify,head,isCurrent}){
   const tbody=root.querySelector("#crm-rows");
   function draw(query=""){
    const filtered=people.filter(p=>[p.full_name,p.email,p.phone].some(v=>String(v||"").toLowerCase().includes(query.toLowerCase())));
-   tbody.innerHTML=filtered.map(p=>'<tr><td><strong>'+escapeHtml(p.full_name||"Customer")+'</strong></td><td>'+escapeHtml(p.email)+'</td><td>'+escapeHtml(p.phone||"Not provided")+'</td><td>'+formatDate(p.created_at)+'</td><td><button class="ae-inline-btn" data-customer="'+escapeHtml(p.id)+'" type="button">Open profile</button></td></tr>').join("")||'<tr><td colspan="5">No customers match this search.</td></tr>';
+   tbody.innerHTML=filtered.map(p=>'<tr class="ae-crm-clickable" data-customer-row="'+escapeHtml(p.id)+'" tabindex="0" role="button" aria-label="Open profile for '+escapeHtml(p.full_name||p.email)+'"><td><strong>'+escapeHtml(p.full_name||"Customer")+'</strong></td><td>'+escapeHtml(p.email)+'</td><td>'+escapeHtml(p.phone||"Not provided")+'</td><td>'+formatDate(p.created_at)+'</td><td><button class="ae-inline-btn" data-customer="'+escapeHtml(p.id)+'" type="button">Open profile</button></td></tr>').join("")||'<tr><td colspan="5">No customers match this search.</td></tr>';
    tbody.querySelectorAll("[data-customer]").forEach(b=>b.onclick=()=>profile(b.dataset.customer));
+   tbody.querySelectorAll('[data-customer-row]').forEach(row=>{
+    row.onclick=event=>{if(event.target.closest('button'))return;profile(row.dataset.customerRow)};
+    row.onkeydown=event=>{if(event.target!==row)return;if(event.key==='Enter'||event.key===' '){event.preventDefault();profile(row.dataset.customerRow)}};
+   });
   }
   draw();root.querySelector("#crm-search").oninput=e=>draw(e.target.value);
   root.querySelector("#crm-add").onclick=()=>customerForm();
