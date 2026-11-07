@@ -1,5 +1,5 @@
-import {createLMS} from './lms.js?v=unsaved-20261107';
-import {createManagementOperations} from './management-operations.js?v=crm-full-width-20261107';
+import {createLMS} from './lms.js?v=course-benefits-access-20261107g';
+import {createManagementOperations} from './management-operations.js?v=customer-return-20261107g';
 import {createBlogStudio,cleanBlogHTML} from './blog-studio.js?v=unsaved-20261107';
 import {createPodcastStudio} from './podcast-studio.js?v=upload-unsaved-20261107';
 import {createUnsavedGuard} from './unsaved-guard.js?v=20261107';
