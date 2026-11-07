@@ -47,7 +47,7 @@ export function createLMS({db,root,notify,safe,isCurrent}){
       '<div class="lms-card-grid">'+matching.map(c=>{
         const modules=s.modules.filter(m=>m.course_id===c.id).length,lessons=s.lessons.filter(l=>l.course_id===c.id).length,students=s.enrollments.filter(e=>e.course_id===c.id&&e.status==="active").length;
         const image=c.featured_image_url&&/^https:\/\//i.test(c.featured_image_url)?'<img src="'+escAttr(c.featured_image_url)+'" alt="" loading="lazy">':'<div class="lms-cover-placeholder">AE<span>LEARNING</span></div>';
-        return '<article class="lms-course-card"><div class="lms-cover">'+image+'</div><div class="lms-course-body"><div class="lms-card-meta"><span class="pill '+esc(c.status)+'">'+esc(c.status)+'</span><span>'+esc(c.category||"Course")+'</span></div><h3>'+esc(c.title)+'</h3><p>'+esc(c.short_description||"Build and deliver your program.")+'</p><div class="lms-card-details"><span>'+modules+' sections</span><span>'+lessons+' lessons</span><span>'+students+' students</span></div><div class="lms-course-bottom"><strong>'+money(c.price)+'</strong><button class="btn secondary" data-open-course="'+escAttr(c.id)+'">Manage course →</button></div></div></article>';
+        return '<article class="lms-course-card"><div class="lms-cover">'+image+'</div><div class="lms-course-body"><div class="lms-card-meta"><span class="pill '+esc(c.status)+'">'+esc(c.status)+'</span><span>'+esc(c.category||"Course")+'</span></div><h3>'+esc(c.title)+'</h3><p>'+esc(c.short_description||"Build and deliver your program.")+'</p><div class="lms-card-details"><span>'+modules+' sections</span><span>'+lessons+' lessons</span><span>'+students+' students</span><span>'+(c.access_days?esc(c.access_days)+" days access":"Lifetime access")+'</span></div><div class="lms-course-bottom"><strong>'+money(c.price)+'</strong><button class="btn secondary" data-open-course="'+escAttr(c.id)+'">Manage course →</button></div></div></article>';
       }).join('')+'</div>'+(matching.length?'':empty("No courses match your search."))+'</section>';
     by("lms-new").onclick=()=>openCourseForm();
     by("lms-search").oninput=e=>{s.term=e.target.value;const pos=e.target.selectionStart;renderLibrary();const n=by("lms-search");n.focus();n.setSelectionRange(pos,pos)};
@@ -68,7 +68,7 @@ export function createLMS({db,root,notify,safe,isCurrent}){
       '<div id="lms-tab-body"></div>';
     by("lms-back").onclick=()=>{s.courseId=null;openRoute("courses");render()};
     by("lms-preview").onclick=()=>{location.assign("training-preview.html?course="+encodeURIComponent(s.courseId)+"&preview=admin")};
-    by("lms-invite").onclick=()=>{s.tab="students";openRoute("course/"+s.courseId+"/students");render();openEnrollment()};
+    by("lms-invite").onclick=()=>{sessionStorage.setItem("ae_enrollment_return",JSON.stringify({courseId:s.courseId}));history.replaceState(null,"","#/admin/customer_profiles");location.reload()};
     const addButton=by("lms-add-menu"),drop=by("lms-add-dropdown");
     addButton.onclick=()=>{drop.hidden=!drop.hidden;addButton.setAttribute("aria-expanded",String(!drop.hidden))};
     drop.querySelectorAll("[data-add-kind]").forEach(b=>b.onclick=()=>{drop.hidden=true;quickAdd(b.dataset.addKind)});
