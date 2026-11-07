@@ -162,18 +162,44 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
   root.querySelector("#ae-invite-from-orders").onclick=()=>inviteForm({email:prefillEmail||""});
   root.querySelectorAll("[data-order-invite]").forEach(button=>button.onclick=()=>inviteForm({email:button.dataset.orderEmail,orderId:button.dataset.orderInvite}));
  }
- function inviteForm({email="",orderId=""}={}){
-  root.innerHTML=head("Send account invitation","Send a secure access link to a customer without requiring a password from staff.")+
-   '<section class="panel ae-mgmt-panel ae-narrow"><h2>Customer invitation</h2><form class="ae-mgmt-form" id="ae-send-invite">'+
-   '<label>Customer email<input type="email" name="email" required maxlength="254" value="'+escapeHtml(email)+'" '+(orderId?'readonly aria-readonly="true"':'')+'></label>'+
-   '<label>Related order ID <span class="ae-form-hint">Optional.</span><input name="orderId" value="'+escapeHtml(orderId)+'"></label>'+
-   '<div class="ae-mgmt-actions"><button class="btn" type="submit">Send invitation</button><button class="btn secondary" type="button" id="ae-invite-cancel">Cancel</button></div></form></section>';
+ async function inviteForm({email="",orderId=""}={}){
+  const [customerResponse,orderResponse]=await Promise.all([api("list_customers"),api("list_orders")]);
+  const customers=customerResponse.items||[],allOrders=orderResponse.items||[];
+  if(!isCurrent("orders"))return;
+  const normalized=String(email||"").trim().toLowerCase();
+  let selected=customers.find(person=>person.email.toLowerCase()===normalized);
+  if(!selected&&orderId){
+    const requested=allOrders.find(order=>order.id===orderId);
+    selected=customers.find(person=>person.email.toLowerCase()===String(requested?.customer_email||"").trim().toLowerCase());
+  }
+  root.innerHTML=head("Send account invitation","Select an existing customer. Account invitations always belong to one customer record.")+
+   '<section class="panel ae-mgmt-panel ae-narrow"><h2>Customer invitation</h2>'+
+   '<form class="ae-mgmt-form" id="ae-send-invite">'+
+   '<label>Customer<select name="userId" required>'+optionList(customers,"Choose a customer",p=>p.id,p=>(p.full_name?p.full_name+" — ":"")+p.email)+'</select></label>'+
+   '<label>Related order <span class="ae-form-hint">Optional. Only this customer’s orders are shown.</span><select name="orderId"><option value="">No specific order</option></select></label>'+
+   '<div class="ae-mgmt-actions"><button class="btn" type="submit">Send invitation</button><button class="btn secondary" type="button" id="ae-invite-cancel">Cancel</button></div></form>'+
+   '<p class="ae-form-hint">Need to invite someone new? Create their customer account in Customer CRM first.</p></section>';
+  const select=root.querySelector('#ae-send-invite [name="userId"]');
+  const orderSelect=root.querySelector('#ae-send-invite [name="orderId"]');
+  function refreshOrders(){
+    const customer=customers.find(p=>p.id===select.value);
+    const related=customer?allOrders.filter(o=>String(o.customer_email||"").trim().toLowerCase()===customer.email.trim().toLowerCase()):[];
+    orderSelect.innerHTML=optionList(related,"No specific order",o=>o.id,o=>o.order_number+" — "+money(o.total));
+    if(related.some(o=>o.id===orderId))orderSelect.value=orderId;
+  }
+  select.value=selected?.id||"";
+  refreshOrders();
+  select.onchange=()=>{orderId="";refreshOrders()};
   root.querySelector("#ae-invite-cancel").onclick=()=>ordersPage();
   onSubmit("#ae-send-invite",async fd=>{
-   const values=Object.fromEntries(fd);if(!values.orderId)delete values.orderId;
-   const res=await api("send_invite",values);
-   notify("Account invitation sent to "+res.email);
-   await ordersPage();
+    const customer=customers.find(p=>p.id===String(fd.get("userId")||""));
+    if(!customer)throw Error("Choose an existing customer");
+    const values={email:customer.email};
+    const related=String(fd.get("orderId")||"");
+    if(related)values.orderId=related;
+    const res=await api("send_invite",values);
+    notify("Account invitation sent to "+res.email);
+    await ordersPage();
   });
  }
  async function extensionSettings(){
