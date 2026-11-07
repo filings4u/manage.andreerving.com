@@ -189,3 +189,11 @@
 .blog-search-preview p{font-size:12px;color:#516980;line-height:1.55;margin:0}
 #blog-writing,#blog-summary,#blog-publishing,#blog-image-section,#blog-search-settings{scroll-margin-top:175px!important}
 @media(max-width:820px){.blog-editor-guide{position:relative!important;top:auto!important;max-height:none!important}.blog-toolbar{top:56px!important}.blog-studio-editor-top{top:0!important}}
+
+/* Respect the portal's persistent top navigation while editor controls float. */
+@media(min-width:821px){
+ .blog-studio-editor-top{top:58px!important}
+ .blog-toolbar{top:118px!important}
+ .blog-editor-guide{top:132px!important;max-height:calc(100dvh - 145px)!important}
+ #blog-writing,#blog-summary,#blog-publishing,#blog-image-section,#blog-search-settings{scroll-margin-top:190px!important}
+}
