@@ -1,0 +1,51 @@
+/* Dedicated eBook documents workspace — scoped to avoid affecting other management pages. */
+.ae-ebook-workspace{--ebook-ink:#172e4b;--ebook-border:#dfe7f0;--ebook-muted:#73859b;max-width:1560px;padding-bottom:60px}
+.ae-ebook-workspace>.head{margin-bottom:22px;padding:4px 0 18px;border-bottom:1px solid #e1e8f0;align-items:flex-end}
+.ae-ebook-workspace>.head h1{font-size:clamp(25px,2.6vw,33px)!important;letter-spacing:-.04em;margin:7px 0 6px!important;color:#122943}
+.ae-ebook-workspace>.head .muted{max-width:760px;font-size:13px;color:#6b7f97;line-height:1.6}
+.ae-ebook-workspace>.panel{padding:27px 30px;border:1px solid var(--ebook-border);border-radius:15px;box-shadow:0 5px 20px rgba(16,38,69,.035);margin-bottom:21px}
+.ae-ebook-section-label{display:block;color:#b88722;letter-spacing:.12em;font-size:10px;font-weight:850;margin-bottom:8px}
+.ae-ebook-workspace .ae-ebook-panel-heading h2,.ae-ebook-workspace .ae-ebook-list-heading h2{font-size:20px;letter-spacing:-.035em;color:var(--ebook-ink);margin:0}
+.ae-ebook-workspace .ae-ebook-upload-panel>p.muted{font-size:12px;line-height:1.65;margin:12px 0 20px;color:var(--ebook-muted);max-width:780px}
+.ae-ebook-workspace .ae-ebook-form{margin:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px 20px;align-items:end}
+.ae-ebook-workspace .ae-ebook-form .field.wide{grid-column:auto;min-width:0;color:#263f60;font-size:12px;font-weight:750}
+.ae-ebook-workspace .ae-ebook-form .field select,.ae-ebook-workspace .ae-ebook-form .field input[type=file]{height:49px;min-height:49px;margin-top:9px;border:1px solid #d4dfec;background:#fff;border-radius:9px;padding:11px 13px;font-size:13px;font-weight:500;color:#1d3857;width:100%;max-width:100%}
+.ae-ebook-workspace .ae-ebook-form .field input[type=file]{padding:8px 10px;line-height:25px;cursor:pointer}
+.ae-ebook-workspace .ae-ebook-form .field input[type=file]::file-selector-button{font:inherit;font-size:11px;font-weight:800;border:1px solid #d4deea;background:#f4f7fb;border-radius:6px;padding:6px 12px;color:#25496f;margin-right:13px;cursor:pointer}
+.ae-ebook-workspace .ae-ebook-form .field select:focus-visible,.ae-ebook-workspace .ae-ebook-form .field input[type=file]:focus-visible{outline:3px solid #e5c27d;outline-offset:2px;border-color:#bc903c}
+.ae-ebook-workspace .ae-ebook-form-footer{grid-column:1/-1;display:flex;align-items:center;justify-content:flex-end;gap:18px;padding-top:17px;margin-top:2px;border-top:1px solid #edf1f6}
+.ae-ebook-workspace .ae-ebook-form-footer #ebook-upload-message{margin:0 auto 0 0;font-size:12px;color:#59718d}
+.ae-ebook-workspace .ae-ebook-submit{width:auto!important;min-width:175px!important;min-height:43px;display:inline-flex;align-items:center;justify-content:center;background:#c99425!important;border:1px solid #c99425!important;border-radius:9px;color:#fff!important;font-weight:800;font-size:12px;padding:12px 22px}
+.ae-ebook-workspace .ae-ebook-submit:hover:not(:disabled){background:#b7831d!important;border-color:#b7831d!important}
+.ae-ebook-workspace .ae-ebook-list-heading{display:flex;justify-content:space-between;align-items:center;gap:14px;padding-bottom:19px}
+.ae-ebook-workspace .ae-ebook-count{border:1px solid #e2eaf3;border-radius:99px;background:#f5f8fc;color:#627a96;padding:8px 12px;font-size:11px;font-weight:750;white-space:nowrap}
+.ae-ebook-workspace .ae-ebook-list-panel>.tablewrap{overflow-x:auto;border:1px solid #e5ebf3;border-radius:10px}
+.ae-ebook-workspace .ae-ebook-list-panel table{width:100%;min-width:760px;table-layout:fixed;border-spacing:0;border-collapse:separate}
+.ae-ebook-workspace .ae-ebook-list-panel th:nth-child(1){width:43%}
+.ae-ebook-workspace .ae-ebook-list-panel th:nth-child(2){width:12%}
+.ae-ebook-workspace .ae-ebook-list-panel th:nth-child(3){width:23%}
+.ae-ebook-workspace .ae-ebook-list-panel th:nth-child(4){width:10%}
+.ae-ebook-workspace .ae-ebook-list-panel th:nth-child(5){width:12%}
+.ae-ebook-workspace .ae-ebook-list-panel thead th{background:#f6f8fc;padding:14px 17px;color:#627996;font-size:10px;font-weight:850;letter-spacing:.075em}
+.ae-ebook-workspace .ae-ebook-list-panel tbody td{padding:16px 17px;color:#435a76;font-size:12px;line-height:1.55;overflow-wrap:anywhere}
+.ae-ebook-workspace .ae-ebook-list-panel tbody td:first-child{font-weight:750;color:#193454;font-size:12px}
+.ae-ebook-workspace .ae-ebook-list-panel tbody tr:last-child td{border-bottom:0}
+.ae-ebook-workspace .ae-ebook-list-panel tbody tr:hover td{background:#f9fbfe}
+.ae-ebook-workspace .ae-ebook-list-panel tbody td .muted{font-style:normal;color:#93a2b5;font-size:12px}
+.ae-ebook-workspace .ae-ebook-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.ae-ebook-workspace .ae-ebook-actions .btn{padding:8px 11px;border-radius:7px;font-size:11px;font-weight:750;min-height:33px;white-space:nowrap;border:1px solid #d6e1ed;background:#fff;color:#24517b;line-height:1.2}
+.ae-ebook-workspace .ae-ebook-actions .ae-ebook-preview:hover{background:#edf5ff}
+.ae-ebook-workspace .ae-ebook-actions .ae-ebook-remove{color:#9b4249;border-color:#eed5d8}
+.ae-ebook-workspace .ae-ebook-actions .ae-ebook-remove:hover{background:#fff2f2}
+@media(max-width:1100px){
+.ae-ebook-workspace>.panel{padding:22px}
+.ae-ebook-workspace .ae-ebook-list-panel table{min-width:850px}
+}
+@media(max-width:750px){
+.ae-ebook-workspace>.panel{padding:18px 16px}
+.ae-ebook-workspace .ae-ebook-form{grid-template-columns:minmax(0,1fr);gap:18px}
+.ae-ebook-workspace .ae-ebook-form-footer{flex-direction:column;align-items:stretch;padding-top:15px}
+.ae-ebook-workspace .ae-ebook-submit{width:100%!important}
+.ae-ebook-workspace .ae-ebook-list-heading{align-items:flex-start;flex-wrap:wrap}
+.ae-ebook-workspace .ae-ebook-list-panel table{min-width:800px}
+}
