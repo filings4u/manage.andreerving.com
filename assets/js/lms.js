@@ -252,7 +252,7 @@ export function createLMS({db,root,notify,safe,isCurrent}){
       if(!await brandedConfirm(restoring?"Grant access again":"Revoke course access",
         (restoring?"Restore access for ":"Revoke access for ")+(s.customers.find(p=>p.id===en.user_id)?.full_name||"this participant")+"? Their account, purchase history and course progress will remain intact."))return;
       const changes={status:restoring?"active":"cancelled"};
-      if(restoring&&en.expires_at&&new Date(en.expires_at)<=new Date())changes.expires_at=null;
+      if(restoring){const days=Number(current()?.access_days);changes.expires_at=Number.isFinite(days)&&days>0?new Date(Date.now()+days*86400000).toISOString():null}
       const result=await db.from("course_enrollments").update(changes).eq("id",en.id).eq("course_id",s.courseId).select("id").single();
       if(result.error)return warn(result.error);
       notify(restoring?"Course access granted again":"Course access revoked; records preserved");
@@ -772,7 +772,7 @@ export function createLMS({db,root,notify,safe,isCurrent}){
     s.nextEditRoute="enrollment/"+(record?.id||"new")+"/"+c.id;
     const fields='<div class="form-grid">'+(record?'<p class="field wide">Customer: '+esc(s.customers.find(x=>x.id===record.user_id)?.email||record.user_id)+'</p>':select("Select customer","user_id",[["","Choose a customer"],...s.customers.map(p=>[p.id,p.full_name?p.full_name+" ("+p.email+")":p.email])],returnedCustomer))+
       select("Access status","status",[["active","Active"],["completed","Completed"],["cancelled","Cancelled"],["expired","Expired"]],record?.status||"active")+
-      input("Expiration date (optional)","expires_at",record?.expires_at?.slice(0,10)||"","date")+'</div><p class="muted">Enrolling a student grants access. It does not create a payment or purchase record.</p>';
+      input("Expiration date (optional; defaults to course access term)","expires_at",record?.expires_at?.slice(0,10)||(c.access_days?new Date(Date.now()+Number(c.access_days)*86400000).toISOString().slice(0,10):""),"date")+'</div><p class="muted">Enrolling a student grants access. It does not create a payment or purchase record.</p>';
     modal(record?"Manage enrollment":"Enroll student",fields,async fd=>{
       const status=String(fd.get("status")||"active"),expires=String(fd.get("expires_at")||"");
       const data={status,expires_at:expires?new Date(expires+"T23:59:59Z").toISOString():null};
