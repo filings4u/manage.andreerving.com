@@ -11,7 +11,7 @@ const safeStyle=value=>{
   "font-family":v=>/^(Arial|Georgia|Verdana|Tahoma|Times New Roman|Courier New|Helvetica|serif|sans-serif|monospace)(, ?(serif|sans-serif|monospace))?$/i.test(v),
   "font-size":v=>/^(1[0-9]|2[0-9]|3[0-6])px$/.test(v),
   "line-height":v=>/^(1|1\.[0-9]|2|2\.[0-5])$/.test(v),
-  "margin-bottom":v=>/^(0|[0-9]|[1-6][0-9])px$/.test(v),
+  "margin-bottom":v=>/^(0|[0-9]|[1-6][0-9])px$/.test(v),\n  "width":v=>/^(25|50|75|100)%$/.test(v),
   "text-align":v=>/^(left|center|right|justify)$/.test(v),
   "text-decoration":v=>/^(underline|line-through|none)$/.test(v)
  };
@@ -348,32 +348,63 @@ export function createBlogStudio({db,root,notify,isCurrent,onExit}){
   dirty=true;updateStats();
   const selection=window.getSelection();if(selection?.rangeCount)savedRange=selection.getRangeAt(0).cloneRange();
  }
+ function openInsertDialog(type){
+  const overlay=document.createElement("div");overlay.className="blog-studio-overlay blog-editor-insert-overlay";
+  const isImage=type==="image",isVideo=type==="video",isLink=type==="link",isTable=type==="table";
+  const titles={image:"Insert image",video:"Embed a video",link:"Insert a link",table:"Insert a table"};
+  overlay.innerHTML='<div class="blog-editor-insert-panel" role="dialog" aria-modal="true" aria-labelledby="blog-insert-title"><div class="blog-editor-insert-header"><h2 id="blog-insert-title">'+titles[type]+'</h2><button type="button" class="blog-insert-close" aria-label="Close">×</button></div><form id="blog-insert-form">'+
+   (isImage?'<label>Image file<input type="file" name="file" accept="image/png,image/jpeg,image/webp"></label><p class="blog-editor-insert-or">Or use a hosted image URL</p><label>Image URL<input name="url" type="url" placeholder="https://..."></label><label>Image description (alt text)<input name="alt" maxlength="200" placeholder="Describe what the image shows"></label><label>Image width<select name="width"><option value="100">Full width</option><option value="75">75%</option><option value="50">50%</option></select></label>':
+   isVideo?'<label>YouTube or Vimeo URL<input name="url" type="url" placeholder="https://www.youtube.com/watch?v=..." required></label><p>Only public videos from YouTube and Vimeo can be embedded.</p>':
+   isLink?'<label>Link text<input name="label" maxlength="240" placeholder="Text to display"></label><label>Destination URL<input name="url" type="url" required placeholder="https://..."></label>':
+   isTable?'<label>Rows<input name="rows" type="number" min="1" max="12" value="3"></label><label>Columns<input name="columns" type="number" min="1" max="6" value="2"></label>':'')+
+   '<p class="blog-editor-insert-status" role="alert"></p><div class="blog-editor-insert-actions"><button type="button" class="btn secondary blog-insert-cancel">Cancel</button><button type="submit" class="btn">Insert</button></div></form></div>';
+  document.body.append(overlay);
+  const form=overlay.querySelector("form"),status=overlay.querySelector(".blog-editor-insert-status");
+  const close=()=>overlay.remove();
+  overlay.querySelector(".blog-insert-close").onclick=close;overlay.querySelector(".blog-insert-cancel").onclick=close;
+  overlay.onclick=event=>{if(event.target===overlay)close()};
+  form.onsubmit=async event=>{
+   event.preventDefault();const fields=new FormData(form),submit=form.querySelector('[type="submit"]');
+   submit.disabled=true;status.textContent="";
+   try{
+    let markup="";
+    if(isImage){
+     const file=form.elements.namedItem("file").files?.[0];
+     const url=file?await uploadImage(file):safeURL(String(fields.get("url")||""),true);
+     if(!url)throw Error("Choose an image file or enter a valid image URL.");
+     const alt=String(fields.get("alt")||"Article image").trim().slice(0,200);
+     const width=["50","75","100"].includes(String(fields.get("width"))) ? fields.get("width") : "100";
+     markup='<figure><img src="'+E(url)+'" alt="'+E(alt)+'" style="width:'+width+'%"></figure><p></p>';
+    }else if(isVideo){
+     const address=String(fields.get("url")||"").trim();let url;
+     const u=new URL(address);
+     if(u.hostname==="youtu.be")url="https://www.youtube-nocookie.com/embed/"+u.pathname.slice(1);
+     else if(["youtube.com","www.youtube.com","m.youtube.com"].includes(u.hostname))url="https://www.youtube-nocookie.com/embed/"+(u.pathname==="/watch"?u.searchParams.get("v"):u.pathname.split("/").pop());
+     else if(["vimeo.com","www.vimeo.com"].includes(u.hostname))url="https://player.vimeo.com/video/"+u.pathname.slice(1);
+     else url=address;
+     const safe=safeVideoURL(url);if(!safe)throw Error("Enter a valid YouTube or Vimeo URL.");
+     markup='<div class="blog-video"><iframe src="'+E(safe)+'" title="Embedded article video" loading="lazy" allowfullscreen></iframe></div><p></p>';
+    }else if(isLink){
+     const href=safeURL(String(fields.get("url")||""));
+     if(!href||!/^https?:/.test(href))throw Error("Use a valid HTTPS link.");
+     const label=String(fields.get("label")||"").trim();
+     const selectionText=savedRange?.toString()?.trim()||"";
+     if(!label&&selectionText){close();format("createLink",href);return}
+     if(!label)throw Error("Enter link text.");
+     markup='<a href="'+E(href)+'">'+E(label)+'</a>';
+    }else if(isTable){
+     const rows=Math.max(1,Math.min(12,Number(fields.get("rows"))||3));
+     const cols=Math.max(1,Math.min(6,Number(fields.get("columns"))||2));
+     markup='<table><thead><tr>'+Array.from({length:cols},(_,i)=>'<th>Heading '+(i+1)+'</th>').join("")+'</tr></thead><tbody>'+Array.from({length:rows},()=>'<tr>'+Array.from({length:cols},()=>'<td>Content</td>').join("")+'</tr>').join("")+'</tbody></table><p></p>';
+    }
+    close();format("insertHTML",markup);
+   }catch(error){status.textContent=error.message||"Unable to insert content.";submit.disabled=false}
+  };
+  form.querySelector('input:not([type="file"])')?.focus();
+ }
  function insert(action){
-  restoreSelection();
   if(action==="divider")return format("insertHorizontalRule");
-  if(action==="table")return format("insertHTML",'<table><tbody><tr><th>Heading</th><th>Heading</th></tr><tr><td>Content</td><td>Content</td></tr></tbody></table><p></p>');
-  if(action==="video"){
-   const address=prompt("Paste a YouTube or Vimeo video URL:");
-   if(!address)return;
-   let url;try{
-    const u=new URL(address);
-    if(u.hostname==="youtu.be")url="https://www.youtube-nocookie.com/embed/"+u.pathname.slice(1);
-    else if(["youtube.com","www.youtube.com","m.youtube.com"].includes(u.hostname)){
-     const id=u.pathname==="/watch"?u.searchParams.get("v"):u.pathname.split("/").pop();
-     url="https://www.youtube-nocookie.com/embed/"+id;
-    }else if(["vimeo.com","www.vimeo.com"].includes(u.hostname))url="https://player.vimeo.com/video/"+u.pathname.slice(1);
-    else url=address;
-   }catch{return errorText("Enter a valid video URL.")}
-   const safe=safeVideoURL(url);if(!safe)return errorText("Use a public YouTube or Vimeo video link.");
-   format("insertHTML",'<div class="blog-video"><iframe src="'+E(safe)+'" title="Embedded article video" loading="lazy" allowfullscreen></iframe></div><p></p>');return;
-  }
-  if(action==="link"){const address=prompt("Enter an HTTPS URL:");if(!address)return;const href=safeURL(address);if(!href)return errorText("Choose a valid web URL.");format("createLink",href)}
-  if(action==="image"){
-   const insertionRange=savedRange?.cloneRange();
-   const input=document.createElement("input");input.type="file";input.accept="image/png,image/jpeg,image/webp";
-   input.onchange=async()=>{try{const file=input.files?.[0];if(!file)return;const url=await uploadImage(file);savedRange=insertionRange;restoreSelection();format("insertHTML",'<figure><img src="'+E(url)+'" alt="Blog image"></figure>');notify("Image added to article")}catch(err){errorText(err.message)}};
-   input.click();
-  }
+  if(["link","image","video","table"].includes(action))return openInsertDialog(action);
  }
  async function uploadImage(file){
   if(!["image/png","image/jpeg","image/webp"].includes(file.type)||file.size>8*1024*1024)throw Error("Choose a JPG, PNG or WebP image under 8 MB.");
