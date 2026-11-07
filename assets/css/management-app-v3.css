@@ -129,3 +129,37 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-ser
 .shell .sidebar .side-bottom{flex:none;margin-top:14px}
 @media(max-width:1000px){.shell .topbar{align-items:flex-start}.shell .topbar .top-actions{max-width:62%}.shell .topbar .top-actions :is(a.btn,button.btn).secondary{padding:8px 10px!important;font-size:11px!important}}
 @media(max-width:700px){.shell .topbar{align-items:center;flex-wrap:wrap}.shell .topbar .top-actions{margin-left:0;max-width:100%;justify-content:flex-start;width:100%}.shell .sidebar{overflow-x:auto}.shell .sidebar .nav{flex-direction:column;overflow:visible}.shell .sidebar .nav-primary,.shell .sidebar .nav-group{width:100%}.shell .sidebar .nav-group>summary{min-height:35px}.shell .sidebar .nav-btn{white-space:normal}}
+
+/* Full-screen management workspace, including CRM creation and record editing. */
+.shell>.main .workspace{max-width:none!important;width:100%!important;margin:0!important;padding:26px clamp(20px,2.3vw,38px) 55px!important}
+.shell>.main .workspace>.head{width:100%;max-width:none}
+.ae-customer-form,.ae-customer-layout{width:100%;max-width:none}
+.ae-customer-layout{display:grid;grid-template-columns:minmax(0,1.9fr) minmax(300px,1fr);gap:18px;align-items:start}
+.ae-customer-main,.ae-customer-side{min-width:0;display:grid;gap:18px}
+.workspace .ae-customer-section{padding:25px clamp(20px,2.1vw,32px)!important;border-radius:14px}
+.ae-customer-section-head{display:flex;align-items:flex-start;gap:14px;padding:0 0 19px;border-bottom:1px solid #e0e8f2;margin-bottom:20px}
+.ae-customer-section-head>span{display:grid;place-items:center;flex:none;width:37px;height:37px;background:#fff0d4;color:#ab7314;font-size:12px;font-weight:900;border-radius:10px}
+.ae-customer-section-head h2{font-size:17px;font-weight:850;margin:1px 0 5px;color:#102b4c;letter-spacing:-.02em}
+.ae-customer-section-head p{font-size:12px;color:#7288a3;line-height:1.5;margin:0}
+.ae-customer-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.ae-customer-fields.one{grid-template-columns:1fr}
+.ae-customer-field{display:flex;flex-direction:column;gap:8px;font-size:12px;font-weight:800;color:#1b3656;min-width:0}
+.ae-customer-field.wide{grid-column:1/-1}
+.ae-customer-field em{font-style:normal;color:#c58c21}
+.ae-customer-field :is(input,select,textarea){display:block;box-sizing:border-box;width:100%;min-width:0;background:#fff;border:1px solid #cfdded;border-radius:9px;color:#203d61;font:inherit;font-size:13px;font-weight:500;padding:11px 13px;min-height:45px;transition:border-color .15s,box-shadow .15s}
+.ae-customer-field textarea{min-height:165px;line-height:1.7;resize:vertical}
+.ae-customer-field :is(input,select,textarea):focus{outline:none;border-color:#3568c5;box-shadow:0 0 0 3px #dceaff}
+.ae-customer-field input[readonly]{background:#f3f6fa;color:#697f9a}
+.ae-customer-info{padding:16px;background:#f4f8fd;border:1px solid #dfe8f2;border-radius:11px}
+.ae-customer-info strong{display:block;color:#153756;font-size:12px;margin-bottom:7px}
+.ae-customer-info p{color:#657c96;font-size:12px;line-height:1.65;margin:0}
+.ae-customer-next{background:linear-gradient(125deg,#102d50,#1b4876);padding:24px;border-radius:13px;color:white}
+.ae-customer-next strong{font-size:15px}
+.ae-customer-next p{font-size:12px;line-height:1.7;color:#c7d6e8;margin:9px 0 0}
+.ae-customer-actionbar{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-top:18px;padding:21px 24px;background:white;border:1px solid #dce6f0;border-radius:13px}
+.ae-customer-actionbar>div:first-child{display:flex;flex-direction:column;gap:5px}
+.ae-customer-actionbar strong{font-size:13px;color:#123456}
+.ae-customer-actionbar span{font-size:12px;color:#738aa2}
+.ae-customer-actions{display:flex;gap:9px;flex-shrink:0}
+@media(max-width:1100px){.ae-customer-layout{grid-template-columns:1fr}.ae-customer-side{grid-template-columns:repeat(2,minmax(0,1fr))}.ae-customer-next{grid-column:1/-1}}
+@media(max-width:670px){.ae-customer-fields,.ae-customer-side{grid-template-columns:1fr}.ae-customer-field.wide{grid-column:auto}.ae-customer-actionbar{flex-direction:column;align-items:stretch}.ae-customer-actions{display:flex}.ae-customer-actions .btn{flex:1}}
