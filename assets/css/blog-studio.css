@@ -125,3 +125,14 @@
 @media(max-width:1150px){.blog-studio-edit-layout{grid-template-columns:minmax(0,1fr) 255px}}
 @media(max-width:900px){.blog-studio-edit-layout{grid-template-columns:1fr}.blog-studio-settings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.blog-studio-editor-top{position:relative;top:auto}}
 @media(max-width:650px){.ae-blog-workspace{padding:14px 12px 30px!important}.blog-studio-settings{grid-template-columns:1fr}.blog-rich-editor{min-height:290px!important;padding:16px!important}.blog-editor-label{align-items:flex-start;flex-direction:column;gap:2px}}
+
+.blog-studio-url-import{border:1px solid #d1e0ef;background:#f8fbff;border-radius:11px;padding:17px;margin:16px 0}
+.blog-studio-url-import h3{font-size:16px;color:#123253;margin:0 0 5px}
+.blog-studio-url-import p{font-size:12px;color:#5e7793;margin:0 0 12px;line-height:1.5}
+.blog-studio-url-import label{margin:0 0 7px}
+.blog-import-url-row{display:flex;gap:9px}
+.blog-import-url-row input{min-width:0;flex:1;border:1px solid #cfdbeb;background:white;border-radius:8px;padding:10px 12px;font-size:12px}
+.blog-import-url-row button{white-space:nowrap}
+.blog-studio-url-import #blog-original-url-status{margin:9px 0 0;min-height:18px}
+.blog-studio-url-import #blog-original-url-status[data-error=true]{color:#aa2c2c}
+@media(max-width:550px){.blog-import-url-row{flex-direction:column}}
