@@ -241,8 +241,8 @@ export function createBlogStudio({db,root,notify,isCurrent,onExit}){
   '<label>Social sharing image URL<input id="blog-og-image" type="url" value="'+E(p.seo_og_image_url||"")+'" placeholder="https://..."></label>'+
   '<label>Cover image description for accessibility<input id="blog-image-alt" maxlength="220" value="'+E(p.seo_image_alt||"")+'" placeholder="Describe what is visible in the cover image"></label>'+
   '<label class="blog-index-setting"><input type="checkbox" id="blog-indexable" '+(p.seo_indexable===false?"":"checked")+'> Allow search engines to index this published article</label>'+
-  '<div class="blog-search-preview"><small>Search result preview</small><strong id="blog-search-preview-title">'+E(p.seo_title||p.title||"Article headline")+'</strong><span id="blog-search-preview-link">andreerving.com/blog-post.html?slug='+E(p.slug||"new-article")+'</span><p id="blog-search-preview-description">'+E(p.seo_description||p.excerpt||"Write a detailed description for search results.")+'</p></div>'+
-  '<p class="blog-studio-livepath">Article URL: andreerving.com/blog-post.html?slug=<span id="blog-slug-display">'+E(p.slug||"new-article")+'</span></p></section>'+
+  '<div class="blog-search-preview"><small>Search result preview</small><strong id="blog-search-preview-title">'+E(p.seo_title||p.title||"Article headline")+'</strong><span id="blog-search-preview-link">andreerving.com/blog/'+E(p.slug||"new-article")+'</span><p id="blog-search-preview-description">'+E(p.seo_description||p.excerpt||"Write a detailed description for search results.")+'</p></div>'+
+  '<p class="blog-studio-livepath">Article URL: andreerving.com/blog/<span id="blog-slug-display">'+E(p.slug||"new-article")+'</span></p></section>'+
   (p.source_url?'<section class="blog-settings-panel"><h2>Original article</h2><a href="'+E(p.source_url)+'" target="_blank" rel="noopener noreferrer">View original post ↗</a>'+(isImported?'<p class="blog-import-warning">The original text has not been imported. Add the article content before publishing.</p>':'')+'</section>':'')+
   '</div></div></div><p role="alert" id="blog-error" class="blog-error" hidden></p></form></div>';
   qa(".blog-editor-guide-links a").forEach(link=>{
@@ -293,7 +293,7 @@ export function createBlogStudio({db,root,notify,isCurrent,onExit}){
    counter.classList.toggle("short",length<160);
    q("#blog-search-preview-title").textContent=q("#blog-seo-title").value.trim()||q("#blog-title").value.trim()||"Article headline";
    q("#blog-search-preview-description").textContent=description||q("#blog-excerpt").value.trim()||"Write a detailed description for search results.";
-   q("#blog-search-preview-link").textContent="andreerving.com/blog-post.html?slug="+slugify(q("#blog-slug").value||q("#blog-title").value);
+   q("#blog-search-preview-link").textContent="andreerving.com/blog/"+slugify(q("#blog-slug").value||q("#blog-title").value)+".html";
   };
   ["#blog-seo-description","#blog-seo-title","#blog-title","#blog-excerpt","#blog-slug"].forEach(selector=>q(selector).addEventListener("input",updateSEO));
   updateSEO();
