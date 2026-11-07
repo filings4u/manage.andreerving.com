@@ -255,6 +255,25 @@ export function createBlogStudio({db,root,notify,isCurrent,onExit}){
     if(link.getAttribute("href")==="#blog-writing")editor.focus({preventScroll:true});
    });
   });
+  const scrollHost=root.closest(".main")||document.querySelector(".main")||document.scrollingElement;
+  const sections=["blog-writing","blog-summary","blog-publishing","blog-image-section","blog-search-settings"];
+  let pendingFrame=false;
+  const updateActiveSection=()=>{
+   pendingFrame=false;
+   if(!root.contains(q("#blog-writing")))return;
+   const threshold=185;
+   let current=sections[0];
+   for(const id of sections){const node=q("#"+id);if(node&&node.getBoundingClientRect().top<=threshold)current=id}
+   qa(".blog-editor-guide-links a").forEach(a=>{
+    const isActive=a.getAttribute("href")==="#"+current;
+    a.classList.toggle("active",isActive);
+    if(isActive)a.setAttribute("aria-current","location");else a.removeAttribute("aria-current");
+   });
+  };
+  const onScroll=()=>{if(!pendingFrame){pendingFrame=true;requestAnimationFrame(updateActiveSection)}};
+  scrollHost.addEventListener("scroll",onScroll,{passive:true});
+  window.addEventListener("resize",onScroll,{passive:true});
+  onScroll();
   editor=q("#blog-content");
   q("#blog-form").addEventListener("submit",event=>{event.preventDefault();save("draft")});
   updateStats();
