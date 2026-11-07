@@ -83,3 +83,11 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-ser
 .ae-ebook-workspace .ae-file-chooser .ae-file-name{min-width:0;flex:1;font-size:12px;font-weight:550;color:#657a92;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ae-ebook-workspace .ae-file-chooser:has(input:valid) .ae-file-name{color:#163957;font-weight:700}
 @media(max-width:500px){.ae-ebook-workspace .ae-file-chooser{flex-wrap:wrap;padding:9px}.ae-ebook-workspace .ae-file-chooser .ae-file-name{flex-basis:100%}}
+
+/* Customer record rows open their complete CRM profiles. */
+.ae-crm-table tbody tr.ae-crm-clickable{cursor:pointer}
+.ae-crm-table tbody tr.ae-crm-clickable:hover td{background:#eef5ff!important}
+.ae-crm-table tbody tr.ae-crm-clickable:focus-visible{outline:3px solid #dfb255;outline-offset:-3px}
+.ae-crm-table tbody tr.ae-crm-clickable td:first-child strong{color:#194e93}
+.ae-crm-stat:nth-child(1){grid-column:auto}
+.ae-extension-row button:disabled{opacity:.65}
