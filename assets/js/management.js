@@ -39,6 +39,7 @@ if(!fromHistory){const url=k==='courses'?'#/lms/courses':'#/admin/'+encodeURICom
 const parent=document.querySelector('[data-section="'+k+'"]')?.closest('.nav-group');if(parent)parent.open=true;
 document.querySelectorAll('[data-section]').forEach(b=>b.classList.toggle('active',b.dataset.section===k));
 const w=document.querySelector('#workspace');if(!w)return;
+w.classList.toggle('ae-ebook-workspace',k==='ebook_documents');
 w.closest('.main')?.scrollTo({top:0,behavior:'instant'});
 w.innerHTML='<p class="muted">Loading…</p>';
 if(k==='courses'||k==='course_modules'||k==='course_lessons'){section='courses';const studio=createLMS({db,root:w,notify:toast,safe,isCurrent:()=>section==='courses'});return studio.start()}
@@ -145,11 +146,11 @@ async function ebookWorkspace(){
  if(catalog.error||docs.error){w.innerHTML=head('eBook documents','Private downloadable files')+'<p class="notice error">'+safe(catalog.error?.message||docs.error?.message)+'</p>';return}
  const items=catalog.data||[],existing=new Map((docs.data||[]).map(d=>[d.offering_id,d]));
  w.innerHTML=head('eBook document library','Upload PDF and EPUB files for verified customer downloads.')+
- '<section class="panel"><h2>Upload an eBook</h2><p class="muted">Select the matching website title. The file will be private and accessible only after a verified order.</p>'+
- '<form id="ebook-upload" class="form-grid"><label class="field wide">eBook<select name="offering_id" required><option value="">Choose an eBook</option>'+items.map(p=>'<option value="'+safe(p.price_key.slice(9))+'">'+safe(p.label)+' — '+(Number(p.amount)===0?'Free':'USD '+Number(p.amount).toFixed(2))+'</option>').join('')+'</select></label>'+
- '<label class="field wide">PDF or EPUB, maximum 50 MB<input name="file" type="file" accept=".pdf,.epub" required></label><button class="btn" type="submit">Upload eBook</button><p id="ebook-upload-message" role="status" class="muted"></p></form></section>'+
- '<section class="panel"><h2>Uploaded documents</h2><div class="tablewrap"><table><thead><tr><th>eBook</th><th>Price</th><th>File</th><th>Updated</th><th>Actions</th></tr></thead><tbody>'+
- items.map(p=>{const id=p.price_key.slice(9),d=existing.get(id);return '<tr><td>'+safe(p.label)+'</td><td>'+(Number(p.amount)===0?'Free':'USD '+Number(p.amount).toFixed(2))+'</td><td>'+(d?safe(d.file_name):'<span class="muted">Not uploaded</span>')+'</td><td>'+(d?format(d.updated_at):'—')+'</td><td>'+(d?'<button type="button" data-ebook-preview="'+safe(id)+'">Preview</button> <button type="button" data-ebook-remove="'+safe(id)+'">Remove</button>':'—')+'</td></tr>'}).join('')+'</tbody></table></div></section>';
+ '<section class="panel ae-ebook-upload-panel"><div class="ae-ebook-panel-heading"><span class="ae-ebook-section-label">DOCUMENT UPLOAD</span><h2>Upload an eBook</h2></div><p class="muted">Select the matching website title. The file will be private and accessible only after a verified order.</p>'+
+ '<form id="ebook-upload" class="form-grid ae-ebook-form"><label class="field wide">eBook<select name="offering_id" required><option value="">Choose an eBook</option>'+items.map(p=>'<option value="'+safe(p.price_key.slice(9))+'">'+safe(p.label)+' — '+(Number(p.amount)===0?'Free':'USD '+Number(p.amount).toFixed(2))+'</option>').join('')+'</select></label>'+
+ '<label class="field wide">PDF or EPUB, maximum 50 MB<input name="file" type="file" accept=".pdf,.epub" required></label><div class="ae-ebook-form-footer"><p id="ebook-upload-message" role="status" class="muted"></p><button class="btn ae-ebook-submit" type="submit">Upload eBook</button></div></form></section>'+
+ '<section class="panel ae-ebook-list-panel"><div class="ae-ebook-list-heading"><div><span class="ae-ebook-section-label">EBOOK LIBRARY</span><h2>Uploaded documents</h2></div><span class="ae-ebook-count">'+(docs.data||[]).length+' of '+items.length+' uploaded</span></div><div class="tablewrap"><table><thead><tr><th>eBook</th><th>Price</th><th>File</th><th>Updated</th><th>Actions</th></tr></thead><tbody>'+
+ items.map(p=>{const id=p.price_key.slice(9),d=existing.get(id);return '<tr><td>'+safe(p.label)+'</td><td>'+(Number(p.amount)===0?'Free':'USD '+Number(p.amount).toFixed(2))+'</td><td>'+(d?safe(d.file_name):'<span class="muted">Not uploaded</span>')+'</td><td>'+(d?format(d.updated_at):'—')+'</td><td>'+(d?'<div class="ae-ebook-actions"><button class="btn secondary ae-ebook-preview" type="button" data-ebook-preview="'+safe(id)+'">Preview</button><button class="btn secondary ae-ebook-remove" type="button" data-ebook-remove="'+safe(id)+'">Remove</button></div>':'—')+'</td></tr>'}).join('')+'</tbody></table></div></section>';
  const form=w.querySelector('#ebook-upload');
  form.onsubmit=async event=>{
   event.preventDefault();
