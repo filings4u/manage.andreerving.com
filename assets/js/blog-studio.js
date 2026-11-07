@@ -47,7 +47,7 @@ function stripDuplicateCover(html,cover){
  if(!cover)return html;
  const parsed=new DOMParser().parseFromString("<div>"+String(html||"")+"</div>","text/html");
  const main=parsed.body.firstElementChild;
- const fingerprint=value=>{try{const u=new URL(value,location.origin);return u.hostname.toLowerCase()+decodeURIComponent(u.pathname).toLowerCase()}catch{return ""}};
+ const fingerprint=value=>{try{const u=new URL(value,location.origin);return u.hostname.toLowerCase()+(u.hostname.endsWith("wixstatic.com")?decodeURIComponent(u.pathname).split("/v1/")[0]:decodeURIComponent(u.pathname)).toLowerCase()}catch{return ""}};
  const target=fingerprint(cover);if(!target)return html;
  for(const img of [...main.querySelectorAll("img")]){
   if(fingerprint(img.getAttribute("src"))!==target)continue;
