@@ -8,7 +8,7 @@ export function createUnsavedGuard(){
  const hasChanges=()=>!!active&&dirty&&active.root?.isConnected;
  function watch(root,{title='this editor',save=null}={}){
    if(!root)return;
-   active={root,title,save};dirty=false;
+   active={root,title,save,url:location.href};dirty=false;
    const flag=e=>{if(active?.root!==root)return;if(e.target.closest?.('[data-unsaved-ignore]'))return;dirty=true;root.classList.add('ae-has-unsaved')};
    root.addEventListener('input',flag);root.addEventListener('change',flag);
  }
@@ -43,5 +43,5 @@ export function createUnsavedGuard(){
  }
  async function confirm(){if(!hasChanges())return true;const choice=await prompt();if(choice==='stay')return false;if(choice==='discard'){clean();return true}return choice==='save'}
  window.addEventListener('beforeunload',e=>{if(!hasChanges())return;e.preventDefault();e.returnValue=''});
- return {watch,mark,clean,clear,confirm,isDirty:hasChanges};
+ return {watch,mark,clean,clear,confirm,isDirty:hasChanges,currentURL:()=>active?.url||location.href};
 }
