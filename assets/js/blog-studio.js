@@ -208,6 +208,16 @@ export function createBlogStudio({db,root,notify,isCurrent,onExit}){
   '<button type="button" data-cmd="underline" title="Underline"><u>U</u></button><button type="button" data-cmd="insertUnorderedList" title="Bulleted list">☷</button>'+
   '<button type="button" data-cmd="insertOrderedList" title="Numbered list">≡</button>'+
   '<button type="button" data-action="link" title="Insert link">Link</button><button type="button" data-action="image" title="Insert image">Image</button>'+
+  '<select id="blog-font" aria-label="Font family"><option value="">Font family</option><option value="Arial">Arial</option><option value="Georgia">Georgia</option><option value="Verdana">Verdana</option><option value="Tahoma">Tahoma</option><option value="Courier New">Courier New</option></select>'+
+  '<select id="blog-size" aria-label="Font size"><option value="">Text size</option><option value="2">Small</option><option value="3">Normal</option><option value="4">Large</option><option value="5">Extra large</option><option value="6">Display</option></select>'+
+  '<label class="blog-toolbar-color" title="Text color">Text <input type="color" id="blog-text-color" value="#18385a" aria-label="Text color"></label>'+
+  '<label class="blog-toolbar-color" title="Highlight color">Highlight <input type="color" id="blog-highlight-color" value="#fff0bc" aria-label="Highlight color"></label>'+
+  '<select id="blog-line-spacing" aria-label="Line spacing"><option value="">Line spacing</option><option value="1.2">Tight</option><option value="1.5">Normal</option><option value="1.75">Comfortable</option><option value="2">Wide</option></select>'+
+  '<select id="blog-paragraph-spacing" aria-label="Paragraph spacing"><option value="">Paragraph spacing</option><option value="0">None</option><option value="8">Compact</option><option value="16">Normal</option><option value="24">Spacious</option><option value="36">Extra</option></select>'+
+  '<button type="button" data-cmd="strikeThrough" title="Strikethrough"><s>S</s></button><button type="button" data-cmd="justifyLeft" title="Align left">Left</button><button type="button" data-cmd="justifyCenter" title="Center text">Center</button><button type="button" data-cmd="justifyRight" title="Align right">Right</button>'+
+  '<button type="button" data-cmd="indent" title="Increase indent">Indent +</button><button type="button" data-cmd="outdent" title="Decrease indent">Indent −</button>'+
+  '<button type="button" data-cmd="removeFormat" title="Clear formatting">Clear</button>'+
+  '<button type="button" data-action="video" title="Embed YouTube or Vimeo video">Video</button><button type="button" data-action="table" title="Insert table">Table</button>'+
   '<button type="button" data-action="divider" title="Horizontal divider">Divider</button>'+
   '<button type="button" data-cmd="undo" title="Undo">↶</button><button type="button" data-cmd="redo" title="Redo">↷</button></div>'+
   '<div id="blog-content" class="blog-rich-editor" contenteditable="true" role="textbox" aria-label="Article content" aria-multiline="true" data-placeholder="Start writing your article here...">'+(p.body_html?cleanBlogHTML(p.body_html):"")+'</div></section>'+
@@ -250,6 +260,20 @@ export function createBlogStudio({db,root,notify,isCurrent,onExit}){
   q("#blog-status").onchange=()=>{q("#blog-publish").textContent=q("#blog-status").value==="published"?"Update published article":"Publish article"};
   q("#blog-preview").onclick=()=>previewPost();
   q("#blog-block").onchange=()=>format("formatBlock",q("#blog-block").value);
+  q("#blog-font").onchange=()=>{if(q("#blog-font").value)format("fontName",q("#blog-font").value);q("#blog-font").value=""};
+  q("#blog-size").onchange=()=>{if(q("#blog-size").value)format("fontSize",q("#blog-size").value);q("#blog-size").value=""};
+  q("#blog-text-color").oninput=()=>format("foreColor",q("#blog-text-color").value);
+  q("#blog-highlight-color").oninput=()=>format("hiliteColor",q("#blog-highlight-color").value);
+  const spacing=(name,value)=>{
+   if(!value)return;restoreSelection();
+   const sel=window.getSelection(),anchor=sel?.anchorNode;
+   const node=anchor?.nodeType===1?anchor:anchor?.parentElement;
+   const block=node?.closest("p,h2,h3,h4,blockquote,div,li");
+   if(!block||!editor.contains(block))return errorText("Place the cursor inside a paragraph before changing spacing.");
+   block.style[name]=value;dirty=true;updateStats();q("#blog-save-indicator").textContent="Unsaved changes";
+  };
+  q("#blog-line-spacing").onchange=()=>{spacing("lineHeight",q("#blog-line-spacing").value);q("#blog-line-spacing").value=""};
+  q("#blog-paragraph-spacing").onchange=()=>{spacing("marginBottom",q("#blog-paragraph-spacing").value+"px");q("#blog-paragraph-spacing").value=""};
   qa("[data-cmd]").forEach(b=>b.addEventListener("mousedown",e=>e.preventDefault()));
   qa("[data-cmd]").forEach(b=>b.onclick=()=>format(b.dataset.cmd));
   qa("[data-action]").forEach(b=>{b.onmousedown=e=>e.preventDefault();b.onclick=()=>insert(b.dataset.action)});
@@ -283,6 +307,22 @@ export function createBlogStudio({db,root,notify,isCurrent,onExit}){
  function insert(action){
   restoreSelection();
   if(action==="divider")return format("insertHorizontalRule");
+  if(action==="table")return format("insertHTML",'<table><tbody><tr><th>Heading</th><th>Heading</th></tr><tr><td>Content</td><td>Content</td></tr></tbody></table><p></p>');
+  if(action==="video"){
+   const address=prompt("Paste a YouTube or Vimeo video URL:");
+   if(!address)return;
+   let url;try{
+    const u=new URL(address);
+    if(u.hostname==="youtu.be")url="https://www.youtube-nocookie.com/embed/"+u.pathname.slice(1);
+    else if(["youtube.com","www.youtube.com","m.youtube.com"].includes(u.hostname)){
+     const id=u.pathname==="/watch"?u.searchParams.get("v"):u.pathname.split("/").pop();
+     url="https://www.youtube-nocookie.com/embed/"+id;
+    }else if(["vimeo.com","www.vimeo.com"].includes(u.hostname))url="https://player.vimeo.com/video/"+u.pathname.slice(1);
+    else url=address;
+   }catch{return errorText("Enter a valid video URL.")}
+   const safe=safeVideoURL(url);if(!safe)return errorText("Use a public YouTube or Vimeo video link.");
+   format("insertHTML",'<div class="blog-video"><iframe src="'+E(safe)+'" title="Embedded article video" loading="lazy" allowfullscreen></iframe></div><p></p>');return;
+  }
   if(action==="link"){const address=prompt("Enter an HTTPS URL:");if(!address)return;const href=safeURL(address);if(!href)return errorText("Choose a valid web URL.");format("createLink",href)}
   if(action==="image"){
    const insertionRange=savedRange?.cloneRange();
