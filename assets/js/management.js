@@ -168,6 +168,11 @@ const [a,b]=await Promise.all([db.from('courses').select('id,title').order('titl
 lookups.courses=a.data||[];lookups.modules=b.data||[];
 }
 const w=document.querySelector('#workspace');if(!w||section!==area)return;
+if(row){
+ const exists=await db.from(area).select('id').eq('id',row.id).maybeSingle();
+ if(exists.error){toast('Unable to open this record: '+exists.error.message,true);return}
+ if(!exists.data){toast('This record was deleted. Refreshing the price list.',true);await loadTable();return}
+}
 history.pushState(null,'','#/admin/'+encodeURIComponent(area)+'/'+(row?'edit/'+encodeURIComponent(row.id):'new'));
 const entries=Object.entries(c.fields),longEntries=entries.filter(([name,type])=>['textarea'].includes(type)),coreEntries=entries.filter(([name,type])=>!['textarea'].includes(type));
 const headingTitle=(row?'Edit ':'Create ')+c.title.replace(/s$/,'');
@@ -188,7 +193,25 @@ if(data.slug&&!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(data.slug))return formError('Us
 if(section==='blog_posts'&&data.status==='published'&&(!data.body_html?.trim()||data.migration_status==='pending_import'))return formError('A published article must have content and cannot be pending import.');
 if(section==='blog_posts'&&data.status==='published'&&!data.published_at)data.published_at=new Date().toISOString();
 if(section==='course_lessons'&&!data.module_id)return formError('Create a module in this course before adding lessons.');
-busy=true;const result=editing?await db.from(section).update(data).eq('id',editing.id).select('id').single():await db.from(section).insert(data).select('id').single();busy=false;if(result.error)return formError(result.error.message);toast(editing?'Record updated':'Record created');history.pushState(null,'','#/admin/'+encodeURIComponent(section));await loadTable()}
+busy=true;
+let result;
+try{
+ result=editing
+  ?await db.from(section).update(data).eq('id',editing.id).select('id').maybeSingle()
+  :await db.from(section).insert(data).select('id').maybeSingle();
+}finally{busy=false}
+if(result.error)return formError(result.error.message);
+if(!result.data?.id){
+ if(editing){
+  const check=await db.from(section).select('id').eq('id',editing.id).maybeSingle();
+  if(check.error)return formError(check.error.message);
+  if(!check.data){toast('This record no longer exists. The list has been refreshed.',true);history.replaceState(null,'','#/admin/'+encodeURIComponent(section));await loadTable();return}
+ }
+ return formError('No record was saved. Check your permissions and try again.');
+}
+toast(editing?'Record updated':'Record created');
+history.replaceState(null,'','#/admin/'+encodeURIComponent(section));
+await loadTable()}
 function formError(message){const p=document.querySelector('#form-error');p.textContent=message;p.classList.remove('hidden')}
 
 
