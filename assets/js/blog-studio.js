@@ -50,7 +50,7 @@ export function cleanBlogHTML(input){
  walk(holder);return holder.innerHTML;
 }
 export function createBlogStudio({db,root,notify,isCurrent,onExit}){
- let selected=null,posts=[],draftTimer=null,dirty=false,editor=null,saveBusy=false,preview=false;
+ let selected=null,posts=[],draftTimer=null,dirty=false,editor=null,saveBusy=false,preview=false,savedRange=null;
  const active=()=>isCurrent("blog_posts");
  const q=selector=>root.querySelector(selector);
  const qa=selector=>[...root.querySelectorAll(selector)];
@@ -152,15 +152,15 @@ export function createBlogStudio({db,root,notify,isCurrent,onExit}){
   if(!rows.length)return [];const headers=rows.shift().map(x=>x.trim());return rows.filter(x=>x.some(Boolean)).map(r=>Object.fromEntries(headers.map((h,i)=>[h,r[i]||""])));
  }
  function open(post){
-  selected=post;preview=false;dirty=false;
+  selected=post;preview=false;dirty=false;savedRange=null;
   const p=post||{},isImported=p.migration_status==="pending_import";
   root.innerHTML='<div class="blog-studio-editor">'+
   '<div class="blog-studio-editor-top"><button type="button" id="blog-back">← All posts</button><span class="blog-studio-save-indicator" id="blog-save-indicator">Not saved</span><div class="blog-studio-editor-actions"><button type="button" id="blog-preview" class="btn secondary">Preview</button><button type="button" id="blog-save" class="btn secondary">Save changes</button><button type="button" id="blog-publish" class="btn">Publish article</button></div></div>'+
   '<form id="blog-form" novalidate><div class="blog-studio-edit-layout"><main class="blog-studio-main">'+
-  '<p class="blog-studio-eyebrow">ANDRE ERVING / CONTENT STUDIO</p>'+
+  '<p class="blog-studio-eyebrow">BLOG / ARTICLE EDITOR</p>'+
   '<input class="blog-title-field" id="blog-title" name="title" aria-label="Article title" placeholder="Add your article title" maxlength="240" value="'+E(p.title||"")+'" required>'+
   '<div class="blog-subline"><span id="blog-word-count">0 words</span><span id="blog-reading-time">0 min read</span><span>'+E(post?"Editing article":"New article")+'</span></div>'+
-  '<section class="blog-edit-card"><div class="blog-toolbar" role="toolbar" aria-label="Article formatting">'+
+  '<section class="blog-edit-card"><div class="blog-editor-label"><strong>Article content</strong><span>Write, format, and add images below.</span></div><div class="blog-toolbar" role="toolbar" aria-label="Article formatting">'+
   '<select id="blog-block" aria-label="Text style"><option value="p">Paragraph</option><option value="h2">Heading 2</option><option value="h3">Heading 3</option><option value="blockquote">Quote</option></select>'+
   '<button type="button" data-cmd="bold" title="Bold"><strong>B</strong></button><button type="button" data-cmd="italic" title="Italic"><em>I</em></button>'+
   '<button type="button" data-cmd="underline" title="Underline"><u>U</u></button><button type="button" data-cmd="insertUnorderedList" title="Bulleted list">☷</button>'+
@@ -180,14 +180,19 @@ export function createBlogStudio({db,root,notify,isCurrent,onExit}){
   (p.source_url?'<section class="blog-settings-panel"><h2>Original article</h2><a href="'+E(p.source_url)+'" target="_blank" rel="noopener noreferrer">View original post ↗</a>'+(isImported?'<p class="blog-import-warning">The original text has not been imported. Add the article content before publishing.</p>':'')+'</section>':'')+
   '</aside></div><p role="alert" id="blog-error" class="blog-error" hidden></p></form></div>';
   editor=q("#blog-content");
+  q("#blog-form").addEventListener("submit",event=>{event.preventDefault();save("draft")});
   updateStats();
   const mark=()=>{dirty=true;q("#blog-save-indicator").textContent="Unsaved changes";updateStats()};
   qa("#blog-form input,#blog-form textarea,#blog-form select").forEach(el=>el.addEventListener("input",mark));
   editor.addEventListener("input",mark);
+  const rememberSelection=()=>{const sel=window.getSelection();if(sel?.rangeCount&&editor.contains(sel.anchorNode))savedRange=sel.getRangeAt(0).cloneRange()};
+  editor.addEventListener("mouseup",rememberSelection);
+  editor.addEventListener("keyup",rememberSelection);
+  editor.addEventListener("focus",rememberSelection);
   q("#blog-title").addEventListener("input",()=>{if(!post&&!q("#blog-slug").dataset.manual){q("#blog-slug").value=slugify(q("#blog-title").value);q("#blog-slug-display").textContent=q("#blog-slug").value||"new-article"}});
   q("#blog-slug").addEventListener("input",()=>{q("#blog-slug").dataset.manual="true";q("#blog-slug-display").textContent=slugify(q("#blog-slug").value)});
   q("#blog-cover").onchange=()=>{q(".blog-cover-preview").innerHTML=q("#blog-cover").value?'<img src="'+E(q("#blog-cover").value)+'" alt="Article cover">':'No cover image yet'};
-  q("#blog-back").onclick=()=>{if(dirty&&!confirm("Leave this article? Unsaved changes will be lost."))return;onExit()};
+  q("#blog-back").onclick=()=>{if(dirty){errorText("You have unsaved changes. Save this draft before leaving.");return}onExit()};
   q("#blog-save").onclick=()=>save(q("#blog-status").value==="archived"?"archived":q("#blog-status").value==="published"?"published":"draft");
   q("#blog-publish").onclick=()=>save("published");
   q("#blog-status").onchange=()=>{q("#blog-publish").textContent=q("#blog-status").value==="published"?"Update published article":"Publish article"};
@@ -209,14 +214,28 @@ export function createBlogStudio({db,root,notify,isCurrent,onExit}){
   if(!editor)return;const words=editor.innerText.trim().split(/\s+/).filter(Boolean).length;
   const a=q("#blog-word-count"),b=q("#blog-reading-time");if(a)a.textContent=words+" words";if(b)b.textContent=Math.max(1,Math.ceil(words/225))+" min read";
  }
- function format(cmd,value){editor.focus();document.execCommand(cmd,false,value||null);dirty=true;updateStats()}
- function insert(action){
+ function restoreSelection(){
   editor.focus();
+  if(savedRange&&editor.contains(savedRange.commonAncestorContainer)){
+   const selection=window.getSelection();selection.removeAllRanges();selection.addRange(savedRange);
+  }
+ }
+ function format(cmd,value){
+  restoreSelection();
+  const success=document.execCommand(cmd,false,value||null);
+  if(!success&&cmd==="insertHorizontalRule")document.execCommand("insertHTML",false,"<hr>");
+  const indicator=q("#blog-save-indicator");if(indicator)indicator.textContent="Unsaved changes";
+  dirty=true;updateStats();
+  const selection=window.getSelection();if(selection?.rangeCount)savedRange=selection.getRangeAt(0).cloneRange();
+ }
+ function insert(action){
+  restoreSelection();
   if(action==="divider")return format("insertHorizontalRule");
   if(action==="link"){const address=prompt("Enter an HTTPS URL:");if(!address)return;const href=safeURL(address);if(!href)return errorText("Choose a valid web URL.");format("createLink",href)}
   if(action==="image"){
+   const insertionRange=savedRange?.cloneRange();
    const input=document.createElement("input");input.type="file";input.accept="image/png,image/jpeg,image/webp";
-   input.onchange=async()=>{try{const file=input.files?.[0];if(!file)return;const url=await uploadImage(file);editor.focus();format("insertHTML",'<figure><img src="'+E(url)+'" alt="Blog image"></figure>');notify("Image added to article")}catch(err){errorText(err.message)}};
+   input.onchange=async()=>{try{const file=input.files?.[0];if(!file)return;const url=await uploadImage(file);savedRange=insertionRange;restoreSelection();format("insertHTML",'<figure><img src="'+E(url)+'" alt="Blog image"></figure>');notify("Image added to article")}catch(err){errorText(err.message)}};
    input.click();
   }
  }
@@ -232,22 +251,25 @@ export function createBlogStudio({db,root,notify,isCurrent,onExit}){
  function payload(status){
   const title=q("#blog-title").value.trim(),slug=slugify(q("#blog-slug").value||title),html=cleanBlogHTML(editor.innerHTML),plain=new DOMParser().parseFromString(html,"text/html").body.textContent.trim();
   if(!title||!slug)throw Error("Article title and URL slug are required.");
-  if(status==="published"&&plain.length<80)throw Error("Add the complete article content before publishing (at least 80 characters).");
+  if(status==="published"&&plain.length<80)throw Error("Add the complete article content before publishing. At least 80 characters are required.");
+  if(status==="published"&& !q("#blog-excerpt").value.trim())throw Error("Add an article summary before publishing.");
   const date=q("#blog-date").value;
-  return {title,slug,excerpt:q("#blog-excerpt").value.trim(),body_html:html,author_name:q("#blog-author").value.trim()||"Andre Erving",category:q("#blog-category").value.trim()||"Insights",tags:q("#blog-tags").value.split(",").map(x=>x.trim()).filter(Boolean).slice(0,20),seo_title:q("#blog-seo-title").value.trim()||null,seo_description:q("#blog-seo-description").value.trim()||null,cover_image_url:safeURL(q("#blog-cover").value.trim(),true)||null,status,published_at:date?new Date(date).toISOString():status==="published"?(selected?.published_at||new Date().toISOString()):(selected?.published_at||null),migration_status:plain?"verified":"pending_import"};
+  return {title,slug,excerpt:q("#blog-excerpt").value.trim(),body_html:html,author_name:q("#blog-author").value.trim()||"Andre Erving",category:q("#blog-category").value.trim()||"Insights",tags:q("#blog-tags").value.split(",").map(x=>x.trim()).filter(Boolean).slice(0,20),seo_title:q("#blog-seo-title").value.trim()||null,seo_description:q("#blog-seo-description").value.trim()||null,cover_image_url:safeURL(q("#blog-cover").value.trim(),true)||null,status,published_at:date?new Date(date).toISOString():status==="published"?(selected?.published_at||new Date().toISOString()):(selected?.published_at||null),migration_status:plain?"verified":selected?.migration_status==="pending_import"?"pending_import":"native"};
  }
  async function save(status){
   if(saveBusy)return;saveBusy=true;
   const buttons=qa("#blog-save,#blog-publish");buttons.forEach(b=>b.disabled=true);
+  const indicator=q("#blog-save-indicator");if(indicator)indicator.textContent=status==="published"?"Publishing…":"Saving…";
+  q("#blog-error").hidden=true;
   try{
    const data=payload(status);
    const out=selected?await db.from("blog_posts").update(data).eq("id",selected.id).select().single():await db.from("blog_posts").insert(data).select().single();
    if(out.error)throw out.error;
-   selected=out.data;dirty=false;q("#blog-save-indicator").textContent="Saved just now";
+   selected=out.data;dirty=false;q("#blog-save-indicator").textContent=status==="published"?"Published successfully":"All changes saved";
    notify(status==="published"?"Article published to andreerving.com":"Draft saved");
    q("#blog-status").value=status;
    history.replaceState(null,"","#/admin/blog_posts/edit/"+selected.id);
-  }catch(error){errorText(error.message||"Unable to save article")}finally{saveBusy=false;buttons.forEach(b=>b.disabled=false)}
+  }catch(error){if(indicator)indicator.textContent="Save failed";errorText(error.message||"Unable to save article")}finally{saveBusy=false;buttons.forEach(b=>b.disabled=false)}
  }
  function previewPost(){
   const content=cleanBlogHTML(editor.innerHTML),title=q("#blog-title").value||"Untitled article",cover=safeURL(q("#blog-cover").value,true);
