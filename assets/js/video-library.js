@@ -44,7 +44,12 @@ export function createVideoLibrary({db,root,notify,safe,isCurrent}){
      try{
        report("Preparing secure upload…");
        const {data,error}=await db.functions.invoke("andre-stream",{body:{mode:"init-library-upload",fileSize:file.size,fileName:file.name}});
-       if(error||!data?.success||!data.uid||!data.uploadURL)throw Error(data?.error||error?.message||"Could not initialize upload");
+       if(error||!data?.success||!data.uid||!data.uploadURL){
+         let details=data||null;
+         if(error?.context?.json){try{details=await error.context.json()}catch{}}
+         const message=details?.error||error?.message||"Could not initialize upload";
+         throw Error(message==="Edge Function returned a non-2xx status code"?"The video service is unavailable. Verify CLOUDFLARE_STREAM_API_TOKEN in the Andre Erving Supabase project.":message);
+       }
        uid=data.uid;
        const uploadURL=new URL(data.uploadURL);
        if(uploadURL.protocol!=="https:"||!["upload.videodelivery.net","upload.cloudflarestream.com"].includes(uploadURL.hostname))throw Error("Invalid upload destination");
