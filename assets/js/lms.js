@@ -742,6 +742,7 @@ export function createLMS({db,root,notify,safe,isCurrent}){
       }catch(error){notify(error.message||String(error),true)}},
 
       onCancel:()=>{s.editor=null;openRoute("course/"+course.id+"/curriculum");s.tab="curriculum";render()},
+      onLibrarySelect:chooseLibraryVideo,
       onUpload:async(file,onProgress)=>{
         const {data,error}=await db.functions.invoke("andre-stream",{body:{
           mode:"init-upload",courseId:course.id,fileSize:file.size,fileName:file.name
