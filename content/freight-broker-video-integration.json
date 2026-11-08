@@ -1,0 +1,101 @@
+{
+  "schema": "ae-course-video-staging-v1",
+  "courseId": "2d95d514-baa7-4641-b107-6265256a504b",
+  "course": "Freight Broker Training",
+  "status": "staged-not-published",
+  "notes": [
+    "These are upload candidates, not live lessons. Never create a public-facing lesson before a successfully processed cfstream UID is saved.",
+    "All segmented MP4 clips are stream-copy cuts at approximately four-minute boundaries. Recut at narrative breaks after narration review.",
+    "Upload each clip through the existing LMS lesson studio. Do not replace the current text lessons or quizzes."
+  ],
+  "sections": [
+    {
+      "source": "Section 4 - 1.mp4",
+      "module": "Finding Shippers & Building a Sales Pipeline",
+      "moduleId": "9b3b7aee-dfbd-4ed2-ab92-f71aa652ea88",
+      "relatedLessonIds": [
+        "13dc61e6-832c-459b-8d3d-c73dcadb62e3",
+        "efcf4c1e-2886-4b94-bc35-cca836843e78",
+        "baba6d19-d6fc-404e-a09a-8c6b37bbc9af"
+      ],
+      "clips": 8,
+      "clipPattern": "section4_1_part_%02d.mp4",
+      "review": "Verify exact shipper qualification, prospecting, and sales boundaries before naming individual clips."
+    },
+    {
+      "source": "Section 4 - 2.mp4",
+      "module": "Freight Markets, Lanes & Pricing",
+      "moduleId": "8fe8a808-8edb-4962-b7b9-d7fe0d98e973",
+      "relatedLessonIds": [
+        "3f98a864-c2d1-41b0-a6e1-3c42177bbc93",
+        "d548b97d-4561-405b-868b-fe5159eaa2f2"
+      ],
+      "clips": 6,
+      "clipPattern": "section4_2_part_%02d.mp4",
+      "review": "Verify exact software demonstrations and market-research segments."
+    },
+    {
+      "source": "Section 4 - 3.mp4",
+      "module": "Freight Markets, Lanes & Pricing",
+      "moduleId": "8fe8a808-8edb-4962-b7b9-d7fe0d98e973",
+      "relatedLessonIds": [
+        "3f98a864-c2d1-41b0-a6e1-3c42177bbc93"
+      ],
+      "clips": 2,
+      "clipPattern": "section4_3_part_%02d.mp4",
+      "review": "Verify exact load-board activities."
+    }
+  ],
+  "futureSources": [
+    {
+      "source": "Media2(1).zip",
+      "modules": [
+        7
+      ]
+    },
+    {
+      "source": "Media3.zip",
+      "modules": [
+        7,
+        8,
+        10
+      ]
+    },
+    {
+      "source": "Section 3.zip",
+      "modules": [
+        7,
+        8,
+        9,
+        10
+      ]
+    },
+    {
+      "source": "Module 3.zip",
+      "modules": [
+        9
+      ]
+    },
+    {
+      "source": "Media1.zip",
+      "modules": [
+        8,
+        10
+      ]
+    },
+    {
+      "source": "Media2.zip",
+      "modules": [
+        8,
+        9
+      ]
+    }
+  ],
+  "qualityGate": [
+    "Review narration and replace arbitrary segment edges with genuine topic transitions.",
+    "Check for visible passwords, contact details, customer data and obsolete workflows.",
+    "Export final branded MP4 and captions; ensure filesize < 200 MiB.",
+    "Confirm Cloudflare Stream processing and authorized student playback.",
+    "Insert new video lesson between the appropriate text lesson and knowledge check; verify completion tracking."
+  ]
+}
