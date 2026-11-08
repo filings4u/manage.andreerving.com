@@ -1,5 +1,5 @@
 /* Andre Erving learning studio - full-page visual lesson authoring */
-export function createLessonStudio({root,course,modules,lesson=null,lessons=[],moduleId=null,kind="text",escape,notify,onSave,onCancel,onOpenLesson,onAddChapter,onAddLesson,onPublish,onUpload,onResourceUpload,onMediaUpload,onMediaURL}){
+export function createLessonStudio({root,course,modules,lesson=null,lessons=[],moduleId=null,kind="text",escape,notify,onSave,onCancel,onOpenLesson,onAddChapter,onAddLesson,onPublish,onUpload,onLibrarySelect,onResourceUpload,onMediaUpload,onMediaURL}){
  const e=escape,$=id=>root.querySelector("#"+id),mode=lesson?.lesson_type||kind;
  const initial={kind:mode,content:String(lesson?.content_html||""),video:String(lesson?.video_url||""),resource:String(lesson?.resource_url||"")};
  let active=initial.kind,questions=[];
@@ -195,9 +195,19 @@ export function createLessonStudio({root,course,modules,lesson=null,lessons=[],m
    $("ae-insert-link").onclick=async()=>{const value=await studioDialog('Add a lesson link','Enter a secure HTTPS URL.',{input:true,confirmLabel:'Insert link'});if(!value)return;try{const url=new URL(value);if(url.protocol!=="https:")throw Error();$("ae-rich").focus();document.execCommand("createLink",false,url.href);changed()}catch{notify("Use a valid HTTPS link.",true)}};
 
   }else if(active==="video"){
-   $("ae-studio-content").innerHTML='<section class="ae-studio-card"><span class="eyebrow">CLOUDFLARE STREAM</span><h2>Upload your video</h2><p>Upload a topic-focused course video. Cloudflare Stream prepares secure student playback. For long recordings, split into instructional chapters before uploading, then verify playback before publishing.</p><label class="ae-upload-drop" id="ae-drop"><span class="ae-upload-glyph">↑</span><strong>Choose video file or drop it here</strong><small>MP4, WebM or MOV · Maximum 200 MB</small><input type="file" id="ae-video-file" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov"></label><div id="ae-video-name">'+(uploadedUID?"Cloudflare Stream video already attached":"No video selected")+'</div><progress id="ae-upload-progress" max="100" value="0" hidden></progress><div class="ae-video-sample" id="ae-video-sample"></div></section><section class="ae-studio-card"><h2>Instructor notes</h2><div id="ae-notes" class="ae-rich ae-rich-short" contenteditable="true" role="textbox" data-placeholder="Add a lesson summary or transcript notes...">'+notes+'</div></section>';
+   $("ae-studio-content").innerHTML='<section class="ae-studio-card"><span class="eyebrow">CLOUDFLARE STREAM</span><h2>Upload your video</h2><p>Upload a topic-focused course video. Cloudflare Stream prepares secure student playback. For long recordings, split into instructional chapters before uploading, then verify playback before publishing.</p><label class="ae-upload-drop" id="ae-drop"><span class="ae-upload-glyph">↑</span><strong>Choose video file or drop it here</strong><small>MP4, WebM or MOV · Maximum 200 MB</small><input type="file" id="ae-video-file" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov"></label><button type="button" class="btn secondary ae-video-library-picker" id="ae-pick-library">▣ &nbsp; Choose from Video Library</button><div id="ae-video-name">'+(uploadedUID?"Cloudflare Stream video already attached":"No video selected")+'</div><progress id="ae-upload-progress" max="100" value="0" hidden></progress><div class="ae-video-sample" id="ae-video-sample"></div></section><section class="ae-studio-card"><h2>Instructor notes</h2><div id="ae-notes" class="ae-rich ae-rich-short" contenteditable="true" role="textbox" data-placeholder="Add a lesson summary or transcript notes...">'+notes+'</div></section>';
    const input=$("ae-video-file"),drop=$("ae-drop");
    const setFile=f=>{if(!f)return;if(!["video/mp4","video/webm","video/quicktime"].includes(f.type)&&!/\.(mp4|webm|mov)$/i.test(f.name))return notify("Please select an MP4, WebM or MOV video.",true);if(f.size>200*1024*1024)return notify("The video must be smaller than 200 MB.",true);file=f;uploadedUID=null;clearURL();blobURL=URL.createObjectURL(file);$("ae-video-name").textContent=file.name+" · "+(file.size/1048576).toFixed(1)+" MB";$("ae-video-sample").innerHTML='<video controls preload="metadata" src="'+blobURL+'"></video>';changed()};
+   $("ae-pick-library").onclick=async()=>{
+    if(typeof onLibrarySelect!=="function")return notify("Video Library is unavailable.",true);
+    const selected=await onLibrarySelect();
+    if(!selected)return;
+    if(!/^[a-f0-9]{32}$/i.test(selected.stream_uid))return notify("This library video identifier is invalid.",true);
+    uploadedUID=selected.stream_uid;file=null;clearURL();
+    $("ae-video-name").textContent="Library video: "+selected.title;
+    $("ae-video-sample").innerHTML='<p class="ae-studio-field-help">Existing Cloudflare Stream video selected. Save this lesson to attach it without uploading again.</p>';
+    changed();
+   };
    input.onchange=()=>setFile(input.files?.[0]);
    drop.addEventListener("dragover",ev=>{ev.preventDefault();drop.classList.add("hover")});
    drop.addEventListener("dragleave",()=>drop.classList.remove("hover"));
