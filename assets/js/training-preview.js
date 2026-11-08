@@ -111,7 +111,7 @@ async function streamPlayback(lesson){
  if(lessons[position]?.id!==lesson.id)return;
  if(error||!data?.success||!data?.token){host.innerHTML='<div class="ae-media-loading">Secure playback is unavailable. Please contact support.</div>';return}
  const iframe=document.createElement('iframe');iframe.src='https://iframe.videodelivery.net/'+encodeURIComponent(data.token);
- iframe.title=lesson.title;iframe.allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture';iframe.allowFullscreen=true;iframe.referrerPolicy='no-referrer';host.replaceChildren(iframe);
+ iframe.title=lesson.title;iframe.allow='accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture';iframe.allowFullscreen=true;iframe.referrerPolicy='strict-origin-when-cross-origin';host.replaceChildren(iframe);
 }
 async function renderDownload(lesson){
  const body=$("lesson-body"),ref=String(lesson.resource_url||"");
