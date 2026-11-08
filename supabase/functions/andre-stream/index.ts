@@ -50,16 +50,18 @@ Deno.serve(async(request:Request)=>{
     await api("","GET");
     return json({success:true,connected:true,message:"Cloudflare Stream authentication succeeded"},200,origin);
   }
-  if(mode==="init-upload"){
+  if(mode==="init-upload"||mode==="init-library-upload"){
     if(!await staff())return json({success:false,error:"Staff access required"},403,origin);
     const courseId=String(payload.courseId||""),fileSize=Number(payload.fileSize),fileName=String(payload.fileName||"");
-    if(!ID.test(courseId)||!Number.isFinite(fileSize)||fileSize<=0||fileSize>MAX||fileName.length>255)return json({success:false,error:"Invalid upload. Maximum size is 200 MB."},400,origin);
-    const {data:course}=await supabase.from("courses").select("id").eq("id",courseId).maybeSingle();
-    if(!course)return json({success:false,error:"Course not found"},404,origin);
+    if((mode==="init-upload"&&!ID.test(courseId))||!Number.isFinite(fileSize)||fileSize<=0||fileSize>MAX||fileName.length>255)return json({success:false,error:"Invalid upload. Maximum size is 200 MB."},400,origin);
+    if(mode==="init-upload"){
+      const {data:course}=await supabase.from("courses").select("id").eq("id",courseId).maybeSingle();
+      if(!course)return json({success:false,error:"Course not found"},404,origin);
+    }
     const data=await api("direct_upload","POST",{
       maxDurationSeconds:36000,creator:auth.user!.id,requireSignedURLs:true,
       expiry:new Date(Date.now()+60*60*1000).toISOString(),
-      meta:{name:fileName.slice(0,180),course_id:courseId,app:"andreerving-lms"},
+      meta:{name:fileName.slice(0,180),course_id:mode==="init-upload"?courseId:"",app:"andreerving-lms-library"},
       allowedOrigins:["filings4u.github.io","manage.andreerving.com","app.andreerving.com"]
     });
     if(!VIDEO.test(data.uid||"")||!/^https:\/\//.test(data.uploadURL||""))throw new Error("Cloudflare returned an invalid upload response");
