@@ -168,16 +168,12 @@ Deno.serve(async(req:Request)=>{
     if(key==="endpoint"||key==="accesskey")fields.set(key,p.slice(idx+1).trim());
   }
   const endpoint=fields.get("endpoint")||"",accessKey=fields.get("accesskey")||"";
-  const isACS=/^https:\/\/[a-z0-9-]+\.communication\.azure\.com\/?$/i.test(endpoint);
-  if(parts.length!==2||!isACS||!accessKey){
-    let diagnosis="The saved value is not a full Azure Communication Services connection string.";
-    if(!value.includes(";")&&!value.includes("endpoint=")&&!value.includes("Endpoint="))
-      diagnosis=/^[a-f0-9]{32,128}$/i.test(value)?"Only a key or identifier appears to be saved, not the full connection string.":"The value contains neither the Endpoint nor the AccessKey fields.";
-    else if(!endpoint)diagnosis="The Endpoint field is missing. You may have pasted only the Access Key or another secret.";
-    else if(!isACS)diagnosis="The Endpoint does not have an Azure Communication Services domain (*.communication.azure.com). It may be a Teams, Email, or other Azure resource.";
-    else if(!accessKey)diagnosis="The AccessKey field is missing or blank.";
-    else diagnosis="The value has extra fields or separators. Copy only the complete connection string from Communication Services > Keys.";
-    return reply({error:diagnosis+" In Azure Portal > Communication Services > your resource > Keys, copy the complete Primary connection string and save it as AZURE_COMMUNICATION_SERVICES_CONNECTION_STRING in Supabase.",code:"ACS_CONNECTION_STRING_FORMAT"},409);
+  // Let the official Azure SDK validate the endpoint host and credentials.
+  // We must not falsely reject regional, sovereign-cloud, or future supported hosts.
+  // Only check for the connection string's basic structure before invoking the SDK.
+  if(!endpoint||!accessKey||!/^https:\/\/[^\s/]+\/?$/i.test(endpoint)){
+    const diagnosis=!endpoint?"The connection string does not contain an Endpoint field.":!accessKey?"The connection string does not contain an AccessKey field.":"The Endpoint is not a valid HTTPS URL.";
+    return reply({error:diagnosis+" Check AZURE_COMMUNICATION_SERVICES_CONNECTION_STRING in the Andre Erving Supabase Edge Function secrets. Do not paste the credential into chat.",code:"ACS_CONNECTION_STRING_STRUCTURE"},409);
   }
   const connection="endpoint="+endpoint.replace(/\/$/,"")+";accesskey="+accessKey;
   let issued;
@@ -185,9 +181,11 @@ Deno.serve(async(req:Request)=>{
    const identity=new CommunicationIdentityClient(connection);
    issued=await identity.createUserAndToken(["voip"],{tokenExpiresInMinutes:60});
   }catch(e){
-   // Do not log the SDK error: malformed credentials can be reflected verbatim.
-   console.error("ACS token issuance unsuccessful; no credential details logged");
-   return reply({error:"The Azure Communication Services connection string has the correct structure, but Azure rejected the token request. Verify that the connection string was copied from the Azure Communication Services resource's Keys page and its access key is current."},503);
+   // Avoid exposing SDK error details that could contain a credential.
+   const code=String((e as any)?.code||"");
+   const reason=String((e as any)?.name||"");
+   console.error("ACS token issuance failed", {code:code.slice(0,50),reason:reason.slice(0,50)});
+   return reply({error:"Azure Communication Services could not issue a calling token. The Azure SDK, rather than a portal-specific endpoint rule, rejected the connection string or request. Check the Edge Function logs for the sanitized error category.",code:"ACS_TOKEN_ISSUE_FAILED"},503);
   }
   return reply({success:true,session_id:s.id,title:s.title,starts_at:s.start_at,ends_at:s.end_at,meeting_link:s.meeting_url,acs:{user_id:issued.user.communicationUserId,token:issued.token,expires_at:issued.expiresOn?.toISOString?.()||null},display_name:clean(user.user_metadata?.full_name||user.email?.split("@")[0]||"Student",120)});
  }
