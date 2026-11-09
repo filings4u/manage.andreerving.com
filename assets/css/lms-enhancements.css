@@ -28,3 +28,11 @@
 .lms-collapse .ae-ui-chevron,.lms-collapse-end .ae-ui-chevron{width:15px;height:15px}
 .lms-collapse,.lms-collapse-end{display:inline-flex!important;align-items:center!important;justify-content:center!important}
 .lms-collapse svg,.lms-collapse-end svg{pointer-events:none}
+
+
+/* Shared LMS catalog filtering across all course categories */
+.lms-catalog-filters{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+.lms-catalog-filters label{display:block;min-width:170px;font-size:12px;font-weight:650;color:#536b88}
+.lms-catalog-filters label:last-child{flex:1;min-width:220px}
+.lms-catalog-filters input,.lms-catalog-filters select{display:block;width:100%;box-sizing:border-box;padding:11px 12px;margin-top:5px;border:1px solid #d5dfec;border-radius:8px;background:white;font:inherit;color:#173252}
+@media(max-width:740px){.lms-catalog-filters{width:100%}.lms-catalog-filters label{width:100%}}
