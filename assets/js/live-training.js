@@ -65,8 +65,16 @@ export function createLiveTrainingManagement({db,root,notify,isCurrent}){
   try{
    const {attendees:items}=await api("attendees",{session_id:s.id});
    const layer=document.createElement("div");layer.className="lt-backdrop";
-   layer.innerHTML='<section class="lt-dialog" role="dialog" aria-modal="true" aria-label="Session attendees"><header><h2>Session attendees</h2><button id="lt-close" type="button" aria-label="Close">×</button></header><p class="lt-muted">'+safe(s.title)+' · '+items.length+' registrations</p><div class="lt-attendee-list">'+(items.length?items.map(a=>'<div class="lt-attendee"><div><strong>'+safe(a.name||a.email||a.user_id)+'</strong><small>'+safe(a.email||"")+'</small></div><select data-user="'+safe(a.user_id)+'"><option value="registered" '+(a.status==="registered"?"selected":"")+'>Registered</option><option value="attended" '+(a.status==="attended"?"selected":"")+'>Attended</option><option value="no_show" '+(a.status==="no_show"?"selected":"")+'>No-show</option><option value="cancelled" '+(a.status==="cancelled"?"selected":"")+'>Cancelled</option></select></div>').join(""):'<p>No registrations yet.</p>')+'</div><footer><button class="btn secondary" id="lt-done" type="button">Close</button></footer></section>';
+   layer.innerHTML='<section class="lt-dialog" role="dialog" aria-modal="true" aria-label="Session attendees"><header><h2>Session attendees</h2><button id="lt-close" type="button" aria-label="Close">×</button></header><p class="lt-muted">'+safe(s.title)+' · '+items.length+' registrations</p><div class="lt-attendee-list">'+(items.length?items.map(a=>'<div class="lt-attendee"><div><strong>'+safe(a.name||a.email||a.user_id)+'</strong><small>'+safe(a.email||"")+'</small></div><select data-user="'+safe(a.user_id)+'"><option value="registered" '+(a.status==="registered"?"selected":"")+'>Registered</option><option value="attended" '+(a.status==="attended"?"selected":"")+'>Attended</option><option value="no_show" '+(a.status==="no_show"?"selected":"")+'>No-show</option><option value="cancelled" '+(a.status==="cancelled"?"selected":"")+'>Cancelled</option></select>'+(['registered','attended'].includes(a.status)?'<button class="lt-resend" type="button" data-resend="'+safe(a.user_id)+'">Send Confirmation</button>':'')+'</div>').join(""):'<p>No registrations yet.</p>')+'</div><footer><button class="btn secondary" id="lt-done" type="button">Close</button></footer></section>';
    document.body.append(layer);const close=()=>layer.remove();layer.querySelector("#lt-close").onclick=close;layer.querySelector("#lt-done").onclick=close;
+   layer.querySelectorAll("[data-resend]").forEach(button=>button.onclick=async()=>{
+    button.disabled=true;
+    try{
+     const response=await api("resend_confirmation",{session_id:s.id,user_id:button.dataset.resend});
+     const statuses=response.notifications||{};
+     notify(statuses.student==="sent"&&statuses.admin==="sent"?"Branded confirmation sent to the student and administrators.":"Confirmation attempted. Check Resend settings and recent delivery logs.",statuses.student!=="sent"||statuses.admin!=="sent");
+    }catch(e){notify(e.message,true)}finally{button.disabled=false}
+   });
    layer.querySelectorAll("[data-user]").forEach(select=>select.onchange=async()=>{
     try{await api("mark_attendance",{session_id:s.id,user_id:select.dataset.user,status:select.value});notify("Attendance updated.");await load()}catch(e){notify(e.message,true)}
    });
@@ -105,6 +113,11 @@ export function createLiveTrainingManagement({db,root,notify,isCurrent}){
      '<div class="lt-actions"><button data-edit="'+safe(s.id)+'">Edit</button>'+(s.status==="draft"?'<button class="lt-primary" data-schedule="'+safe(s.id)+'">Schedule & Create Teams</button>':'')+(s.status==="scheduled"?'<button data-sync="'+safe(s.id)+'">Sync Teams</button>':'')+(s.status==="scheduled"?'<button data-calendar="'+safe(s.id)+'">'+(s.microsoft_event_id?'Sync Outlook Calendar':'Add to Outlook Calendar')+'</button>':'')+'<button data-attendees="'+safe(s.id)+'">Attendees</button>'+(s.status==="scheduled"?'<button data-join="'+safe(s.id)+'">Join Room</button><button data-host="'+safe(s.id)+'">Start as Teams Host</button>':'')+(["draft","scheduled"].includes(s.status)?'<button class="lt-danger" data-cancel="'+safe(s.id)+'">Cancel session</button>':'')+'</div></article>'
    }).join(""):'<p class="lt-empty">No live sessions yet. Create a draft to start scheduling Freight Broker Training.</p>')+'</div></div></div>';
   root.querySelector("#lt-new").onclick=()=>editor();
+  root.querySelector("#lt-test-email")?.addEventListener("click",async e=>{
+   const button=e.currentTarget;button.disabled=true;
+   try{const status=await api("delivery_status");notify(status.resend_configured?"Branded email provider is configured. Confirmations will be sent to active administrator addresses.":"RESEND_API_KEY is not configured in Andre Erving Supabase. Branded training emails cannot send.",!status.resend_configured)}
+   catch(e){notify(e.message,true)}finally{button.disabled=false}
+  });
   root.querySelector("#lt-test-teams").onclick=async e=>{
    const button=e.currentTarget;button.disabled=true;button.textContent="Checking Microsoft Teams…";
    try{const response=await api("verify_teams");if(!response.embedded_meeting_configured)notify("Microsoft Teams is connected, but embedded portal meetings require the AZURE_COMMUNICATION_SERVICES_CONNECTION_STRING secret in Andre Erving Supabase.",true);else notify("Microsoft Teams and embedded Azure Communication Services are configured. OnlineMeetings.ReadWrite.All confirmed.");}
