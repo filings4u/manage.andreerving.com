@@ -71,3 +71,8 @@
 .vl-course-tree-modules button{width:100%;text-align:left;display:flex;justify-content:space-between;gap:8px;background:transparent;border:0;border-radius:6px;color:#506b86;font-size:11px;padding:7px 6px;cursor:pointer}
 .vl-course-tree-entry button:hover,.vl-course-tree-entry button.active{background:#eaf2fc;color:#164e8b}
 .vl-course-tree-empty{font-size:11px;color:#8492a5;padding:5px 3px}
+
+.vl-pagination{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-top:1px solid #e0e8f2;margin-top:20px;padding-top:16px;font-size:12px;color:#5e728a}
+.vl-pagination>div{display:flex;gap:12px;align-items:center}
+.vl-pagination button{border:1px solid #d1dcea;border-radius:8px;background:#fff;color:#1f507f;padding:8px 12px;cursor:pointer;font-weight:700}
+.vl-pagination button:disabled{opacity:.4;cursor:not-allowed}
