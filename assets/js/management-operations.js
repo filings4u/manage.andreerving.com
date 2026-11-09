@@ -41,7 +41,7 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
   const people=res.items||[];
   const backEnrollment=(()=>{try{return JSON.parse(sessionStorage.getItem("ae_enrollment_return")||"null")}catch{return null}})();
   root.innerHTML=head("Customer CRM","Manage complete customer profiles, purchases, courses, documents, and support.")+
-   '<div class="ae-mgmt-header-actions"><button type="button" class="btn" id="crm-add">Create customer account</button>'+(backEnrollment?.courseId?'<button type="button" class="btn secondary ae-return-enroll" data-return-enrollment>Back to course enrollment</button>':'')+'</div>'+
+   '<div class="ae-mgmt-header-actions"><button type="button" class="btn" id="crm-start-order">+ Create Order</button>'+(backEnrollment?.courseId?'<button type="button" class="btn secondary ae-return-enroll" data-return-enrollment>Back to course enrollment</button>':'')+'</div>'+
    '<section class="panel ae-mgmt-panel"><div class="ae-mgmt-panel-heading"><div><span class="ae-mini-eyebrow">CUSTOMER RELATIONSHIPS</span><h2>Customer directory</h2></div><span class="ae-mgmt-counter">'+people.length+' customers</span></div>'+
    '<label class="ae-mgmt-search-label">Search customer records<input id="crm-search" type="search" placeholder="Find a customer by name, email, or phone"></label>'+
    '<div class="tablewrap"><table class="ae-crm-table"><thead><tr><th>Customer</th><th>Email</th><th>Phone</th><th>Created</th><th></th></tr></thead><tbody id="crm-rows"></tbody></table></div></section>';
@@ -56,10 +56,10 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
    });
   }
   draw();root.querySelector("#crm-search").oninput=e=>draw(e.target.value);
-  root.querySelector("#crm-add").onclick=()=>customerForm();
+  root.querySelector("#crm-start-order").onclick=async()=>{await navigateTo("orders");await ordersPage()};
   root.querySelector('[data-return-enrollment]')?.addEventListener("click",()=>returnToEnrollment());
   if(backEnrollment?.courseId&&!root.querySelector(".ae-crm-return-note")){
-    const note=document.createElement("p");note.className="ae-crm-return-note";note.textContent="Create the customer account first, then select Back to course enrollment to assign their course.";
+    const note=document.createElement("p");note.className="ae-crm-return-note";note.textContent="Create a paid or free order to provision course access through the standard workflow.";
     root.querySelector(".ae-mgmt-header-actions")?.after(note);
   }
  }
@@ -132,7 +132,7 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
   const returning=(()=>{try{return JSON.parse(sessionStorage.getItem("ae_enrollment_return")||"null")}catch{return null}})();
   root.innerHTML=head(p.full_name||p.email,"Customer CRM / Full account record")+
    '<div class="ae-mgmt-header-actions"><button class="btn secondary" id="crm-back">All customers</button><button class="btn secondary" id="crm-edit">Edit customer details</button>'+
-   '<button class="btn" id="crm-enroll">Assign a course</button><button class="btn secondary" id="crm-order">Create an order</button><button class="btn secondary" id="crm-invite">Send account invitation</button></div>'+
+   '<button class="btn" id="crm-order">Create an order</button></div>'+
    '<div class="ae-crm-overview">'+
    [['Customer email',p.email],['Phone',p.phone||"Not provided"],['Purchases',orders.length],['Courses',items.length]].map(x=>'<section class="ae-crm-stat"><span>'+escapeHtml(x[0])+'</span><strong>'+escapeHtml(x[1])+'</strong></section>').join("")+'</div>'+
    '<section class="panel ae-mgmt-panel"><h2>Courses and access</h2><div class="tablewrap"><table><thead><tr><th>Course</th><th>Status</th><th>Enrolled</th><th>Expires</th><th>Manage</th></tr></thead><tbody>'+
@@ -152,9 +152,7 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
     const btn=document.createElement("button");btn.type="button";btn.className="btn ae-return-enroll";btn.textContent="Enroll this customer in the course";btn.onclick=()=>returnToEnrollment(uid);
     actions?.prepend(btn);
   }
-  root.querySelector("#crm-enroll").onclick=async()=>{await navigateTo("course_enrollments");await enrollments(uid)};
   root.querySelector("#crm-order").onclick=async()=>{await navigateTo("orders");await ordersPage(uid,p.email)};
-  root.querySelector("#crm-invite").onclick=async()=>{await navigateTo("orders");inviteForm({email:p.email})};
   root.querySelectorAll("[data-access]").forEach(b=>b.onclick=()=>changeAccess(b.dataset.access,uid,items,courses));
  }
  async function enrollments(prefill=""){
@@ -202,26 +200,42 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
   const [customers,orders,catalog]=await Promise.all([api("list_customers"),api("list_orders"),api("list_prices")]);
   if(!isCurrent("orders")&&!isCurrent("customer_profiles"))return;
   const people=customers.items||[],records=orders.items||[],prices=(catalog.items||[]).filter(p=>p.active&&p.price_key.startsWith("offering."));
-  root.innerHTML=head("Orders and purchases","Create pending orders, review purchase history, and send customer invitations.")+
-   '<div class="ae-mgmt-two"><section class="panel ae-mgmt-panel"><h2>Create an order</h2><p class="muted">Manual orders remain pending until payment is verified. This does not charge the customer.</p>'+
-   '<form id="ae-create-order" class="ae-mgmt-form"><label>Customer<select name="userId" required>'+optionList(people,"Choose a customer",p=>p.id,p=>p.full_name||p.email)+'</select></label>'+
-   '<label>Offering<select name="priceKey" required>'+optionList(prices,"Choose a product or service",p=>p.price_key,p=>p.label+" — "+money(p.amount))+'</select></label>'+
-   '<div class="ae-mgmt-actions"><button class="btn" type="submit">Create pending order</button></div></form></section>'+
-   '<section class="panel ae-mgmt-panel"><h2>Account invitations</h2><p>Send an account invitation after recording an order. Invites use a secure, single-use link.</p><button class="btn secondary" id="ae-invite-from-orders">Send invitation</button></section></div>'+
+  const existing=people.find(p=>p.id===prefillUser||p.email?.toLowerCase()===prefillEmail.toLowerCase());
+  const names=String(existing?.full_name||"").trim().split(/\s+/);
+  const first=names.shift()||"",last=names.join(" ");
+  const meta=new Map((orders.invoices||[]).map(x=>[x.order_id,x]));
+  root.innerHTML=head("Orders & invoices","Create orders using customer details. Free access is provisioned immediately; paid access begins only after verified checkout payment.")+
+   '<div class="ae-mgmt-two"><section class="panel ae-mgmt-panel"><h2>Create an order</h2><p class="muted">Enter the customer information first. No account is created for unpaid invoices.</p>'+
+   '<form id="ae-create-order" class="ae-mgmt-form">'+
+   '<label>First name<input required name="firstName" maxlength="80" value="'+escapeHtml(first)+'"></label>'+
+   '<label>Last name<input required name="lastName" maxlength="80" value="'+escapeHtml(last)+'"></label>'+
+   '<label>Customer email<input required type="email" name="email" maxlength="254" value="'+escapeHtml(existing?.email||prefillEmail)+'"></label>'+
+   '<label>Phone (optional)<input type="tel" name="phone" maxlength="32" value="'+escapeHtml(existing?.phone||"")+'"></label>'+
+   '<label>Product or service<select name="priceKey" required>'+optionList(prices,"Choose a product or service",p=>p.price_key,p=>p.label+" — "+money(p.amount))+'</select></label>'+
+   '<label>Order type<select name="mode" required><option value="invoice">Accept Payment — Send Invoice</option><option value="free">Free Access — $0.00</option></select></label>'+
+   '<p class="ae-form-hint" id="ae-order-flow-explanation">An invoice will be emailed with a link to view the order and pay securely using checkout.html. Customer access begins after confirmed payment.</p>'+
+   '<div class="ae-mgmt-actions"><button class="btn" type="submit">Create Order &amp; Send Invoice</button></div></form></section>'+
+   '<section class="panel ae-mgmt-panel"><h2>Order workflow</h2><p><strong>1.</strong> Create an order using the customer name and email.</p><p><strong>2.</strong> Send a branded invoice, or choose Free Access.</p><p><strong>3.</strong> Payment is verified, then an account is created or reused.</p><p><strong>4.</strong> Course access is granted and branded account invitation and receipt emails are sent.</p><p class="muted">An unpaid invoice never creates an account or activates course access.</p></section></div>'+
    '<section class="panel ae-mgmt-panel"><h2>All orders</h2><div class="tablewrap"><table><thead><tr><th>Order</th><th>Customer</th><th>Amount</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody>'+
-   records.map(o=>'<tr><td><strong>'+escapeHtml(o.order_number)+'</strong></td><td>'+escapeHtml(o.customer_email)+'</td><td>'+money(o.total)+'</td><td><span class="pill '+escapeHtml(o.status)+'">'+escapeHtml(o.status)+'</span></td><td>'+formatDate(o.created_at)+'</td><td><button class="ae-inline-btn" type="button" data-order-invite="'+escapeHtml(o.id)+'" data-order-email="'+escapeHtml(o.customer_email)+'">Invite customer</button></td></tr>').join("")+'</tbody></table></div></section>';
-  const customerSelect=root.querySelector('#ae-create-order [name="userId"]');
-  if(prefillUser)customerSelect.value=prefillUser;
+   (records.map(o=>{const m=meta.get(o.id);return '<tr><td><strong>'+escapeHtml(o.order_number)+'</strong></td><td>'+escapeHtml(o.customer_email)+'</td><td>'+money(o.total)+'</td><td><span class="pill '+escapeHtml(o.status)+'">'+escapeHtml(o.status)+'</span></td><td>'+formatDate(o.created_at)+'</td><td>'+
+     (o.status==="pending"&&m?.mode==="invoice"?'<button class="ae-inline-btn" type="button" data-send-invoice="'+escapeHtml(o.id)+'">Resend Invoice</button>':o.status==="paid"?'<span>Paid / Free</span>':'<span>Pending</span>')+'</td></tr>'}).join("")||'<tr><td colspan="6">No orders yet.</td></tr>')+
+   '</tbody></table></div></section>';
+  const flow=root.querySelector('#ae-order-flow-explanation'),submit=root.querySelector('#ae-create-order [type="submit"]');
+  root.querySelector('#ae-create-order [name="mode"]').onchange=e=>{
+   const free=e.target.value==="free";
+   flow.textContent=free?"Free Access: create or reuse the customer account, grant any purchased course, and send branded invitation and $0 receipt. No payment is charged.":"An invoice will be emailed with a link to review the order and pay securely using checkout.html. Access begins only after verified payment.";
+   submit.textContent=free?"Grant Free Access & Send Emails":"Create Order & Send Invoice";
+  };
   onSubmit("#ae-create-order",async fd=>{
-   const uid=String(fd.get("userId")||"");const p=people.find(x=>x.id===uid);
-   if(!p)throw Error("Choose a valid customer");
-   const parts=String(p.full_name||"").trim().split(/\s+/);
-   const result=await api("create_order",{userId:uid,email:p.email,firstName:parts.shift()||"",lastName:parts.join(" "),phone:p.phone||"",priceKey:fd.get("priceKey")});
-   notify("Pending order "+result.orderNumber+" created");
-   await ordersPage(uid,p.email);
+   const values=Object.fromEntries(fd),result=await api("create_order",values);
+   notify(values.mode==="free"?"Free access order "+result.orderNumber+" completed.":"Invoice "+result.orderNumber+" sent to "+values.email);
+   await ordersPage();
   });
-  root.querySelector("#ae-invite-from-orders").onclick=()=>inviteForm({email:prefillEmail||""});
-  root.querySelectorAll("[data-order-invite]").forEach(button=>button.onclick=()=>inviteForm({email:button.dataset.orderEmail,orderId:button.dataset.orderInvite}));
+  root.querySelectorAll("[data-send-invoice]").forEach(btn=>btn.onclick=async()=>{
+   btn.disabled=true;
+   try{await api("send_invoice",{orderId:btn.dataset.sendInvoice});notify("Branded invoice email sent.");await ordersPage()}
+   catch(e){showError(e)}finally{btn.disabled=false}
+  });
  }
  async function inviteForm({email="",orderId=""}={}){
   const [customerResponse,orderResponse]=await Promise.all([api("list_customers"),api("list_orders")]);
