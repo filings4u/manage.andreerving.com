@@ -153,15 +153,33 @@ Deno.serve(async(req:Request)=>{
   }
   const now=Date.now(),start=new Date(s.start_at).getTime(),end=new Date(s.end_at).getTime();
   if(now<start-30*60000||now>end+60*60000)return reply({error:"The meeting room opens 30 minutes before class and closes one hour afterward.",join_available_at:new Date(start-30*60000).toISOString()},403);
-  const connection=env("AZURE_COMMUNICATION_SERVICES_CONNECTION_STRING")||env("ACS_CONNECTION_STRING");
-  if(!connection)return reply({error:"Embedded meetings need Azure Communication Services. Add AZURE_COMMUNICATION_SERVICES_CONNECTION_STRING to the Andre Erving Supabase Edge Function secrets. Your Microsoft Teams credentials alone do not enable embedded video."},409);
-  // Validate format without revealing secret values in error messages or logs.
-  const parts=connection.split(";").map(x=>x.trim()).filter(Boolean);
-  const entries=new Map(parts.map(part=>{const i=part.indexOf("=");return i<0?["", ""]:[part.slice(0,i).trim().toLowerCase(),part.slice(i+1).trim()]}));
-  const endpoint=entries.get("endpoint")||"",accessKey=entries.get("accesskey")||"";
-  if(!/^https:\/\/[a-z0-9.-]+\.communication\.azure\.com\/?$/i.test(endpoint)||!accessKey||parts.length!==2){
-    return reply({error:"The Azure Communication Services secret has the wrong format. In Azure Portal > Communication Services > Keys, copy the complete Primary connection string (Endpoint=https://...communication.azure.com;AccessKey=...), and paste it as AZURE_COMMUNICATION_SERVICES_CONNECTION_STRING in Supabase. Do not use only the Access Key or a Microsoft Teams client secret."},409);
+  const rawConnection=env("AZURE_COMMUNICATION_SERVICES_CONNECTION_STRING")||env("ACS_CONNECTION_STRING");
+  if(!rawConnection)return reply({error:"Azure Communication Services connection string is missing. Add AZURE_COMMUNICATION_SERVICES_CONNECTION_STRING to Supabase Edge Function secrets."},409);
+  // Azure documents endpoint=...;accesskey=... . Normalize harmless casing, quotes,
+  // whitespace and trailing semicolons before passing to the SDK.
+  let value=rawConnection.trim();
+  if((value.startsWith('"')&&value.endsWith('"'))||(value.startsWith("'")&&value.endsWith("'")))value=value.slice(1,-1).trim();
+  const parts=value.split(";").map(v=>v.trim()).filter(Boolean);
+  const fields=new Map<string,string>();
+  for(const p of parts){
+    const idx=p.indexOf("=");
+    if(idx<0)continue;
+    const key=p.slice(0,idx).trim().toLowerCase();
+    if(key==="endpoint"||key==="accesskey")fields.set(key,p.slice(idx+1).trim());
   }
+  const endpoint=fields.get("endpoint")||"",accessKey=fields.get("accesskey")||"";
+  const isACS=/^https:\/\/[a-z0-9-]+\.communication\.azure\.com\/?$/i.test(endpoint);
+  if(parts.length!==2||!isACS||!accessKey){
+    let diagnosis="The saved value is not a full Azure Communication Services connection string.";
+    if(!value.includes(";")&&!value.includes("endpoint=")&&!value.includes("Endpoint="))
+      diagnosis=/^[a-f0-9]{32,128}$/i.test(value)?"Only a key or identifier appears to be saved, not the full connection string.":"The value contains neither the Endpoint nor the AccessKey fields.";
+    else if(!endpoint)diagnosis="The Endpoint field is missing. You may have pasted only the Access Key or another secret.";
+    else if(!isACS)diagnosis="The Endpoint does not have an Azure Communication Services domain (*.communication.azure.com). It may be a Teams, Email, or other Azure resource.";
+    else if(!accessKey)diagnosis="The AccessKey field is missing or blank.";
+    else diagnosis="The value has extra fields or separators. Copy only the complete connection string from Communication Services > Keys.";
+    return reply({error:diagnosis+" In Azure Portal > Communication Services > your resource > Keys, copy the complete Primary connection string and save it as AZURE_COMMUNICATION_SERVICES_CONNECTION_STRING in Supabase.",code:"ACS_CONNECTION_STRING_FORMAT"},409);
+  }
+  const connection="endpoint="+endpoint.replace(/\/$/,"")+";accesskey="+accessKey;
   let issued;
   try{
    const identity=new CommunicationIdentityClient(connection);
