@@ -36,3 +36,20 @@
 @media(max-width:720px){.lt-top,.lt-panel-head{align-items:flex-start;flex-direction:column}.lt-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.lt-form-grid{grid-template-columns:1fr}.lt-panel-head select{width:100%}}
 
 .lt-header-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+
+/* Consistent branded confirmations, not native browser dialogs */
+.lt-dialog:has(#lt-confirm-title){padding:0;max-width:560px;overflow:hidden;border:1px solid #dce6f0;border-radius:18px}
+.lt-dialog:has(#lt-confirm-title) header{padding:24px 28px 18px;border-bottom:1px solid #e8edf5;gap:18px}
+.lt-dialog:has(#lt-confirm-title) header h2{font-size:23px;letter-spacing:-.025em;line-height:1.25;color:#122e52}
+.lt-dialog:has(#lt-confirm-title) header button{font-size:24px;line-height:1;width:34px;height:34px;border-radius:8px;flex-shrink:0}
+.lt-dialog:has(#lt-confirm-title) header button:hover{background:#f1f5fa}
+.lt-dialog #lt-confirm-description{margin:0;padding:24px 28px!important;font-size:15px;color:#4c6682;line-height:1.7!important}
+.lt-dialog:has(#lt-confirm-title) footer{margin:0;padding:18px 28px;background:#f7f9fd;border-top:1px solid #e8edf5;gap:10px}
+.lt-dialog #lt-confirm-no,.lt-dialog #lt-confirm-yes{font:inherit;font-size:13px;font-weight:750;min-height:42px;padding:10px 18px;border-radius:8px;cursor:pointer;transition:background .15s}
+.lt-dialog #lt-confirm-no{background:#fff;color:#233f61;border:1px solid #cbd9e9}
+.lt-dialog #lt-confirm-yes{background:#cf931e;color:#fff;border:1px solid #cf931e}
+.lt-dialog #lt-confirm-yes:hover{background:#b78015}
+.lt-dialog #lt-confirm-yes.lt-danger{background:#ae3c3c;border-color:#ae3c3c;color:#fff}
+.lt-dialog #lt-confirm-yes.lt-danger:hover{background:#912b2b}
+.lt-dialog #lt-confirm-no:focus-visible,.lt-dialog #lt-confirm-yes:focus-visible{outline:3px solid #639bdd;outline-offset:2px}
+@media(max-width:560px){.lt-dialog:has(#lt-confirm-title) header{padding:20px}.lt-dialog #lt-confirm-description{padding:20px!important}.lt-dialog:has(#lt-confirm-title) footer{padding:15px 20px}.lt-dialog #lt-confirm-no,.lt-dialog #lt-confirm-yes{flex:1}}
