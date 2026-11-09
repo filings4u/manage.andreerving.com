@@ -205,7 +205,7 @@ Deno.serve(async(req:Request)=>{
   const session=await selectSession();if(["cancelled","completed"].includes(session.status))throw new Error("This session cannot be scheduled");
   if(new Date(session.start_at)<=new Date())throw new Error("Start date must be in the future");
   let meeting;try{meeting=await teams(session)}catch(e){await db.from("live_training_sessions").update({teams_error:err(e)}).eq("id",session.id);throw e}
-  const row:any={meeting_provider:"microsoft_teams",meeting_id:meeting.id,meeting_url:meeting.url,teams_error:null,status:"scheduled",updated_at:new Date().toISOString()};
+  const row:any={meeting_provider:"microsoft_teams",meeting_id:meeting.id,meeting_url:meeting.url,meeting_organizer_user_id:env("MICROSOFT_TEAMS_ORGANIZER_USER_ID"),teams_error:null,status:"scheduled",updated_at:new Date().toISOString()};
   let calendarStatus="synced",calendarError="";
   try{const event=await syncCalendarEvent({...session,...row});row.microsoft_event_id=event.event_id;row.calendar_sync_error=null}
   catch(e){calendarStatus="failed";calendarError=err(e);row.calendar_sync_error=calendarError.slice(0,500);console.error("Outlook event sync failed",{reason:calendarError.slice(0,160)})}
@@ -216,6 +216,9 @@ Deno.serve(async(req:Request)=>{
   const session=await selectSession();
   if(session.status!=="scheduled")return reply({error:"Only scheduled sessions can be reassigned."},409);
   if(new Date(session.start_at).getTime()<=Date.now())return reply({error:"This session has already started. Create a new future session instead of replacing an active or past meeting."},409);
+  if(String(session.meeting_organizer_user_id||"").toLowerCase()==="support@andreerving.com"){
+    return reply({success:true,already_assigned:true,session,organizer:"support@andreerving.com",registrations_preserved:null});
+  }
   // Verify the target identity before changing any existing meeting.
   const target=env("MICROSOFT_TEAMS_ORGANIZER_USER_ID");
   if(target.toLowerCase()!=="support@andreerving.com")return reply({error:"Organizer configuration does not match support@andreerving.com. Update MICROSOFT_TEAMS_ORGANIZER_USER_ID first."},409);
@@ -225,7 +228,7 @@ Deno.serve(async(req:Request)=>{
   try{meeting=await teams({...session,meeting_id:null,meeting_url:null})}
   catch(e){return reply({error:"Could not create a new Teams meeting for support@andreerving.com: "+err(e).slice(0,450)},409)}
   // Calendar event ownership is separate. Do not carry an old event ID over.
-  const row:any={meeting_id:meeting.id,meeting_url:meeting.url,meeting_provider:"microsoft_teams",teams_error:null,microsoft_event_id:null,calendar_sync_error:null,updated_at:new Date().toISOString()};
+  const row:any={meeting_id:meeting.id,meeting_url:meeting.url,meeting_provider:"microsoft_teams",meeting_organizer_user_id:target,teams_error:null,microsoft_event_id:null,calendar_sync_error:null,updated_at:new Date().toISOString()};
   let calendarStatus="synced",calendarError="";
   try{const event=await syncCalendarEvent({...session,...row});row.microsoft_event_id=event.event_id}
   catch(e){calendarStatus="failed";calendarError=err(e).slice(0,450);row.calendar_sync_error=calendarError}
