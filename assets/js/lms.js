@@ -3,7 +3,7 @@ import {createLessonStudio} from './lms-lesson-studio.js?v=unsaved-20261107';
 /* Andre Erving LMS studio. Auth and authorization are supplied by the management app;
    Supabase RLS is the server-side enforcement for every operation. */
 export function createLMS({db,root,notify,safe,isCurrent}){
-  const s={courses:[],modules:[],lessons:[],enrollments:[],customers:[],courseId:null,tab:"overview",term:"",busy:false,editor:null,nextEditRoute:null,collapsed:new Set(),drag:null,reordering:false,previewLessonId:null,progressCache:new Map(),progressPending:new Set()};
+  const s={courses:[],modules:[],lessons:[],enrollments:[],customers:[],courseId:null,tab:"overview",term:"",categoryFilter:"",busy:false,editor:null,nextEditRoute:null,collapsed:new Set(),drag:null,reordering:false,previewLessonId:null,progressCache:new Map(),progressPending:new Set()};
   const esc=safe;
   const fmt=v=>v?new Date(v).toLocaleDateString():"—";
   const money=n=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(Number(n)||0);
@@ -12,9 +12,17 @@ export function createLMS({db,root,notify,safe,isCurrent}){
   const all=(sel)=>[...root.querySelectorAll(sel)];
   function warn(e){notify(e?.message||String(e),true)}
   async function list(table,cols="*",order="sort_order"){
-    let q=db.from(table).select(cols);
-    if(order)q=q.order(order,{ascending:order==="created_at"?false:true});
-    const r=await q.limit(500);if(r.error)throw r.error;return r.data||[];
+    const batch=500,items=[];
+    for(let offset=0;offset<20000;offset+=batch){
+      let q=db.from(table).select(cols);
+      if(order)q=q.order(order,{ascending:order==="created_at"?false:true});
+      if(order!=="id")q=q.order("id",{ascending:true});
+      const r=await q.range(offset,offset+batch-1);
+      if(r.error)throw r.error;
+      items.push(...(r.data||[]));
+      if((r.data||[]).length<batch)return items;
+    }
+    throw Error("LMS catalog exceeds the current 20,000-record safety limit. Narrow or paginate the query.");
   }
   async function refresh(){try{
     const [a,b,c,d,e]=await Promise.all([
@@ -38,18 +46,20 @@ export function createLMS({db,root,notify,safe,isCurrent}){
     if(s.editor){if(s.editor.isVisualLesson)return;renderEditor();return}if(!s.courseId)renderLibrary();else renderStudio();
   }
   function renderLibrary(){
-    const matching=s.courses.filter(c=>(c.title+" "+c.category+" "+c.status).toLowerCase().includes(s.term.toLowerCase()));
+    const matching=s.courses.filter(c=>(!s.categoryFilter||c.category===s.categoryFilter)&&(c.title+" "+c.category+" "+c.status).toLowerCase().includes(s.term.toLowerCase()));
+    const categories=[...new Set(s.courses.map(c=>c.category||"Uncategorized"))].sort();
     const published=s.courses.filter(c=>c.status==="published").length;
     root.innerHTML=sectionHeader("Courses & programs","Build and manage the learning experience, from course details to individual lessons.")+
       '<div class="lms-banner"><div><span class="eyebrow">COURSE MANAGEMENT</span><h2>Your training catalog</h2><p>Design curriculum, manage participants, and control how courses appear in the student portal.</p></div><button class="btn lms-create" id="lms-new">+ Create course</button></div>'+
       '<div class="lms-stats"><div><span>Total courses</span><strong>'+s.courses.length+'</strong></div><div><span>Published</span><strong>'+published+'</strong></div><div><span>Drafts</span><strong>'+s.courses.filter(c=>c.status==="draft").length+'</strong></div><div><span>Enrollments</span><strong>'+s.enrollments.length+'</strong></div></div>'+
-      '<section class="panel lms-library"><div class="lms-library-top"><div><h2>All courses</h2><p class="muted">Select any course to edit its overview, curriculum, students and settings.</p></div><input id="lms-search" type="search" aria-label="Search courses" placeholder="Search courses…" value="'+escAttr(s.term)+'"></div>'+
+      '<section class="panel lms-library"><div class="lms-library-top"><div><h2>All courses</h2><p class="muted">Select any course to edit its overview, curriculum, students and settings.</p></div><div class="lms-catalog-filters"><label>Category<select id="lms-category-filter"><option value="">All categories</option>'+categories.map(c=>'<option value="'+escAttr(c)+'" '+(s.categoryFilter===c?'selected':'')+'>'+esc(c)+'</option>').join('')+'</select></label><label>Search<input id="lms-search" type="search" aria-label="Search courses" placeholder="Search courses…" value="'+escAttr(s.term)+'"></label></div></div>'+
       '<div class="lms-card-grid">'+matching.map(c=>{
         const modules=s.modules.filter(m=>m.course_id===c.id).length,lessons=s.lessons.filter(l=>l.course_id===c.id).length,students=s.enrollments.filter(e=>e.course_id===c.id&&e.status==="active").length;
         const image=c.featured_image_url&&/^https:\/\//i.test(c.featured_image_url)?'<img src="'+escAttr(c.featured_image_url)+'" alt="" loading="lazy">':'<div class="lms-cover-placeholder">AE<span>LEARNING</span></div>';
         return '<article class="lms-course-card"><div class="lms-cover">'+image+'</div><div class="lms-course-body"><div class="lms-card-meta"><span class="pill '+esc(c.status)+'">'+esc(c.status)+'</span><span>'+esc(c.category||"Course")+'</span></div><h3>'+esc(c.title)+'</h3><p>'+esc(c.short_description||"Build and deliver your program.")+'</p><div class="lms-card-details"><span>'+modules+' sections</span><span>'+lessons+' lessons</span><span>'+students+' students</span><span>'+(c.access_days?esc(c.access_days)+" days access":"Lifetime access")+'</span></div><div class="lms-course-bottom"><strong>'+money(c.price)+'</strong><button class="btn secondary" data-open-course="'+escAttr(c.id)+'">Manage course →</button></div></div></article>';
       }).join('')+'</div>'+(matching.length?'':empty("No courses match your search."))+'</section>';
     by("lms-new").onclick=()=>openCourseForm();
+    by("lms-category-filter").onchange=e=>{s.categoryFilter=e.target.value;renderLibrary()};
     by("lms-search").oninput=e=>{s.term=e.target.value;const pos=e.target.selectionStart;renderLibrary();const n=by("lms-search");n.focus();n.setSelectionRange(pos,pos)};
     all("[data-open-course]").forEach(b=>b.onclick=()=>{s.courseId=b.dataset.openCourse;s.tab="curriculum";openRoute("course/"+s.courseId+"/curriculum");render()});
   }
