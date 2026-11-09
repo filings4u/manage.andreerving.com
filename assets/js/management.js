@@ -1,11 +1,11 @@
-import {createLiveTrainingManagement} from './live-training.js?v=organizer-migration-20261109';
+import {createLiveTrainingManagement} from './live-training.js?v=branded-modals-organizer-20261109';
 import {createLMS} from './lms.js?v=publish-order-fix-20261108';
 import {createVideoLibrary} from './video-library.js?v=multi-course-paged-20261108';
 import {createManagementOperations} from './management-operations.js?v=customer-return-20261107g';
 import {createBlogStudio,cleanBlogHTML} from './blog-studio.js?v=unsaved-20261107';
 import {createPodcastStudio} from './podcast-studio.js?v=upload-unsaved-20261107';
 import {createUnsavedGuard} from './unsaved-guard.js?v=20261107';
-import {showInquiry,downloadInquiryPDF} from './inquiry-workspace.js?v=20261107a';
+import {showInquiry,downloadInquiryPDF} from './inquiry-workspace.js?v=branded-pdf-notification-20261109';
 import{createClient}from'https://esm.sh/@supabase/supabase-js@2.58.0';
 const db=createClient('https://gnfyidajbectlppsekzj.supabase.co','sb_publishable_DGt4HrHAwWyMt-0Xtzlfog_F18RnOyf');
 const unsaved=createUnsavedGuard();window.AEUnsaved=unsaved;
