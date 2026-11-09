@@ -55,14 +55,24 @@ Deno.serve(async(req:Request)=>{
  const selectSession=async()=>{if(!uuid(sessionId))throw new Error("Valid session ID required");const a=dbError(await db.from("live_training_sessions").select("*").eq("id",sessionId).maybeSingle());if(!a)throw new Error("Session not found");return a};
  if(action==="config_status"){return reply({success:true,teams_configured:["MICROSOFT_TENANT_ID","MICROSOFT_CLIENT_ID","MICROSOFT_CLIENT_SECRET","MICROSOFT_TEAMS_ORGANIZER_USER_ID"].every(key=>!!env(key)),missing_secret_names:["MICROSOFT_TENANT_ID","MICROSOFT_CLIENT_ID","MICROSOFT_CLIENT_SECRET","MICROSOFT_TEAMS_ORGANIZER_USER_ID"].filter(key=>!env(key))})}
  if(action==="verify_teams"){
-  const keys=["MICROSOFT_TENANT_ID","MICROSOFT_CLIENT_ID","MICROSOFT_CLIENT_SECRET","MICROSOFT_TEAMS_ORGANIZER_USER_ID"];
   checkMicrosoftSecrets();
   const t=await fetch("https://login.microsoftonline.com/"+encodeURIComponent(env("MICROSOFT_TENANT_ID"))+"/oauth2/v2.0/token",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({client_id:env("MICROSOFT_CLIENT_ID"),client_secret:env("MICROSOFT_CLIENT_SECRET"),grant_type:"client_credentials",scope:"https://graph.microsoft.com/.default"})});
-  const j=await t.json();if(!t.ok||!j.access_token)throw new Error(j.error_description||"Microsoft Graph authentication failed");
-  const gr=await fetch("https://graph.microsoft.com/v1.0/users/"+encodeURIComponent(env("MICROSOFT_TEAMS_ORGANIZER_USER_ID"))+"?$select=id,displayName",{headers:{Authorization:"Bearer "+j.access_token}});
-  const identity=await gr.json();if(!gr.ok)throw new Error(identity?.error?.message||"Teams organizer cannot be accessed via Microsoft Graph");
-  const scope=Array.isArray(j.roles)?j.roles:[];
-  return reply({success:true,configured:true,organizer_name:identity.displayName||"Configured organizer",permissions:scope,online_meetings_permission:scope.includes("OnlineMeetings.ReadWrite.All"),note:"Microsoft Graph authentication and organizer lookup succeeded. A scheduled session is required to verify Microsoft Teams application access policy."});
+  const j=await t.json();
+  if(!t.ok||!j.access_token)throw new Error(j.error_description||"Microsoft Graph authentication failed");
+  let roles:string[]=[];
+  try{
+    const segment=String(j.access_token).split(".")[1];
+    const decoded=JSON.parse(atob(segment.replace(/-/g,"+").replace(/_/g,"/").padEnd(Math.ceil(segment.length/4)*4,"=")));
+    roles=Array.isArray(decoded.roles)?decoded.roles.filter((v:any)=>typeof v==="string"):[];
+  }catch{
+    return reply({success:false,error:"Microsoft login succeeded, but application permissions could not be inspected. Verify Microsoft Graph application permission OnlineMeetings.ReadWrite.All is granted with admin consent.",authentication_ok:true,permission_check:"unavailable"},409);
+  }
+  const canCreate=roles.includes("OnlineMeetings.ReadWrite.All");
+  if(!canCreate)return reply({
+    success:false,authentication_ok:true,online_meetings_permission:false,
+    error:"Microsoft authentication succeeded, but the app token does not have OnlineMeetings.ReadWrite.All. In Microsoft Entra > App registrations > API permissions, add Microsoft Graph APPLICATION permission OnlineMeetings.ReadWrite.All, then Grant admin consent. An application access policy for the Teams organizer is also needed to create meetings."
+  },409);
+  return reply({success:true,configured:true,authentication_ok:true,organizer_name:"Configured Teams organizer",online_meetings_permission:true,note:"Microsoft authentication and OnlineMeetings.ReadWrite.All application consent verified. Teams application access policy and organizer meeting creation require a scheduled meeting to test."});
  }
  if(action==="staff_list"){
   const courses=dbError(await db.from("courses").select("id,title,status").order("title").limit(500));
