@@ -76,12 +76,14 @@ Deno.serve(async(request:Request)=>{
   if(mode==="playback"){
     const lessonId=String(payload.lessonId||"");
     if(!ID.test(lessonId))return json({success:false,error:"Invalid lesson"},400,origin);
-    const {data:lesson,error:lessonError}=await supabase.from("course_lessons").select("id,course_id,video_url,lesson_type").eq("id",lessonId).maybeSingle();
-    if(lessonError||!lesson||lesson.lesson_type!=="video")return json({success:false,error:"Video lesson not available"},404,origin);
+    const {data:adminAccess}=await supabase.from("admin_profiles").select("id,role").eq("id",auth.user!.id).eq("active",true).maybeSingle();
+    const isStaff=!!adminAccess&&["admin","manager","editor"].includes(adminAccess.role);
+    const lessonTable=isStaff?"course_lessons":"published_course_lessons";
+    const {data:lesson,error:lessonError}=await supabase.from(lessonTable).select("id,course_id,video_url,lesson_type").eq("id",lessonId).maybeSingle();
+    if(lessonError||!lesson||lesson.lesson_type!=="video")return json({success:false,error:"Published video lesson not available"},404,origin);
     const match=String(lesson.video_url||"").match(/^cfstream:([a-f0-9]{32})$/i);
     if(!match)return json({success:false,error:"No Cloudflare video assigned"},404,origin);
-    const {data:adminAccess}=await supabase.from("admin_profiles").select("id").eq("id",auth.user!.id).eq("active",true).maybeSingle();
-    if(!adminAccess){
+    if(!isStaff){
       const {data:enrollment}=await supabase.from("course_enrollments").select("status,expires_at").eq("course_id",lesson.course_id).eq("user_id",auth.user!.id).in("status",["active","completed"]).maybeSingle();
       if(!enrollment||(enrollment.expires_at&&new Date(enrollment.expires_at).getTime()<=Date.now()))return json({success:false,error:"You are not enrolled in this course"},403,origin);
     }
