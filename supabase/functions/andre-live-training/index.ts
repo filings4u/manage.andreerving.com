@@ -130,7 +130,15 @@ Deno.serve(async(req:Request)=>{
  }
  if(action==="register"||action==="unregister"){
   if(!uuid(sessionId))throw new Error("Valid session required");
-  const rpc=dbError(await db.rpc("live_training_registration",{p_session:sessionId,p_cancel:action==="unregister"}));
+  // The service-role client has no auth.uid() claim. Execute the registration
+  // RPC as the verified learner so its SECURITY DEFINER checks their identity.
+  const anonKey=env("SUPABASE_ANON_KEY");
+  if(!anonKey)throw new Error("Registration auth configuration is unavailable.");
+  const learnerDb=createClient(env("SUPABASE_URL"),anonKey,{
+    auth:{persistSession:false,autoRefreshToken:false},
+    global:{headers:{Authorization:"Bearer "+token}}
+  });
+  const rpc=dbError(await learnerDb.rpc("live_training_registration",{p_session:sessionId,p_cancel:action==="unregister"}));
   return reply({success:true,status:rpc});
  }
  if(action==="join"){
