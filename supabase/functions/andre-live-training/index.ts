@@ -35,6 +35,85 @@ async function teams(s:any){
  if(!r.ok)throw new Error(m?.error?.message||"Microsoft Graph meeting request failed ("+r.status+")");
  return {id:m.id||s.meeting_id,url:m.joinWebUrl||s.meeting_url};
 }
+
+const escapeMail=(v:any)=>String(v??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]||ch));
+const brandLogo="https://gnfyidajbectlppsekzj.supabase.co/storage/v1/object/public/Andre%20Erving%20Public/logos/logo.png";
+function trainingEmail(session:any,person:any,kind:"student_registered"|"admin_registered"|"student_cancelled"|"admin_cancelled",url:string){
+ const isAdmin=kind.startsWith("admin"),cancelled=kind.endsWith("cancelled");
+ const headline=cancelled?"Live Training Registration Cancelled":isAdmin?"New Live Training Registration":"Your Live Training Is Confirmed";
+ const name=escapeMail(person.full_name||person.email||"Student");
+ const when=new Intl.DateTimeFormat("en-US",{dateStyle:"full",timeStyle:"short",timeZone:session.timezone||"America/Chicago"}).format(new Date(session.start_at));
+ const end=new Intl.DateTimeFormat("en-US",{timeStyle:"short",timeZone:session.timezone||"America/Chicago"}).format(new Date(session.end_at));
+ const description=isAdmin?(cancelled?"A student cancelled a reserved training session.":"A student registered for instructor-led training."):(cancelled?"Your seat has been cancelled.":"Your seat is reserved. You can attend the meeting inside the Andre Erving student portal. Join Meeting opens 30 minutes before the session.");
+ return '<!doctype html><html><body style="margin:0;padding:30px 14px;background:#edf2f9;font-family:Arial,Helvetica,sans-serif;color:#173451"><table role="presentation" style="margin:auto;max-width:620px;width:100%;border-spacing:0;background:#fff;border-radius:12px;overflow:hidden"><tr><td style="background:#122c4a;padding:28px 32px;border-bottom:4px solid #d59e25"><img src="'+brandLogo+'" alt="Andre Erving" width="240" style="max-width:100%;height:auto"><p style="color:#f0b542;font-size:12px;letter-spacing:1px;font-weight:700">GROWTH · STRATEGY · EDUCATION</p></td></tr><tr><td style="padding:30px"><h1 style="font-size:24px;margin:0 0 16px">'+headline+'</h1><p style="font-size:15px;line-height:1.6">'+description+'</p><div style="background:#f4f7fc;border:1px solid #dfe7ef;padding:18px;border-radius:9px;line-height:1.9"><strong>Course:</strong> '+escapeMail(session.title)+'<br><strong>Date:</strong> '+escapeMail(when)+' – '+escapeMail(end)+' ('+escapeMail(session.timezone||"America/Chicago")+')<br><strong>Instructor:</strong> '+escapeMail(session.host_name||"Andre Erving Training")+(isAdmin?'<br><strong>Student:</strong> '+name+'<br><strong>Email:</strong> '+escapeMail(person.email):"")+'</div><p style="margin:28px 0"><a href="'+escapeMail(url)+'" style="display:inline-block;background:#2453a0;color:#fff;padding:14px 22px;border-radius:8px;text-decoration:none;font-weight:bold">'+(isAdmin?"Manage Live Training":"Open Live Training Sessions")+'</a></p><p style="font-size:13px;color:#647b96">Questions? Contact support@andreerving.com.</p></td></tr></table></body></html>';
+}
+function calendarIcs(s:any){
+ const fmt=(v:string)=>new Date(v).toISOString().replace(/[-:]/g,"").replace(/\.\d{3}/,"");
+ const escape=(v:string)=>String(v).replace(/\\/g,"\\\\").replace(/[\r\n]+/g,"\\n").replace(/,/g,"\\,").replace(/;/g,"\\;");
+ return ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Andre Erving//Live Training//EN","METHOD:PUBLISH","BEGIN:VEVENT","UID:"+s.id+"@andreerving.com","DTSTAMP:"+fmt(new Date().toISOString()),"DTSTART:"+fmt(s.start_at),"DTEND:"+fmt(s.end_at),"SUMMARY:"+escape(s.title),"DESCRIPTION:"+escape("Join in your student portal at https://app.andreerving.com/#/live-training"),"URL:https://app.andreerving.com/#/live-training","END:VEVENT","END:VCALENDAR"].join("\r\n");
+}
+async function sendRegistrationNotices(db:any,s:any,person:any,kind:"registered"|"cancelled",userId:string){
+ const apiKey=env("RESEND_API_KEY"),sender=env("ANDRE_LIVE_TRAINING_FROM_EMAIL")||"Andre Erving <support@andreerving.com>";
+ const customer=String(person.email||"").trim(),admins=String(env("ANDRE_LIVE_TRAINING_ADMIN_EMAIL")||"support@andreerving.com").split(/[,;]/).map(x=>x.trim()).filter(Boolean);
+ const results:any={};
+ for(const [who,recipients] of [["student",[customer]],["admin",admins]] as const){
+  const event=(who+"_"+kind) as "student_registered"|"admin_registered"|"student_cancelled"|"admin_cancelled";
+  for(const recipient of recipients){
+   if(!recipient)continue;
+   const key=who+"_"+recipient;
+   const subject=(kind==="registered"?(who==="student"?"Live Training Confirmed":"New Student Live Training Registration"):(who==="student"?"Live Training Registration Cancelled":"Student Cancelled Live Training"))+" — "+s.title;
+   const url=who==="admin"?"https://manage.andreerving.com/#/admin/live_training":"https://app.andreerving.com/#/live-training";
+   let status="failed",providerId=null,errorMessage="";
+   try{
+    if(!apiKey)throw Error("RESEND_API_KEY is not configured");
+    const payload:any={from:sender,to:[recipient],subject,html:trainingEmail(s,person,event,url)};
+    if(who==="student"&&kind==="registered"){
+     const bytes=new TextEncoder().encode(calendarIcs(s));
+     let binary="";for(const byte of bytes)binary+=String.fromCharCode(byte);
+     payload.attachments=[{filename:"andre-erving-live-training.ics",content:btoa(binary)}];
+    }
+    const response=await fetch("https://api.resend.com/emails",{method:"POST",headers:{"Authorization":"Bearer "+apiKey,"Content-Type":"application/json"},body:JSON.stringify(payload)});
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok)throw Error("Resend returned HTTP "+response.status);
+    providerId=data.id||null;status="sent";
+   }catch(e){errorMessage=String((e as Error).message||"Email not sent").slice(0,240);console.error("Live training notification delivery failed",{event,status,error: errorMessage})}
+   results[key]=status;
+   // No student receives access to this audit table; all writes use the service role.
+   const saved=await db.from("live_training_notification_log").upsert({session_id:s.id,user_id:userId,recipient_email:recipient,notification_type:event,delivery_status:status,provider_message_id:providerId,error_message:errorMessage||null,sent_at:new Date().toISOString()},{onConflict:"session_id,user_id,notification_type"});
+   if(saved.error)console.error("Live training mail audit write failed",saved.error.code);
+  }
+ }
+ return results;
+}
+async function calendarAccessToken(){
+ checkMicrosoftSecrets();
+ const r=await fetch("https://login.microsoftonline.com/"+encodeURIComponent(env("MICROSOFT_TENANT_ID"))+"/oauth2/v2.0/token",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({client_id:env("MICROSOFT_CLIENT_ID"),client_secret:env("MICROSOFT_CLIENT_SECRET"),scope:"https://graph.microsoft.com/.default",grant_type:"client_credentials"})});
+ const j=await r.json().catch(()=>({}));if(!r.ok||!j.access_token)throw Error("Microsoft calendar authentication failed");
+ const middle=String(j.access_token).split(".")[1];let roles:string[]=[];
+ try{const body=JSON.parse(atob(middle.replace(/-/g,"+").replace(/_/g,"/").padEnd(Math.ceil(middle.length/4)*4,"=")));roles=Array.isArray(body.roles)?body.roles:[]}catch{}
+ if(!roles.includes("Calendars.ReadWrite"))throw Error("Microsoft Graph Application permission Calendars.ReadWrite is missing. Add it in Entra App registrations > API permissions and grant admin consent. This is separate from OnlineMeetings.ReadWrite.All.");
+ return j.access_token as string;
+}
+async function syncCalendarEvent(s:any,operation:"upsert"|"delete"="upsert"){
+ const token=await calendarAccessToken(),organizer=encodeURIComponent(env("MICROSOFT_TEAMS_ORGANIZER_USER_ID"));
+ const base="https://graph.microsoft.com/v1.0/users/"+organizer+"/events";
+ const target=s.microsoft_event_id?base+"/"+encodeURIComponent(s.microsoft_event_id):base;
+ const isDelete=operation==="delete",method=isDelete?"DELETE":s.microsoft_event_id?"PATCH":"POST";
+ const body=isDelete?undefined:JSON.stringify({
+  subject:s.title,
+  body:{contentType:"HTML",content:'<p>Andre Erving Live Training — Attend inside the portal: <a href="https://app.andreerving.com/#/live-training">Open Live Training</a>.</p>'},
+  start:{dateTime:new Date(s.start_at).toISOString().replace("Z",""),timeZone:"UTC"},
+  end:{dateTime:new Date(s.end_at).toISOString().replace("Z",""),timeZone:"UTC"},
+  location:{displayName:"Andre Erving Online Classroom"},
+  showAs:"busy",isReminderOn:true,reminderMinutesBeforeStart:30,
+  isOnlineMeeting:false,attendees:[]
+ });
+ const r=await fetch(target,{method,headers:{Authorization:"Bearer "+token,"Content-Type":"application/json"},body});
+ const data=r.status===204?{}:await r.json().catch(()=>({}));
+ if(!r.ok)throw Error("Microsoft Outlook calendar error: "+(data.error?.message||"HTTP "+r.status));
+ return {event_id:isDelete?null:data.id||s.microsoft_event_id||null};
+}
+
 Deno.serve(async(req:Request)=>{
  const origin=req.headers.get("Origin")||"";const headers={"Content-Type":"application/json","Access-Control-Allow-Origin":origins.has(origin)?origin:"https://app.andreerving.com","Access-Control-Allow-Headers":"authorization, apikey, content-type, x-client-info","Access-Control-Allow-Methods":"POST, OPTIONS","Vary":"Origin"};
  const reply=(data:any,status=200)=>new Response(JSON.stringify(data),{status,headers});
