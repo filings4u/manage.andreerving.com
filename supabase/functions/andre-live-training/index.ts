@@ -155,11 +155,22 @@ Deno.serve(async(req:Request)=>{
   if(now<start-30*60000||now>end+60*60000)return reply({error:"The meeting room opens 30 minutes before class and closes one hour afterward.",join_available_at:new Date(start-30*60000).toISOString()},403);
   const connection=env("AZURE_COMMUNICATION_SERVICES_CONNECTION_STRING")||env("ACS_CONNECTION_STRING");
   if(!connection)return reply({error:"Embedded meetings need Azure Communication Services. Add AZURE_COMMUNICATION_SERVICES_CONNECTION_STRING to the Andre Erving Supabase Edge Function secrets. Your Microsoft Teams credentials alone do not enable embedded video."},409);
+  // Validate format without revealing secret values in error messages or logs.
+  const parts=connection.split(";").map(x=>x.trim()).filter(Boolean);
+  const entries=new Map(parts.map(part=>{const i=part.indexOf("=");return i<0?["", ""]:[part.slice(0,i).trim().toLowerCase(),part.slice(i+1).trim()]}));
+  const endpoint=entries.get("endpoint")||"",accessKey=entries.get("accesskey")||"";
+  if(!/^https:\/\/[a-z0-9.-]+\.communication\.azure\.com\/?$/i.test(endpoint)||!accessKey||parts.length!==2){
+    return reply({error:"The Azure Communication Services secret has the wrong format. In Azure Portal > Communication Services > Keys, copy the complete Primary connection string (Endpoint=https://...communication.azure.com;AccessKey=...), and paste it as AZURE_COMMUNICATION_SERVICES_CONNECTION_STRING in Supabase. Do not use only the Access Key or a Microsoft Teams client secret."},409);
+  }
   let issued;
   try{
    const identity=new CommunicationIdentityClient(connection);
    issued=await identity.createUserAndToken(["voip"],{tokenExpiresInMinutes:60});
-  }catch(e){console.error("ACS identity token issuance failed",e);return reply({error:"The embedded meeting service could not issue a calling token. Check the Azure Communication Services connection string."},503)}
+  }catch(e){
+   // Do not log the SDK error: malformed credentials can be reflected verbatim.
+   console.error("ACS token issuance unsuccessful; no credential details logged");
+   return reply({error:"The Azure Communication Services connection string has the correct structure, but Azure rejected the token request. Verify that the connection string was copied from the Azure Communication Services resource's Keys page and its access key is current."},503);
+  }
   return reply({success:true,session_id:s.id,title:s.title,starts_at:s.start_at,ends_at:s.end_at,meeting_link:s.meeting_url,acs:{user_id:issued.user.communicationUserId,token:issued.token,expires_at:issued.expiresOn?.toISOString?.()||null},display_name:clean(user.user_metadata?.full_name||user.email?.split("@")[0]||"Student",120)});
  }
  if(action==="join"){
