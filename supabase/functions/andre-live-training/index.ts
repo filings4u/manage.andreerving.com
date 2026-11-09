@@ -30,11 +30,12 @@ Deno.serve(async(req:Request)=>{
  const {data:staff}=await db.from("admin_profiles").select("id,role,active").eq("id",user.id).maybeSingle();
  const isStaff=!!staff?.active&&["admin","manager","editor"].includes(staff.role);
  const body=await req.json().catch(()=>({}));const action=clean(body.action,30);
- const management=new Set(["staff_list","create","update","schedule","cancel","attendees","mark_attendance","delete"]);
+ const management=new Set(["config_status","staff_list","create","update","schedule","cancel","attendees","mark_attendance","delete"]);
  if(management.has(action)&&!isStaff)return reply({error:"Management access required"},403);
  const dbError=(r:any)=>{if(r.error)throw r.error;return r.data};
  const sessionId=clean(body.session_id,50);
  const selectSession=async()=>{if(!uuid(sessionId))throw new Error("Valid session ID required");const a=dbError(await db.from("live_training_sessions").select("*").eq("id",sessionId).maybeSingle());if(!a)throw new Error("Session not found");return a};
+ if(action==="config_status"){return reply({success:true,teams_configured:["MICROSOFT_TENANT_ID","MICROSOFT_CLIENT_ID","MICROSOFT_CLIENT_SECRET","MICROSOFT_TEAMS_ORGANIZER_USER_ID"].every(key=>!!env(key)),missing_secret_names:["MICROSOFT_TENANT_ID","MICROSOFT_CLIENT_ID","MICROSOFT_CLIENT_SECRET","MICROSOFT_TEAMS_ORGANIZER_USER_ID"].filter(key=>!env(key))})}
  if(action==="staff_list"){
   const courses=dbError(await db.from("courses").select("id,title,status").order("title").limit(500));
   const sessions=dbError(await db.from("live_training_sessions").select("*").order("start_at",{ascending:false}).limit(500));
@@ -74,7 +75,7 @@ Deno.serve(async(req:Request)=>{
   return reply({success:true,attendees:attendees.map((a:any)=>({...a,name:profiles.find((p:any)=>p.id===a.user_id)?.full_name||"",email:profiles.find((p:any)=>p.id===a.user_id)?.email||""}))});
  }
  if(action==="mark_attendance"){
-  await selectSession();if(!uuid(body.user_id)||!["attended","no_show","registered"].includes(body.status))throw new Error("Invalid attendance status");
+  await selectSession();if(!uuid(body.user_id)||!["attended","no_show","registered","cancelled"].includes(body.status))throw new Error("Invalid attendance status");
   const a=dbError(await db.from("live_training_attendees").update({status:body.status,updated_at:new Date().toISOString()}).eq("session_id",sessionId).eq("user_id",body.user_id).select("id"));
   if(!a?.length)throw new Error("Registration not found");return reply({success:true});
  }
