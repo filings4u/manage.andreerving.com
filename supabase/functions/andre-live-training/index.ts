@@ -16,8 +16,10 @@ function checkMicrosoftSecrets(){
  if(!microsoftGuid.test(env("MICROSOFT_CLIENT_ID")))
   throw new Error("MICROSOFT_CLIENT_ID must be the Microsoft Entra application's Application (client) ID in GUID format, not a secret value.");
  const organizer=env("MICROSOFT_TEAMS_ORGANIZER_USER_ID");
- if(!microsoftGuid.test(organizer)&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(organizer))
-  throw new Error("MICROSOFT_TEAMS_ORGANIZER_USER_ID must be an Entra user object ID (GUID) or the Teams organizer's user principal name (email format).");
+ if(!microsoftGuid.test(organizer)&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(organizer)){
+  const kind=/^[a-f0-9]{64}$/i.test(organizer)?"a 64-character hexadecimal value (likely a secret or hash, not a Microsoft user ID)":/^[a-f0-9]{32}$/i.test(organizer)?"a 32-character hexadecimal value without GUID separators":/^https?:\/\//i.test(organizer)?"a URL":/^['"].*['"]$/.test(organizer)?"a quoted value (remove the quotation marks)":"a value that is neither a GUID nor a user principal name";
+  throw new Error("MICROSOFT_TEAMS_ORGANIZER_USER_ID is configured, but contains "+kind+". Replace its value with the organizer's Microsoft Entra user Object ID (xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx) or Microsoft 365 sign-in address (user@company.com). Do not use a Teams meeting ID, app secret, or secret ID.");
+ }
  return names;
 }
 async function teams(s:any){
