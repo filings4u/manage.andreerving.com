@@ -3,7 +3,7 @@ import {createLessonStudio} from './lms-lesson-studio.js?v=unsaved-20261107';
 /* Andre Erving LMS studio. Auth and authorization are supplied by the management app;
    Supabase RLS is the server-side enforcement for every operation. */
 export function createLMS({db,root,notify,safe,isCurrent}){
-  const s={courses:[],modules:[],lessons:[],enrollments:[],customers:[],courseId:null,tab:"overview",term:"",categoryFilter:"",busy:false,editor:null,nextEditRoute:null,collapsed:new Set(),drag:null,reordering:false,previewLessonId:null,progressCache:new Map(),progressPending:new Set()};
+  const s={courses:[],modules:[],lessons:[],enrollments:[],customers:[],publications:[],courseId:null,tab:"overview",term:"",categoryFilter:"",busy:false,editor:null,nextEditRoute:null,collapsed:new Set(),drag:null,reordering:false,previewLessonId:null,progressCache:new Map(),progressPending:new Set()};
   const esc=safe;
   const fmt=v=>v?new Date(v).toLocaleDateString():"—";
   const money=n=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(Number(n)||0);
@@ -25,18 +25,20 @@ export function createLMS({db,root,notify,safe,isCurrent}){
     throw Error("LMS catalog exceeds the current 20,000-record safety limit. Narrow or paginate the query.");
   }
   async function refresh(){try{
-    const [a,b,c,d,e]=await Promise.all([
+    const [a,b,c,d,e,pubs]=await Promise.all([
       list("courses"),list("course_modules"),list("course_lessons"),
       list("course_enrollments","id,user_id,course_id,status,enrolled_at,expires_at","enrolled_at"),
-      list("customer_profiles","id,email,full_name","email")
+      list("customer_profiles","id,email,full_name","email"),
+      list("course_publications","course_id,published_at,revision,has_unpublished_changes","course_id")
     ]);
     if(!isCurrent())return;
-    Object.assign(s,{courses:a,modules:b,lessons:c,enrollments:d,customers:e});
+    Object.assign(s,{courses:a,modules:b,lessons:c,enrollments:d,customers:e,publications:pubs});
     if(s.courseId&&!a.some(x=>x.id===s.courseId)){s.courseId=null;s.tab="overview"}
     s.progressCache.clear();
     render();
   }catch(e){if(isCurrent())root.innerHTML='<div class="notice error">Unable to load LMS data: '+esc(e.message)+'</div>';}}
   const current=()=>s.courses.find(x=>x.id===s.courseId);
+  const publishedState=()=>s.publications.find(p=>p.course_id===s.courseId);
   const related=(key)=>s[key].filter(x=>x.course_id===s.courseId);
   const escAttr=esc;
   const sectionHeader=(head,sub)=>'<div class="lms-heading"><div><div class="eyebrow">ANDRE ERVING / LEARNING MANAGEMENT</div><h1>'+esc(head)+'</h1><p class="muted">'+esc(sub)+'</p></div></div>';
@@ -219,7 +221,7 @@ export function createLMS({db,root,notify,safe,isCurrent}){
   }
   function renderSettings(c,enrollments){
     return '<div class="ae-settings-intro"><div><span class="ae-editor-eyebrow">COURSE CONFIGURATION</span><h2>Manage your course settings</h2><p>Control visibility, edit enrollment rules and maintain your published program.</p></div><button type="button" class="btn secondary" data-edit-course>Edit course details →</button></div>'+
-      '<div class="lms-two-col ae-settings-layout"><section class="panel ae-settings-publish"><span class="ae-editor-eyebrow">VISIBILITY & PUBLISHING</span><h2>Publication status</h2><p class="muted">Draft courses are not shown as published in the learning catalog. Publish when your curriculum is ready.</p><div class="lms-status-row"><span>Current status</span><span class="pill '+esc(c.status)+'">'+esc(c.status)+'</span></div><div class="ae-settings-facts"><div><strong>Course URL</strong><span>'+esc(c.slug)+'</span></div><div><strong>Student access</strong><span>'+(c.access_days?esc(c.access_days)+" days":"Unlimited")+'</span></div></div><div class="row-actions">'+(c.status!=="published"?'<button class="btn" data-status="published">Publish course</button>':'<button class="btn secondary" data-status="draft">Unpublish course</button>')+'<button class="btn secondary" data-edit-course>Edit settings</button></div></section>'+
+      '<div class="lms-two-col ae-settings-layout"><section class="panel ae-settings-publish"><span class="ae-editor-eyebrow">VISIBILITY & PUBLISHING</span><h2>Publication status</h2><p class="muted">All editing stays in draft until you explicitly publish a new revision. Enrolled students continue seeing the previous published content.</p><div class="lms-status-row"><span>Current status</span><span class="pill '+esc(c.status)+'">'+esc(c.status)+'</span></div><p class="notice" role="status">'+(publishedState()?.has_unpublished_changes?'Unpublished changes waiting for approval.':'Student content matches the published revision.')+' Revision '+(publishedState()?.revision||0)+'.</p><div class="ae-settings-facts"><div><strong>Course URL</strong><span>'+esc(c.slug)+'</span></div><div><strong>Student access</strong><span>'+(c.access_days?esc(c.access_days)+" days":"Unlimited")+'</span></div></div><div class="row-actions">'+'<button class="btn" data-status="published">'+(c.status==="published"?"Publish changes":"Publish course")+'</button>'+(c.status==="published"?'<button class="btn secondary" data-status="draft">Unpublish course</button>':'')+'<button class="btn secondary" data-edit-course>Edit settings</button></div></section>'+
       '<section class="panel ae-settings-danger"><span class="ae-editor-eyebrow">LIFECYCLE MANAGEMENT</span><h2>Archive or delete</h2><p class="muted">Archiving removes this course from publication without deleting student history. Permanent deletion removes the course and curriculum.</p><div class="ae-settings-warning">Permanent deletion is blocked when enrollments exist. Check student access before making destructive changes.</div><div class="row-actions"><button class="btn secondary" data-status="archived">Archive course</button><button class="btn danger" id="lms-delete-course" '+(enrollments.length?'disabled title="Remove enrollments before deleting"':'')+'>Permanently delete</button></div>'+(enrollments.length?'<p class="notice">'+enrollments.length+' enrollment record(s) prevent deletion.</p>':'')+'</section></div>';
   }
   function wireTab(){
@@ -748,10 +750,7 @@ export function createLMS({db,root,notify,safe,isCurrent}){
       onOpenLesson:(id)=>openLessonForm(s.lessons.find(l=>l.id===id)),
       onAddChapter:()=>{s.editor=null;s.tab="curriculum";openRoute("course/"+course.id+"/curriculum");render();openModuleForm()},
       onAddLesson:(target)=>openLessonForm(null,target),
-      onPublish:async()=>{try{
-        const {error}=await db.from("courses").update({status:"published"}).eq("id",course.id);
-        if(error)throw error;notify("Course published. Save any lesson changes separately.");await refresh();
-      }catch(error){notify(error.message||String(error),true)}},
+      onPublish:async()=>{try{await publishRevision(course);await refresh()}catch(error){notify(error.message||String(error),true)}},
 
       onCancel:()=>{s.editor=null;openRoute("course/"+course.id+"/curriculum");s.tab="curriculum";render()},
       onLibrarySelect:chooseLibraryVideo,
@@ -825,11 +824,19 @@ export function createLMS({db,root,notify,safe,isCurrent}){
       await save("course_enrollments",data,record?.id);if(!record)sessionStorage.removeItem("ae_enrollment_return");notify(record?"Enrollment updated":"Student enrolled");
     });
   }
+  async function publishRevision(c){
+    const {data,error}=await db.rpc("publish_course_revision",{p_course_id:c.id});
+    if(error)throw error;
+    const published=data?.[0];
+    notify("Published revision "+(published?.revision||"new")+". Students will now see the approved course content.");
+  }
   async function changeStatus(status){
     const c=current();if(!c)return;
-    if(status==="published"&&!related("modules").length)return notify("Add a section before publishing.",true);
-    if(status==="published"&&!related("lessons").length)return notify("Add at least one lesson before publishing.",true);
-    if(status==="published"&&!await brandedConfirm("Publish course","Publish "+c.title+"? The course will be available to the public catalog."))return;
+    if(status==="published"){
+      if(!related("modules").length||!related("lessons").length)return notify("Add course modules and lessons before publishing.",true);
+      if(!await brandedConfirm("Publish changes","Publish all saved changes to "+c.title+"? Students will see the new revision."))return;
+      try{await publishRevision(c);await refresh()}catch(error){warn(error)}return;
+    }
     const r=await db.from("courses").update({status}).eq("id",c.id);if(r.error)return warn(r.error);notify("Course status updated");await refresh();
   }
   async function deleteRecord(table,id){
