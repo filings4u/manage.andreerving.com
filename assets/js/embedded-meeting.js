@@ -83,11 +83,13 @@ export function createEmbeddedMeeting({root,api,sessionId,escapeHTML,onExit}){
    const lobby=$('ae-room-lobby'),meeting=$('ae-room-connected');
    if(lobby)lobby.hidden=v!=='InLobby';
    if(meeting)meeting.hidden=v!=='Connected';
+   if(v==='InLobby'||v==='Connected')message('');
    if(v==='Disconnected')message('You have left or the meeting has ended.');
  }
  async function enter(){
   const button=$('ae-room-enter');if(!button||started)return;
   button.disabled=true;button.textContent='Connecting to classroom…';
+  message('');
   try{
     const data=await api('embedded_token',{session_id:sessionId});
     if(destroyed)return;
@@ -97,6 +99,7 @@ export function createEmbeddedMeeting({root,api,sessionId,escapeHTML,onExit}){
     if(destroyed)return;
     call=callAgent.join({meetingLink:data.meeting_link},{audioOptions:{muted:micMuted},videoOptions:cameraOn&&localVideo?{localVideoStreams:[localVideo]}:undefined});
     started=true;
+    message('');
     const onState=()=>stateChanged(),onParticipants=e=>{for(const p of e.added||[])subscribeRemote(p);for(const p of e.removed||[])for(const stream of p.videoStreams||[])removeRemote(p,stream)};
     call.on('stateChanged',onState);call.on('remoteParticipantsUpdated',onParticipants);
     subscriptions.add(()=>call?.off('stateChanged',onState));subscriptions.add(()=>call?.off('remoteParticipantsUpdated',onParticipants));
