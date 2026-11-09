@@ -235,7 +235,10 @@ async function fulfillFreeOrder(orderId:string,staff:{id:string}){
   await update("crm_order_invoices","?order_id=eq."+o.id,{invite_sent_at:new Date().toISOString()});
  }
  if(!m?.receipt_sent_at){
-  await brandedMail(o.customer_email,"Andre Erving — Your Free Access Receipt",'<h1 style="font-size:24px">Your access is confirmed</h1><p>Hi '+esc(o.customer_name||first)+', your complimentary order has been completed.</p><p><strong>Order:</strong> '+esc(o.order_number)+'</p><p><strong>Total:</strong> $0.00 (Free Access)</p><p>You will receive a separate secure account activation invitation.</p>');
+  const freeItems=await rows("order_items","?select=item_name,course_id,quantity&order_id=eq."+o.id);
+  const entitlements=freeItems.map((item:any)=>String(item.item_name||"").trim()).filter(Boolean);
+  const accessHtml=entitlements.length?'<div style="margin:20px 0;padding:18px;background:#f3f6fb;border:1px solid #e0e8f1;border-radius:9px"><strong>Your complimentary access includes:</strong><ul style="margin:10px 0 0;padding-left:22px">'+entitlements.map((item:string)=>'<li style="padding:4px 0">'+esc(item)+'</li>').join("")+'</ul></div>':'<p>You can view your assigned training in your customer portal.</p>';
+  await brandedMail(o.customer_email,"Andre Erving — Your Free Access Receipt",'<h1 style="font-size:24px">Your access is confirmed</h1><p>Hi '+esc(o.customer_name||first)+', your complimentary order has been completed.</p><p><strong>Order:</strong> '+esc(o.order_number)+'</p><p><strong>Total:</strong> $0.00 (Free Access)</p>'+accessHtml+'<p>Access your training at <a href="https://app.andreerving.com/">Andre Erving Customer Portal</a>. Your account activation invitation is sent separately.</p>');
   await update("crm_order_invoices","?order_id=eq."+o.id,{receipt_sent_at:new Date().toISOString(),completed_at:new Date().toISOString()});
  }
  return account;
