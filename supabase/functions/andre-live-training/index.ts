@@ -73,7 +73,7 @@ Deno.serve(async(req:Request)=>{
     success:false,authentication_ok:true,online_meetings_permission:false,
     error:"Microsoft authentication succeeded, but the app token does not have OnlineMeetings.ReadWrite.All. In Microsoft Entra > App registrations > API permissions, add Microsoft Graph APPLICATION permission OnlineMeetings.ReadWrite.All, then Grant admin consent. An application access policy for the Teams organizer is also needed to create meetings."
   },409);
-  return reply({success:true,configured:true,authentication_ok:true,organizer_name:"Configured Teams organizer",online_meetings_permission:true,note:"Microsoft authentication and OnlineMeetings.ReadWrite.All application consent verified. Teams application access policy and organizer meeting creation require a scheduled meeting to test."});
+  return reply({success:true,configured:true,authentication_ok:true,organizer_name:"Configured Teams organizer",online_meetings_permission:true,embedded_meeting_configured:!!(env("AZURE_COMMUNICATION_SERVICES_CONNECTION_STRING")||env("ACS_CONNECTION_STRING")),note:"Teams creation permission verified. Embedded in-portal calling additionally requires an Azure Communication Services connection string."});
  }
  if(action==="staff_list"){
   const courses=dbError(await db.from("courses").select("id,title,status").order("title").limit(500));
