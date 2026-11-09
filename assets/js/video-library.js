@@ -1,7 +1,7 @@
 /* Shared video library: Cloudflare Stream holds media once; lessons store cfstream:uid references. */
 export function createVideoLibrary({db,root,notify,safe,isCurrent}){
  const CATEGORIES=["Software Walkthrough","Practical Demonstration","Case Study","Lecture","Compliance Training","Assessment","Reference","Other"];
- let records=[],courses=[],modules=[],lessons=[],term="",filter="",courseFilter="",moduleFilter="",busy=false;
+ let records=[],courses=[],modules=[],lessons=[],term="",filter="",courseFilter="",moduleFilter="",page=0,busy=false;
  const $=s=>root.querySelector(s);
  const all=s=>[...root.querySelectorAll(s)];
  const clean=v=>String(v||"").trim();
@@ -62,35 +62,47 @@ export function createVideoLibrary({db,root,notify,safe,isCurrent}){
  };
  const categorySelect=(selected="",id="video-category")=>'<select id="'+id+'">'+[...new Set([...CATEGORIES,...records.map(x=>x.category),selected])].filter(Boolean).map(x=>'<option value="'+safe(x)+'" '+(x===selected?'selected':'')+'>'+safe(x)+'</option>').join('')+'</select>';
  async function load(){
-   const [v,c,m,l]=await Promise.all([
-     db.from("course_video_library").select("*").order("created_at",{ascending:false}).limit(1000),
-     db.from("courses").select("id,title,category,status").order("title").limit(1000),
-     db.from("course_modules").select("id,course_id,title,sort_order").order("sort_order").limit(5000),
-     db.from("course_lessons").select("id,course_id,module_id,title,sort_order").order("sort_order").limit(10000)
+   const fetchPages=async(table,cols,order,limit=20000)=>{
+     const items=[],batch=500;
+     for(let offset=0;offset<limit;offset+=batch){
+       const r=await db.from(table).select(cols).order(order,{ascending:order!=="created_at"}).order("id").range(offset,offset+batch-1);
+       if(r.error)throw r.error;items.push(...(r.data||[]));
+       if((r.data||[]).length<batch)return items;
+     }
+     throw Error("Video Library reached the 20,000-record safety limit. Use archival pagination.");
+   };
+   [records,courses,modules,lessons]=await Promise.all([
+     fetchPages("course_video_library","*","created_at"),
+     fetchPages("courses","id,title,category,status","title"),
+     fetchPages("course_modules","id,course_id,title,sort_order","sort_order"),
+     fetchPages("course_lessons","id,course_id,module_id,title,sort_order","sort_order")
    ]);
-   for(const r of [v,c,m,l])if(r.error)throw r.error;
-   records=v.data||[];courses=c.data||[];modules=m.data||[];lessons=l.data||[];
    render();
  }
  function render(){
    if(!isCurrent())return;
    const shown=records.filter(v=>(!filter||v.category===filter)&&(!courseFilter||v.course_id===courseFilter)&&(!moduleFilter||v.module_id===moduleFilter)&&[v.title,v.category,v.topic,v.description,v.original_filename,courseName(v.course_id),moduleName(v.module_id),lessonName(v.lesson_id)].join(" ").toLowerCase().includes(term.toLowerCase()));
    const categories=[...new Set([...CATEGORIES,...records.map(v=>v.category)])].sort();
+   const pageSize=24,totalPages=Math.max(1,Math.ceil(shown.length/pageSize));
+   page=Math.min(page,totalPages-1);
+   const pageItems=shown.slice(page*pageSize,(page+1)*pageSize);
    root.innerHTML='<div class="vl-page"><div class="vl-heading"><div><span class="vl-eyebrow">ANDRE ERVING / LEARNING MANAGEMENT</span><h1>Video Library</h1><p>Upload once, organize by category, then use the same video across multiple course lessons.</p></div><button type="button" class="btn" id="vl-add">+ Upload video</button></div>'+
     '<div class="vl-stats"><div><span>Library videos</span><strong>'+records.length+'</strong></div><div><span>Ready</span><strong>'+records.filter(v=>v.status==="ready").length+'</strong></div><div><span>Courses</span><strong>'+courses.length+'</strong></div><div><span>Modules</span><strong>'+modules.length+'</strong></div></div>'+
     catalogTree()+'<section class="vl-panel"><div class="vl-toolbar vl-filters"><label>Search videos<input type="search" id="vl-search" placeholder="Search title, topic, module, filename…" value="'+safe(term)+'"></label>'+
     '<label>Course<select id="vl-course-filter">'+groupedCourseOptions(courseFilter,"All courses / shared")+'</select></label>'+
     '<label>Module<select id="vl-module-filter">'+catalogOptions(modules.filter(m=>m.course_id===courseFilter),moduleFilter,"All modules")+'</select></label>'+
     '<label>Media type<select id="vl-filter"><option value="">All types</option>'+categories.map(c=>'<option value="'+safe(c)+'" '+(filter===c?'selected':'')+'>'+safe(c)+'</option>').join('')+'</select></label></div>'+
-    '<div class="vl-grid">'+shown.map(v=>'<article class="vl-card" data-card="'+safe(v.id)+'"><div class="vl-card-top"><span class="vl-category">'+safe(v.category)+'</span><span class="vl-status '+safe(v.status)+'">'+statusLabel(v.status)+'</span></div><p class="vl-path">'+safe(courses.find(c=>c.id===v.course_id)?.category||"Shared")+' / '+safe(courseName(v.course_id))+' / '+safe(v.module_id?moduleName(v.module_id):"Unassigned module")+(v.lesson_id?' / '+safe(lessonName(v.lesson_id)):'')+'</p><h3>'+safe(v.title)+'</h3><p>'+safe(v.description||"No description added.")+'</p>'+(v.topic?'<p class="vl-topic">Topic: '+safe(v.topic)+'</p>':'')+'<small>'+Math.round(Number(v.duration_seconds)||0)+' seconds · '+safe(v.original_filename||"Cloudflare Stream")+'</small><div class="vl-actions"><button type="button" data-edit="'+safe(v.id)+'">Edit details</button><button type="button" data-check="'+safe(v.id)+'">Check status</button><button type="button" data-detach="'+safe(v.id)+'">Course attachments</button><button type="button" data-delete="'+safe(v.id)+'" class="vl-danger">Remove</button></div></article>').join('')+'</div>'+(shown.length?'':'<p class="vl-empty">No videos match. Upload a video to build your library.</p>')+'</section><div id="vl-modal-root"></div></div>';
+    '<div class="vl-grid">'+pageItems.map(v=>'<article class="vl-card" data-card="'+safe(v.id)+'"><div class="vl-card-top"><span class="vl-category">'+safe(v.category)+'</span><span class="vl-status '+safe(v.status)+'">'+statusLabel(v.status)+'</span></div><p class="vl-path">'+safe(courses.find(c=>c.id===v.course_id)?.category||"Shared")+' / '+safe(courseName(v.course_id))+' / '+safe(v.module_id?moduleName(v.module_id):"Unassigned module")+(v.lesson_id?' / '+safe(lessonName(v.lesson_id)):'')+'</p><h3>'+safe(v.title)+'</h3><p>'+safe(v.description||"No description added.")+'</p>'+(v.topic?'<p class="vl-topic">Topic: '+safe(v.topic)+'</p>':'')+'<small>'+Math.round(Number(v.duration_seconds)||0)+' seconds · '+safe(v.original_filename||"Cloudflare Stream")+'</small><div class="vl-actions"><button type="button" data-edit="'+safe(v.id)+'">Edit details</button><button type="button" data-check="'+safe(v.id)+'">Check status</button><button type="button" data-detach="'+safe(v.id)+'">Course attachments</button><button type="button" data-delete="'+safe(v.id)+'" class="vl-danger">Remove</button></div></article>').join('')+'</div>'+(shown.length?'':'<p class="vl-empty">No videos match. Upload a video to build your library.</p>')+'<div class="vl-pagination"><span>Showing '+(shown.length?page*pageSize+1:0)+'–'+Math.min((page+1)*pageSize,shown.length)+' of '+shown.length+' videos</span><div><button type="button" id="vl-prev" '+(page===0?'disabled':'')+'>Previous</button><span>Page '+(page+1)+' of '+totalPages+'</span><button type="button" id="vl-next" '+(page+1>=totalPages?'disabled':'')+'>Next</button></div></div></section><div id="vl-modal-root"></div></div>';
    $("#vl-add").onclick=()=>showUpload();
-   all("[data-browse-course]").forEach(b=>b.onclick=()=>{courseFilter=b.dataset.browseCourse;moduleFilter="";render()});
-   all("[data-browse-module]").forEach(b=>b.onclick=()=>{courseFilter=b.dataset.parentCourse;moduleFilter=b.dataset.browseModule;render()});
-   all("[data-browse-all]").forEach(b=>b.onclick=()=>{courseFilter="";moduleFilter="";filter="";term="";render()});
-   $("#vl-search").oninput=e=>{term=e.target.value;render();const input=$("#vl-search");input.focus();input.setSelectionRange(term.length,term.length)};
-   $("#vl-filter").onchange=e=>{filter=e.target.value;render()};
-   $("#vl-course-filter").onchange=e=>{courseFilter=e.target.value;moduleFilter="";render()};
-   $("#vl-module-filter").onchange=e=>{moduleFilter=e.target.value;render()};
+   $("#vl-prev").onclick=()=>{page=Math.max(0,page-1);render()};
+   $("#vl-next").onclick=()=>{page=Math.min(totalPages-1,page+1);render()};
+   all("[data-browse-course]").forEach(b=>b.onclick=()=>{courseFilter=b.dataset.browseCourse;moduleFilter="";page=0;render()});
+   all("[data-browse-module]").forEach(b=>b.onclick=()=>{courseFilter=b.dataset.parentCourse;moduleFilter=b.dataset.browseModule;page=0;render()});
+   all("[data-browse-all]").forEach(b=>b.onclick=()=>{courseFilter="";moduleFilter="";filter="";term="";page=0;render()});
+   $("#vl-search").oninput=e=>{term=e.target.value;page=0;render();const input=$("#vl-search");input.focus();input.setSelectionRange(term.length,term.length)};
+   $("#vl-filter").onchange=e=>{filter=e.target.value;page=0;render()};
+   $("#vl-course-filter").onchange=e=>{courseFilter=e.target.value;moduleFilter="";page=0;render()};
+   $("#vl-module-filter").onchange=e=>{moduleFilter=e.target.value;page=0;render()};
    $("#vl-module-filter").disabled=!courseFilter;
    all("[data-edit]").forEach(b=>b.onclick=()=>showEdit(records.find(v=>v.id===b.dataset.edit)));
    all("[data-check]").forEach(b=>b.onclick=()=>check(records.find(v=>v.id===b.dataset.check)));
