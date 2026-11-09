@@ -31,11 +31,13 @@ function calendarIcs(s:any){
 async function sendRegistrationNotices(db:any,s:any,person:any,kind:"registered"|"cancelled",userId:string){
  const apiKey=env("RESEND_API_KEY"),sender=env("ANDRE_LIVE_TRAINING_FROM_EMAIL")||"Andre Erving <support@andreerving.com>";
  const customer=String(person.email||"").trim();
- const adminEmails=String(env("ANDRE_LIVE_TRAINING_ADMIN_EMAIL")||"").split(/[,;]/).map(x=>x.trim()).filter(Boolean);
+ const blockedAdmins=new Set(["andre@andreerving.com"]);
+ const adminEmails=String(env("ANDRE_LIVE_TRAINING_ADMIN_EMAIL")||"").split(/[,;]/).map(x=>x.trim().toLowerCase()).filter(x=>x&&!blockedAdmins.has(x));
  const adminRecords=await db.from("admin_profiles").select("email").eq("active",true).eq("role","admin").limit(20);
- const admins=[...new Set([...adminEmails,...(adminRecords.data||[]).map((x:any)=>String(x.email||"").trim()).filter(Boolean)])];
+ if(adminRecords.error)throw adminRecords.error;
+ const admins=[...new Set([...adminEmails,...(adminRecords.data||[]).map((x:any)=>String(x.email||"").trim().toLowerCase()).filter(x=>x&&!blockedAdmins.has(x)))];
  if(!admins.length)admins.push("support@andreerving.com");
- const results:any={};
+ const results:any={student:"skipped",admin:"skipped",admin_recipients:{}};
  for(const [who,recipients] of [["student",[customer]],["admin",admins]] as const){
   const event=(who+"_"+kind) as "student_registered"|"admin_registered"|"student_cancelled"|"admin_cancelled";
   for(const recipient of recipients){
@@ -56,7 +58,8 @@ async function sendRegistrationNotices(db:any,s:any,person:any,kind:"registered"
     if(!response.ok)throw Error("Resend returned HTTP "+response.status);
     providerId=data.id||null;status="sent";
    }catch(e){errorMessage=String((e as Error).message||"Email not sent").slice(0,240);console.error("Live training notification delivery failed",{event,status,error: errorMessage})}
-   results[who]=results[who]==="failed"?"failed":status;
+   if(who==="admin")results.admin_recipients[recipient]=status;
+   results[who]=status==="failed"?"failed":results[who]==="failed"?"failed":"sent";
    // No student receives access to this audit table; all writes use the service role.
    const saved=await db.from("live_training_notification_log").upsert({session_id:s.id,user_id:userId,recipient_email:recipient,notification_type:event,delivery_status:status,provider_message_id:providerId,error_message:errorMessage||null,sent_at:new Date().toISOString()},{onConflict:"session_id,user_id,notification_type"});
    if(saved.error)console.error("Live training mail audit write failed",saved.error.code);
