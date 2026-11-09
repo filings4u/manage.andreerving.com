@@ -1,0 +1,30 @@
+/* Embedded live-training classroom, using the same ACS calling workflow as Screenings4U */
+#ae-embedded-room{min-height:65vh}
+.ae-room-shell{display:grid;gap:18px;color:#143354}
+.ae-room-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.ae-room-heading h1{font-size:28px;letter-spacing:-.03em;margin:9px 0}
+.ae-room-heading p{color:#647c95;line-height:1.5}
+.ae-room-prejoin{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr);gap:18px}
+.ae-room-preview,.ae-room-prejoin-details,.ae-room-in-call{background:#fff;border:1px solid #d9e4ef;border-radius:16px;overflow:hidden}
+.ae-room-preview{min-height:360px;background:#132b47;display:grid;place-items:center;color:#f0f6ff}
+.ae-room-preview video{width:100%;height:100%;object-fit:cover}
+.ae-room-camera-off{text-align:center;color:#d3dfeb;font-size:16px;font-weight:700}
+.ae-room-prejoin-details{padding:30px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center}
+.ae-room-prejoin-details h2{font-size:25px;margin:8px 0}
+.ae-room-prejoin-details p{color:#60768b;line-height:1.6}
+.ae-room-prejoin-details .ae-room-note{font-size:12px}
+.ae-room-controls,.ae-room-call-controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.ae-room-controls{margin:16px 0 24px}
+.ae-room-message{padding:14px;border-radius:10px;background:#eaf1fb;border:1px solid #c9d9ec;color:#214e79}
+.ae-room-message.error{background:#fff3ec;border-color:#f3cdbc;color:#aa482b}
+.ae-room-in-call{padding:16px;background:#eff4fa}
+.ae-room-gallery{min-height:360px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:12px;background:#132b47;border-radius:12px;padding:14px;align-items:stretch}
+.ae-room-remote-tile{min-height:250px;position:relative;overflow:hidden;background:#0b2037;border-radius:10px;display:grid;place-items:center}
+.ae-room-remote-tile>div{width:100%;height:100%}
+.ae-room-person{position:absolute;bottom:10px;left:10px;color:#fff;background:#0b2037c9;border-radius:6px;padding:6px 9px;font-size:12px}
+.ae-room-empty{align-self:center;justify-self:center;color:#d9e7f5;font-size:14px;text-align:center}
+.ae-room-lobby{padding:75px 20px;text-align:center;background:#fff;border-radius:12px}
+.ae-room-lobby p{color:#607790}
+.ae-room-call-controls{justify-content:center;margin-top:16px}
+#ae-room-leave{background:#a52f33;border-color:#a52f33;color:#fff}
+@media(max-width:850px){.ae-room-prejoin{grid-template-columns:1fr}.ae-room-preview{min-height:260px}.ae-room-prejoin-details{padding:22px}.ae-room-heading{flex-direction:column}}
