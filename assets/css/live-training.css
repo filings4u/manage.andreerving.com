@@ -53,3 +53,14 @@
 .lt-dialog #lt-confirm-yes.lt-danger:hover{background:#912b2b}
 .lt-dialog #lt-confirm-no:focus-visible,.lt-dialog #lt-confirm-yes:focus-visible{outline:3px solid #639bdd;outline-offset:2px}
 @media(max-width:560px){.lt-dialog:has(#lt-confirm-title) header{padding:20px}.lt-dialog #lt-confirm-description{padding:20px!important}.lt-dialog:has(#lt-confirm-title) footer{padding:15px 20px}.lt-dialog #lt-confirm-no,.lt-dialog #lt-confirm-yes{flex:1}}
+
+/* Branded attendee management controls */
+.lt-dialog .lt-attendee{align-items:center;flex-wrap:wrap;background:#fbfcfe;gap:12px}
+.lt-dialog .lt-attendee>div{flex:1 1 160px;min-width:0}
+.lt-dialog .lt-attendee select{width:auto;min-width:130px;max-width:180px;margin:0;padding:10px 12px;border-radius:8px;border:1px solid #cbd8e9;background:#fff;color:#193454;font-size:13px}
+.lt-dialog .lt-attendee .lt-resend{appearance:none;min-height:39px;border:1px solid #2453a0;background:#2453a0;color:#fff;font:inherit;font-size:12px;font-weight:700;padding:10px 15px;border-radius:8px;cursor:pointer;white-space:nowrap}
+.lt-dialog .lt-attendee .lt-resend:hover{background:#173d7e}
+.lt-dialog .lt-attendee .lt-resend:disabled{opacity:.55;cursor:wait}
+.lt-dialog .lt-attendee .lt-resend:focus-visible{outline:3px solid #89b8ff;outline-offset:2px}
+.lt-dialog footer .btn,.lt-dialog footer button{font:inherit;font-size:13px;font-weight:700;border-radius:8px;min-height:40px;padding:9px 17px;cursor:pointer}
+.lt-dialog footer .btn.secondary{background:#fff;color:#1e4268;border:1px solid #cedbea}
