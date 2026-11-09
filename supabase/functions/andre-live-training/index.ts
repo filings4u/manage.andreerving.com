@@ -5,6 +5,14 @@ const env=(key:string)=>Deno.env.get(key)?.trim()||"";
 const clean=(x:any,max=250)=>String(x??"").trim().slice(0,max);
 const uuid=(x:any)=>/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(x||""));
 const err=(e:any)=>e?.message||String(e);
+const DEFAULT_TEAMS_MEETING_URL="https://teams.microsoft.com/meet/2407922688544968?p=OZT6iByBC2oLTUI1A0";
+function validatedMeetingUrl(input:any){
+ const raw=clean(input,2000)||DEFAULT_TEAMS_MEETING_URL;
+ let url:URL;try{url=new URL(raw)}catch{throw new Error("Enter a valid Microsoft Teams meeting link.")}
+ if(url.protocol!=="https:"||url.hostname.toLowerCase()!=="teams.microsoft.com"||(!url.pathname.startsWith("/meet/")&&!url.pathname.startsWith("/l/meetup-join/"))||url.username||url.password)throw new Error("Use a valid https://teams.microsoft.com/meet/... or Teams meeting invitation link.");
+ return url.toString();
+}
+
 const microsoftGuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const microsoftDomain=/^(?=.{4,253}$)[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/i;
 function checkMicrosoftSecrets(){
@@ -198,15 +206,16 @@ Deno.serve(async(req:Request)=>{
   const start=new Date(body.start_at),end=new Date(body.end_at);
   if(!Number.isFinite(start.getTime())||!Number.isFinite(end.getTime()))throw new Error("Enter valid start and end dates.");if(start<=new Date())throw new Error("The session start must be in the future.");if(end<=start)throw new Error("The end time must be after the start time.");if(end.getTime()-start.getTime()>8*3600000)throw new Error("The selected session lasts longer than 8 hours. End it within 8 hours of the start, or create separate sessions for each training day.");
   const {data:course,error:ce}=await db.from("courses").select("id,title").eq("id",body.course_id).maybeSingle();if(ce||!course)throw new Error("Course not found");
-  const row={course_id:course.id,title:clean(body.title,160)||course.title+" — Live Training",description:clean(body.description,2500),start_at:start.toISOString(),end_at:end.toISOString(),timezone:clean(body.timezone,80)||"America/Chicago",capacity:Math.max(1,Math.min(1000,Math.trunc(Number(body.capacity)||30))),status:"draft",host_name:clean(body.host_name,120)||"Andre Erving Training",created_by:user.id};
+  const row={course_id:course.id,title:clean(body.title,160)||course.title+" — Live Training",description:clean(body.description,2500),start_at:start.toISOString(),end_at:end.toISOString(),timezone:clean(body.timezone,80)||"America/Chicago",capacity:Math.max(1,Math.min(1000,Math.trunc(Number(body.capacity)||30))),status:"draft",host_name:clean(body.host_name,120)||"Andre Erving Training",meeting_provider:"microsoft_teams",meeting_url:validatedMeetingUrl(body.meeting_url),meeting_id:null,meeting_organizer_user_id:null,created_by:user.id};
   return reply({success:true,session:dbError(await db.from("live_training_sessions").insert(row).select("*").single())});
  }
  if(action==="update"){
   const session=await selectSession();if(session.status==="cancelled"||session.status==="completed")throw new Error("Completed or cancelled sessions cannot be edited");
   const start=new Date(body.start_at),end=new Date(body.end_at);
   if(!Number.isFinite(start.getTime())||!Number.isFinite(end.getTime()))throw new Error("Enter valid start and end dates.");if(start<=new Date())throw new Error("The session start must be in the future.");if(end<=start)throw new Error("The end time must be after the start time.");if(end.getTime()-start.getTime()>8*3600000)throw new Error("The selected session lasts longer than 8 hours. End it within 8 hours of the start, or create separate sessions for each training day.");
-  const row={title:clean(body.title,160),description:clean(body.description,2500),start_at:start.toISOString(),end_at:end.toISOString(),timezone:clean(body.timezone,80)||"America/Chicago",capacity:Math.max(1,Math.min(1000,Math.trunc(Number(body.capacity)||30))),host_name:clean(body.host_name,120)||"Andre Erving Training",updated_at:new Date().toISOString()};
-  if(session.status==="scheduled"&&session.meeting_id){const meeting=await teams({...session,...row});row["meeting_id"]=meeting.id;row["meeting_url"]=meeting.url}
+  const row={title:clean(body.title,160),description:clean(body.description,2500),start_at:start.toISOString(),end_at:end.toISOString(),timezone:clean(body.timezone,80)||"America/Chicago",capacity:Math.max(1,Math.min(1000,Math.trunc(Number(body.capacity)||30))),host_name:clean(body.host_name,120)||"Andre Erving Training",meeting_url:validatedMeetingUrl(body.meeting_url??session.meeting_url),meeting_provider:"microsoft_teams",updated_at:new Date().toISOString()};
+  // Manual Teams links are owned by the instructor. Never mutate or re-create the meeting via Graph.
+  if(row.meeting_url!==session.meeting_url){row["meeting_id"]=null;row["meeting_organizer_user_id"]=null;}
   const updated=dbError(await db.from("live_training_sessions").update(row).eq("id",session.id).select("*").single());
   if(session.status==="scheduled"&&session.microsoft_event_id){
    try{await syncCalendarEvent(updated);await db.from("live_training_sessions").update({calendar_sync_error:null}).eq("id",session.id)}
@@ -217,13 +226,10 @@ Deno.serve(async(req:Request)=>{
  if(action==="schedule"){
   const session=await selectSession();if(["cancelled","completed"].includes(session.status))throw new Error("This session cannot be scheduled");
   if(new Date(session.start_at)<=new Date())throw new Error("Start date must be in the future");
-  let meeting;try{meeting=await teams(session)}catch(e){await db.from("live_training_sessions").update({teams_error:err(e)}).eq("id",session.id);throw e}
-  const row:any={meeting_provider:"microsoft_teams",meeting_id:meeting.id,meeting_url:meeting.url,meeting_organizer_user_id:env("MICROSOFT_TEAMS_ORGANIZER_USER_ID"),teams_error:null,status:"scheduled",updated_at:new Date().toISOString()};
-  let calendarStatus="synced",calendarError="";
-  try{const event=await syncCalendarEvent({...session,...row});row.microsoft_event_id=event.event_id;row.calendar_sync_error=null}
-  catch(e){calendarStatus="failed";calendarError=err(e);row.calendar_sync_error=calendarError.slice(0,500);console.error("Outlook event sync failed",{reason:calendarError.slice(0,160)})}
+  const row={meeting_provider:"microsoft_teams",meeting_url:validatedMeetingUrl(session.meeting_url),meeting_id:null,meeting_organizer_user_id:null,teams_error:null,status:"scheduled",updated_at:new Date().toISOString()};
   const saved=dbError(await db.from("live_training_sessions").update(row).eq("id",session.id).select("*").single());
-  return reply({success:true,session:saved,calendar_status:calendarStatus,calendar_error:calendarError});
+  // Instructor-owned meetings: no Graph meeting creation and no fake calendar success.
+  return reply({success:true,session:saved,calendar_status:saved.microsoft_event_id?"existing":"not_synced",manual_meeting:true});
  }
  if(action==="calendar_sync"){
   const session=await selectSession();
