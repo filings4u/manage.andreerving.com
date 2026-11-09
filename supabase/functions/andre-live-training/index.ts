@@ -13,7 +13,7 @@ function validatedMeetingUrl(input:any){
 }
 
 const escapeMail=(v:any)=>String(v??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]||ch));
-const brandLogo="https://gnfyidajbectlppsekzj.supabase.co/storage/v1/object/public/Andre%20Erving%20Public/logos/logo2.png";
+const brandLogo="https://gnfyidajbectlppsekzj.supabase.co/storage/v1/object/public/Andre%20Erving%20Public/logos/logo.png";
 function trainingEmail(session:any,person:any,kind:"student_registered"|"admin_registered"|"student_cancelled"|"admin_cancelled",url:string){
  const isAdmin=kind.startsWith("admin"),cancelled=kind.endsWith("cancelled");
  const headline=cancelled?"Live Training Registration Cancelled":isAdmin?"New Live Training Registration":"Your Live Training Is Confirmed";
@@ -78,7 +78,7 @@ Deno.serve(async(req:Request)=>{
  const {data:staff}=await db.from("admin_profiles").select("id,role,active").eq("id",user.id).maybeSingle();
  const isStaff=!!staff?.active&&["admin","manager","editor"].includes(staff.role);
  const body=await req.json().catch(()=>({}));const action=clean(body.action,30);
- const management=new Set(["staff_list","create","update","schedule","delivery_status","resend_confirmation","cancel","attendees","mark_attendance","delete"]);
+ const management=new Set(["staff_list","create","update","schedule","delivery_status","resend_confirmation","cancel","attendees","mark_attendance","delete","customer_search","add_customer"]);
  if(management.has(action)&&!isStaff)return reply({error:"Management access required"},403);
  const dbError=(r:any)=>{if(r.error)throw r.error;return r.data};
  const sessionId=clean(body.session_id,50);
@@ -132,6 +132,32 @@ Deno.serve(async(req:Request)=>{
   const session=await selectSession();
   const saved=dbError(await db.from("live_training_sessions").update({status:"cancelled",updated_at:new Date().toISOString()}).eq("id",session.id).select("*").single());
   return reply({success:true,session:saved});
+ }
+ if(action==="customer_search"){
+  const term=clean(body.query,100).replace(/[%,()]/g,"").trim();
+  if(term.length<2)return reply({success:true,customers:[]});
+  const match="%"+term+"%";
+  const result=dbError(await db.from("customer_profiles").select("id,full_name,email").or("full_name.ilike."+match+",email.ilike."+match).order("full_name").limit(30));
+  return reply({success:true,customers:result});
+ }
+ if(action==="add_customer"){
+  const s=await selectSession();
+  if(s.status!=="scheduled")return reply({error:"Only scheduled sessions accept customer invitations"},409);
+  if(new Date(s.start_at).getTime()<=Date.now())return reply({error:"The session has already started"},409);
+  const target=clean(body.user_id,50);
+  if(!uuid(target))return reply({error:"Select a customer"},400);
+  const customer=dbError(await db.from("customer_profiles").select("id,full_name,email").eq("id",target).maybeSingle());
+  if(!customer?.email)return reply({error:"Customer does not have a valid email"},404);
+  const enrollment=dbError(await db.from("course_enrollments").select("status,expires_at").eq("user_id",target).eq("course_id",s.course_id).in("status",["active","completed"]).limit(10));
+  if(!enrollment.some((x:any)=>!x.expires_at||new Date(x.expires_at)>new Date()))return reply({error:"Customer does not have access to this course"},403);
+  const existing=dbError(await db.from("live_training_attendees").select("id,status").eq("session_id",s.id).eq("user_id",target).maybeSingle());
+  if(existing&&["registered","attended"].includes(existing.status))return reply({success:true,already_registered:true,notifications:{},message:"Customer already registered; use Send Confirmation to resend the invitation."});
+  const current=dbError(await db.from("live_training_attendees").select("id").eq("session_id",s.id).in("status",["registered","attended"]));
+  if(current.length>=s.capacity)return reply({error:"The meeting has reached capacity"},409);
+  if(existing)dbError(await db.from("live_training_attendees").update({status:"registered",registered_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq("id",existing.id));
+  else dbError(await db.from("live_training_attendees").insert({session_id:s.id,user_id:target,status:"registered"}));
+  const notifications=await sendRegistrationNotices(db,s,customer,"registered",target);
+  return reply({success:true,already_registered:false,notifications,message:notifications.student==="sent"?"Customer registered and meeting invitation sent.":"Customer registered, but the email invitation could not be confirmed. Use Send Confirmation to retry."});
  }
  if(action==="attendees"){
   const session=await selectSession();const attendees=dbError(await db.from("live_training_attendees").select("*").eq("session_id",session.id).order("registered_at"));
