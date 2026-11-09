@@ -35,7 +35,7 @@ async function sendRegistrationNotices(db:any,s:any,person:any,kind:"registered"
  const adminEmails=String(env("ANDRE_LIVE_TRAINING_ADMIN_EMAIL")||"").split(/[,;]/).map(x=>x.trim().toLowerCase()).filter(x=>x&&!blockedAdmins.has(x));
  const adminRecords=await db.from("admin_profiles").select("email").eq("active",true).eq("role","admin").limit(20);
  if(adminRecords.error)throw adminRecords.error;
- const admins=[...new Set([...adminEmails,...(adminRecords.data||[]).map((x:any)=>String(x.email||"").trim().toLowerCase()).filter(x=>x&&!blockedAdmins.has(x)))];
+ const admins=[...new Set([...adminEmails,...(adminRecords.data||[]).map((x:any)=>String(x.email||"").trim().toLowerCase()).filter(x=>x&&!blockedAdmins.has(x))])];
  if(!admins.length)admins.push("support@andreerving.com");
  const results:any={student:"skipped",admin:"skipped",admin_recipients:{}};
  for(const [who,recipients] of [["student",[customer]],["admin",admins]] as const){
