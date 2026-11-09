@@ -25,11 +25,36 @@ export function createLiveTrainingManagement({db,root,notify,isCurrent}){
   const close=()=>layer.remove();
   layer.querySelector("#lt-close").onclick=close;layer.querySelector("#lt-cancel").onclick=close;
   layer.onclick=e=>{if(e.target===layer)close()};
+  const formNode=layer.querySelector("#lt-form");
+  const startInput=formNode.elements.namedItem("start_at");
+  const endInput=formNode.elements.namedItem("end_at");
+  // Default to a 60-minute session. Keep an explicitly edited end time intact.
+  if(!s.id&&!endInput.value){
+   const initial=new Date(Date.now()+2*3600000);
+   initial.setMinutes(0,0,0);
+   startInput.value=toLocal(initial);
+   endInput.value=toLocal(new Date(initial.getTime()+3600000));
+  }
+  let endEdited=!!s.id;
+  endInput.addEventListener("input",()=>{endEdited=true});
+  startInput.addEventListener("change",()=>{
+   const next=new Date(startInput.value);
+   if(!Number.isFinite(next.getTime()))return;
+   const finish=new Date(endInput.value);
+   if(!endEdited||!Number.isFinite(finish.getTime())||finish<=next){
+    endInput.value=toLocal(new Date(next.getTime()+3600000));
+    endEdited=false;
+   }
+  });
   layer.querySelector("#lt-form").onsubmit=async e=>{
    e.preventDefault();const form=e.currentTarget,values=Object.fromEntries(new FormData(form));
    if(!s.id)values.course_id=courseId;
    const start=new Date(values.start_at),end=new Date(values.end_at);
-   if(!Number.isFinite(start.getTime())||!Number.isFinite(end.getTime())||end<=start){layer.querySelector("#lt-form-error").textContent="Enter valid start and end times";return}
+   const validation=layer.querySelector("#lt-form-error");
+   if(!Number.isFinite(start.getTime())||!Number.isFinite(end.getTime())){validation.textContent="Choose both a start date/time and an end date/time.";return}
+   if(start<=new Date()){validation.textContent="The session must start in the future.";return}
+   if(end<=start){validation.textContent="The end date/time must be after the start date/time.";return}
+   if(end.getTime()-start.getTime()>8*3600000){validation.textContent="The selected session is longer than 8 hours. Choose an end time within 8 hours of the start, or create separate sessions for different days.";return}
    values.start_at=start.toISOString();values.end_at=end.toISOString();values.capacity=Number(values.capacity);
    const submit=form.querySelector('[type="submit"]');submit.disabled=true;
    try{await api(s.id?"update":"create",s.id?{session_id:s.id,...values}:values);close();notify(s.id?"Session updated.":"Draft session saved.");await load()}
