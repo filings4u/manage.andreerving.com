@@ -693,31 +693,33 @@ export function createLMS({db,root,notify,safe,isCurrent}){
     return data.signedUrl;
   };
   async function chooseLibraryVideo(){
-    const {data,error}=await db.from("course_video_library").select("id,title,category,description,status,stream_uid,duration_seconds").eq("status","ready").order("category").order("title").limit(1000);
+    const {data,error}=await db.from("course_video_library").select("id,title,category,description,status,stream_uid,duration_seconds,course_id,module_id,lesson_id,topic").eq("status","ready").order("category").order("title").limit(1000);
     if(error){notify("Unable to load Video Library: "+error.message,true);return null}
     const videos=data||[];
     return new Promise(resolve=>{
       const backdrop=document.createElement("div");backdrop.className="vl-backdrop";
       const dialog=document.createElement("section");dialog.className="vl-modal vl-picker";dialog.setAttribute("role","dialog");dialog.setAttribute("aria-modal","true");dialog.setAttribute("aria-label","Choose a library video");
-      dialog.innerHTML='<div class="vl-modal-title"><h2>Choose from Video Library</h2><button type="button" class="vl-close" aria-label="Close">×</button></div><p>Use an existing recording without uploading another copy.</p><div class="vl-toolbar"><label>Search videos<input type="search" id="vl-pick-search" placeholder="Search videos…"></label><label>Category<select id="vl-pick-category"><option value="">All categories</option></select></label></div><div id="vl-pick-list" class="vl-pick-list" role="list"></div><div class="vl-modal-actions"><button type="button" class="btn secondary" id="vl-pick-cancel">Cancel</button></div>';
+      dialog.innerHTML='<div class="vl-modal-title"><h2>Choose from Video Library</h2><button type="button" class="vl-close" aria-label="Close">×</button></div><p>Use an existing recording without uploading another copy.</p><div class="vl-toolbar vl-filters"><label>Search videos<input type="search" id="vl-pick-search" placeholder="Search videos…"></label><label>Source<select id="vl-pick-source"><option value="relevant">Current course and shared</option><option value="all">All courses (reuse)</option></select></label><label>Module<select id="vl-pick-module"><option value="">All modules</option></select></label><label>Media type<select id="vl-pick-category"><option value="">All categories</option></select></label></div><div id="vl-pick-list" class="vl-pick-list" role="list"></div><div class="vl-modal-actions"><button type="button" class="btn secondary" id="vl-pick-cancel">Cancel</button></div>';
       backdrop.append(dialog);document.body.append(backdrop);
       const categories=[...new Set(videos.map(v=>v.category))].sort();
       const category=dialog.querySelector("#vl-pick-category");for(const value of categories){const o=document.createElement("option");o.value=value;o.textContent=value;category.append(o)}
       const search=dialog.querySelector("#vl-pick-search"),list=dialog.querySelector("#vl-pick-list");
+      const source=dialog.querySelector("#vl-pick-source"),moduleSelect=dialog.querySelector("#vl-pick-module");
+      for(const mod of s.modules.filter(m=>m.course_id===s.courseId)){const option=document.createElement("option");option.value=mod.id;option.textContent=mod.title;moduleSelect.append(option)}
       const end=chosen=>{document.removeEventListener("keydown",key);backdrop.remove();resolve(chosen)};
       const key=e=>{if(e.key==="Escape")end(null)};
       const show=()=>{
-        const matches=videos.filter(v=>(!category.value||v.category===category.value)&&[v.title,v.category,v.description].join(" ").toLowerCase().includes(search.value.toLowerCase()));
+        const matches=videos.filter(v=>(source.value==="all"||!v.course_id||v.course_id===s.courseId)&&(!moduleSelect.value||v.module_id===moduleSelect.value)&&(!category.value||v.category===category.value)&&[v.title,v.category,v.description,v.topic].join(" ").toLowerCase().includes(search.value.toLowerCase()));
         list.replaceChildren();
         if(!matches.length){const p=document.createElement("p");p.className="vl-empty";p.textContent="No ready videos found. Upload a video to Video Library and check its processing status first.";list.append(p)}
         matches.forEach(video=>{
           const row=document.createElement("button");row.type="button";row.className="vl-pick-row";
           const heading=document.createElement("strong");heading.textContent=video.title;
-          const meta=document.createElement("small");meta.textContent=video.category+" · "+Math.round(Number(video.duration_seconds)||0)+" seconds";
+          const meta=document.createElement("small");meta.textContent=(s.courses.find(c=>c.id===video.course_id)?.title||"Shared media")+" · "+(s.modules.find(m=>m.id===video.module_id)?.title||"No module")+" · "+video.category+" · "+Math.round(Number(video.duration_seconds)||0)+" seconds";
           row.append(heading,meta);row.onclick=()=>end(video);list.append(row);
         });
       };
-      search.oninput=show;category.onchange=show;
+      search.oninput=show;category.onchange=show;moduleSelect.onchange=show;source.onchange=show;
       dialog.querySelector(".vl-close").onclick=()=>end(null);
       dialog.querySelector("#vl-pick-cancel").onclick=()=>end(null);
       backdrop.onclick=e=>{if(e.target===backdrop)end(null)};
