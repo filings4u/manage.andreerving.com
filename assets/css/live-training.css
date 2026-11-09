@@ -34,3 +34,5 @@
 .lt-attendee strong,.lt-attendee small{display:block}.lt-attendee small{font-size:11px;color:#71849c;margin-top:4px}
 .lt-attendee select{width:auto;margin:0}
 @media(max-width:720px){.lt-top,.lt-panel-head{align-items:flex-start;flex-direction:column}.lt-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.lt-form-grid{grid-template-columns:1fr}.lt-panel-head select{width:100%}}
+
+.lt-header-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
