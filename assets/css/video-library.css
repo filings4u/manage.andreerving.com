@@ -39,3 +39,5 @@
 .vl-pick-row strong{font-size:13px}.vl-pick-row small{color:#61778f;font-size:11px}
 .ae-video-library-picker{margin:12px 0}
 @media(max-width:720px){.vl-heading{align-items:flex-start;flex-direction:column}.vl-stats{grid-template-columns:1fr}.vl-toolbar{flex-direction:column;align-items:stretch}.vl-pick-row{align-items:flex-start;flex-direction:column}}
+
+.vl-attachment{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:13px;border:1px solid #d9e3ee;border-radius:9px;background:#f8fbff}.vl-attachment strong{display:block;font-size:13px;color:#173455}.vl-attachment small{display:block;margin-top:4px;color:#647993;font-size:11px}.vl-attachment button{flex:none}@media(max-width:600px){.vl-attachment{align-items:flex-start;flex-direction:column}}
