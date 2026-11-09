@@ -51,7 +51,7 @@ export function createLiveTrainingManagement({db,root,notify,isCurrent}){
   if(!isCurrent())return;
   const matching=sessions.filter(s=>!filter||s.course_id===filter);
   const next=sessions.filter(s=>s.status==="scheduled"&&new Date(s.start_at)>new Date()).length;
-  root.innerHTML='<div class="lt-page"><header class="lt-top"><div><span class="lt-eyebrow">ANDRE ERVING / LEARNING MANAGEMENT</span><h1>Live Training Sessions</h1><p>Schedule instructor-led Microsoft Teams sessions, manage registrations, and track attendance across your courses.</p></div><button type="button" class="btn" id="lt-new">+ New live session</button></header>'+
+  root.innerHTML='<div class="lt-page"><header class="lt-top"><div><span class="lt-eyebrow">ANDRE ERVING / LEARNING MANAGEMENT</span><h1>Live Training Sessions</h1><p>Schedule instructor-led Microsoft Teams sessions, manage registrations, and track attendance across your courses.</p></div><div class="lt-header-actions"><button type="button" class="btn secondary" id="lt-test-teams">Test Teams connection</button><button type="button" class="btn" id="lt-new">+ New live session</button></div></header>'+
    '<div class="lt-stats"><div><small>All sessions</small><strong>'+sessions.length+'</strong></div><div><small>Upcoming</small><strong>'+next+'</strong></div><div><small>Drafts</small><strong>'+sessions.filter(s=>s.status==="draft").length+'</strong></div><div><small>Registrations</small><strong>'+attendees.filter(a=>a.status==="registered").length+'</strong></div></div>'+
    '<div class="lt-panel"><div class="lt-panel-head"><h2>Scheduled training</h2><label>Course<select id="lt-filter"><option value="">All courses</option>'+courses.map(c=>'<option value="'+safe(c.id)+'" '+(filter===c.id?"selected":"")+'>'+safe(c.title)+'</option>').join("")+'</select></label></div>'+
    '<div class="lt-grid">'+(matching.length?matching.map(s=>{
@@ -60,6 +60,12 @@ export function createLiveTrainingManagement({db,root,notify,isCurrent}){
      '<div class="lt-actions"><button data-edit="'+safe(s.id)+'">Edit</button>'+(s.status==="draft"?'<button class="lt-primary" data-schedule="'+safe(s.id)+'">Schedule & Create Teams</button>':'')+(s.status==="scheduled"?'<button data-sync="'+safe(s.id)+'">Sync Teams</button>':'')+'<button data-attendees="'+safe(s.id)+'">Attendees</button>'+(s.status==="scheduled"?'<button data-join="'+safe(s.id)+'">Join</button>':'')+(["draft","scheduled"].includes(s.status)?'<button class="lt-danger" data-cancel="'+safe(s.id)+'">Cancel session</button>':'')+'</div></article>'
    }).join(""):'<p class="lt-empty">No live sessions yet. Create a draft to start scheduling Freight Broker Training.</p>')+'</div></div></div>';
   root.querySelector("#lt-new").onclick=()=>editor();
+  root.querySelector("#lt-test-teams").onclick=async e=>{
+   const button=e.currentTarget;button.disabled=true;button.textContent="Checking Microsoft Teams…";
+   try{const response=await api("verify_teams");notify("Teams authenticated: "+response.organizer_name+(response.online_meetings_permission?". OnlineMeetings.ReadWrite.All confirmed.":". Meeting creation permission needs attention."));}
+   catch(err){notify("Teams test failed: "+err.message,true)}
+   finally{button.disabled=false;button.textContent="Test Teams connection"}
+  };
   root.querySelector("#lt-filter").onchange=e=>{filter=e.target.value;render()};
   const on=(selector,fn)=>root.querySelectorAll(selector).forEach(b=>b.onclick=()=>fn(sessions.find(s=>s.id===b.dataset[selector.slice(6,-1)]),b));
   root.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>editor(sessions.find(s=>s.id===b.dataset.edit)));
