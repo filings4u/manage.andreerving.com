@@ -1,15 +1,55 @@
 /* Shared video library: Cloudflare Stream holds media once; lessons store cfstream:uid references. */
 export function createVideoLibrary({db,root,notify,safe,isCurrent}){
- const CATEGORIES=["Shipper Prospecting","Freight Markets & Load Boards","Carrier Vetting","Quoting & Negotiation","Booking & Dispatch","Tracking & Operations","Documents & Billing","Compliance & Safety","Final Practicum","Other"];
- let records=[],term="",filter="",busy=false;
+ const CATEGORIES=["Software Walkthrough","Practical Demonstration","Case Study","Lecture","Compliance Training","Assessment","Reference","Other"];
+ let records=[],courses=[],modules=[],lessons=[],term="",filter="",courseFilter="",moduleFilter="",busy=false;
  const $=s=>root.querySelector(s);
  const all=s=>[...root.querySelectorAll(s)];
  const clean=v=>String(v||"").trim();
  const statusLabel=s=>s==="ready"?"Ready":s==="error"?"Processing error":"Processing";
+ const courseName=id=>courses.find(c=>c.id===id)?.title||"Shared media";
+ const moduleName=id=>modules.find(m=>m.id===id)?.title||"No module";
+ const lessonName=id=>lessons.find(l=>l.id===id)?.title||"No lesson";
+ const catalogOptions=(items,selected,blank)=>'<option value="">'+safe(blank)+'</option>'+items.map(x=>'<option value="'+safe(x.id)+'" '+(x.id===selected?'selected':'')+'>'+safe(x.title)+'</option>').join('');
+ const taxonomyFields=(prefix,video={})=>'<div class="vl-taxonomy"><label>Course'+
+   '<select id="'+prefix+'-course">'+catalogOptions(courses,video.course_id,"Shared / choose later")+'</select></label>'+
+   '<label>Module / section<select id="'+prefix+'-module"></select></label>'+
+   '<label>Lesson (optional)<select id="'+prefix+'-lesson"></select></label>'+
+   '<label>Topic / keywords<input id="'+prefix+'-topic" maxlength="180" placeholder="E.g., Load board search" value="'+safe(video.topic||"")+'"></label></div>'+
+   '<p class="vl-help">Organizing by lesson does not publish or attach a video to the course. Use the lesson editor to add it when ready.</p>';
+ function bindTaxonomy(host,prefix,video={}){
+   const course=host.querySelector("#"+prefix+"-course"),mod=host.querySelector("#"+prefix+"-module"),lesson=host.querySelector("#"+prefix+"-lesson");
+   const fillLessons=selected=>{
+     const choices=lessons.filter(l=>l.module_id===mod.value);
+     lesson.innerHTML=catalogOptions(choices,selected,"No lesson / organize at module level");
+     lesson.disabled=!mod.value||!choices.length;
+   };
+   const fillModules=(selected="",selectedLesson="")=>{
+     const choices=modules.filter(m=>m.course_id===course.value);
+     mod.innerHTML=catalogOptions(choices,selected,"No module / organize at course level");
+     mod.disabled=!course.value||!choices.length;
+     fillLessons(selectedLesson);
+   };
+   course.onchange=()=>fillModules();
+   mod.onchange=()=>fillLessons();
+   fillModules(video.module_id||"",video.lesson_id||"");
+ }
+ const taxonomyValue=(host,prefix)=>({
+   course_id:host.querySelector("#"+prefix+"-course").value||null,
+   module_id:host.querySelector("#"+prefix+"-module").value||null,
+   lesson_id:host.querySelector("#"+prefix+"-lesson").value||null,
+   topic:clean(host.querySelector("#"+prefix+"-topic").value)
+ });
  const categorySelect=(selected="",id="video-category")=>'<select id="'+id+'">'+[...new Set([...CATEGORIES,...records.map(x=>x.category),selected])].filter(Boolean).map(x=>'<option value="'+safe(x)+'" '+(x===selected?'selected':'')+'>'+safe(x)+'</option>').join('')+'</select>';
  async function load(){
-   const r=await db.from("course_video_library").select("*").order("created_at",{ascending:false}).limit(1000);
-   if(r.error)throw r.error;records=r.data||[];render();
+   const [v,c,m,l]=await Promise.all([
+     db.from("course_video_library").select("*").order("created_at",{ascending:false}).limit(1000),
+     db.from("courses").select("id,title,category,status").order("title").limit(1000),
+     db.from("course_modules").select("id,course_id,title,sort_order").order("sort_order").limit(5000),
+     db.from("course_lessons").select("id,course_id,module_id,title,sort_order").order("sort_order").limit(10000)
+   ]);
+   for(const r of [v,c,m,l])if(r.error)throw r.error;
+   records=v.data||[];courses=c.data||[];modules=m.data||[];lessons=l.data||[];
+   render();
  }
  function render(){
    if(!isCurrent())return;
