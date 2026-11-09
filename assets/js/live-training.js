@@ -99,7 +99,7 @@ export function createLiveTrainingManagement({db,root,notify,isCurrent}){
   root.replaceChildren(roomRoot);
   let observer=null,room=null;
   try{
-   const {createEmbeddedMeeting}=await import('./embedded-meeting.js?v=20261109-lobby-clear');
+   const {createEmbeddedMeeting}=await import('./embedded-meeting.js?v=manual-teams-fallback-20261109');
    if(!roomRoot.isConnected||!isCurrent())return;
    const close=()=>{observer?.disconnect();observer=null;const r=room;room=null;if(r)void r.dispose();void load()};
    room=createEmbeddedMeeting({root:roomRoot,api,sessionId:s.id,escapeHTML:safe,onExit:close});
