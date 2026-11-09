@@ -79,8 +79,38 @@ export function createLiveTrainingManagement({db,root,notify,isCurrent}){
   try{
    const {attendees:items}=await api("attendees",{session_id:s.id});
    const layer=document.createElement("div");layer.className="lt-backdrop";
-   layer.innerHTML='<section class="lt-dialog" role="dialog" aria-modal="true" aria-label="Session attendees"><header><h2>Session attendees</h2><button id="lt-close" type="button" aria-label="Close">×</button></header><p class="lt-muted">'+safe(s.title)+' · '+items.length+' registrations</p><div class="lt-attendee-list">'+(items.length?items.map(a=>'<div class="lt-attendee"><div><strong>'+safe(a.name||a.email||a.user_id)+'</strong><small>'+safe(a.email||"")+'</small></div><select data-user="'+safe(a.user_id)+'"><option value="registered" '+(a.status==="registered"?"selected":"")+'>Registered</option><option value="attended" '+(a.status==="attended"?"selected":"")+'>Attended</option><option value="no_show" '+(a.status==="no_show"?"selected":"")+'>No-show</option><option value="cancelled" '+(a.status==="cancelled"?"selected":"")+'>Cancelled</option></select>'+(['registered','attended'].includes(a.status)?'<button class="lt-resend" type="button" data-resend="'+safe(a.user_id)+'">Send Confirmation</button>':'')+'</div>').join(""):'<p>No registrations yet.</p>')+'</div><footer><button class="btn secondary" id="lt-done" type="button">Close</button></footer></section>';
+   layer.innerHTML='<section class="lt-dialog" role="dialog" aria-modal="true" aria-label="Session attendees"><header><h2>Session attendees</h2><button id="lt-close" type="button" aria-label="Close">×</button></header><p class="lt-muted">'+safe(s.title)+' · '+items.length+' registrations</p>'+(s.status==="scheduled"?'<div style="padding:0 24px 14px"><button class="btn" id="lt-add-customer" type="button">+ Add Customer / Send Invitation</button></div>':"")+'<div class="lt-attendee-list">'+(items.length?items.map(a=>'<div class="lt-attendee"><div><strong>'+safe(a.name||a.email||a.user_id)+'</strong><small>'+safe(a.email||"")+'</small></div><select data-user="'+safe(a.user_id)+'"><option value="registered" '+(a.status==="registered"?"selected":"")+'>Registered</option><option value="attended" '+(a.status==="attended"?"selected":"")+'>Attended</option><option value="no_show" '+(a.status==="no_show"?"selected":"")+'>No-show</option><option value="cancelled" '+(a.status==="cancelled"?"selected":"")+'>Cancelled</option></select>'+(['registered','attended'].includes(a.status)?'<button class="lt-resend" type="button" data-resend="'+safe(a.user_id)+'">Send Confirmation</button>':'')+'</div>').join(""):'<p>No registrations yet.</p>')+'</div><footer><button class="btn secondary" id="lt-done" type="button">Close</button></footer></section>';
    document.body.append(layer);const close=()=>layer.remove();layer.querySelector("#lt-close").onclick=close;layer.querySelector("#lt-done").onclick=close;
+   layer.querySelector("#lt-add-customer")?.addEventListener("click",()=>{
+    const dialog=document.createElement("div");dialog.className="lt-backdrop";
+    dialog.innerHTML='<section class="lt-dialog" role="dialog" aria-modal="true" aria-label="Add customer to meeting"><header><h2>Add Customer to Meeting</h2><button type="button" id="lt-add-close" aria-label="Close">×</button></header><div style="padding:20px 24px"><p class="lt-muted">Search existing customers. Only customers with access to this course can be invited.</p><label>Find customer<input type="search" id="lt-customer-search" placeholder="Search name or email" autocomplete="off"></label><div id="lt-customer-results" class="lt-attendee-list" style="max-height:300px;overflow:auto;margin-top:12px"></div><p id="lt-add-error" role="alert"></p></div><footer><button class="btn secondary" id="lt-add-done" type="button">Close</button></footer></section>';
+    document.body.append(dialog);
+    const close=()=>dialog.remove();
+    dialog.querySelector("#lt-add-close").onclick=close;dialog.querySelector("#lt-add-done").onclick=close;
+    const input=dialog.querySelector("#lt-customer-search"),results=dialog.querySelector("#lt-customer-results"),error=dialog.querySelector("#lt-add-error");
+    let sequence=0,timer;
+    input.oninput=()=>{
+     clearTimeout(timer);const term=input.value.trim(),current=++sequence;
+     if(term.length<2){results.textContent="Type at least 2 characters.";return}
+     timer=setTimeout(async()=>{
+      try{
+       const data=await api("customer_search",{query:term});
+       if(current!==sequence)return;
+       results.innerHTML=(data.customers||[]).map(c=>'<div class="lt-attendee"><div><strong>'+safe(c.full_name||c.email)+'</strong><small>'+safe(c.email)+'</small></div><button type="button" data-add-user="'+safe(c.id)+'">Add & Send Invite</button></div>').join("")||'<p>No matching customers.</p>';
+       results.querySelectorAll("[data-add-user]").forEach(button=>button.onclick=async()=>{
+        button.disabled=true;error.textContent="";
+        try{
+         const added=await api("add_customer",{session_id:s.id,user_id:button.dataset.addUser});
+         if(added.already_registered){notify(added.message);close();layer.remove();await manageAttendees(s);return}
+         const sent=added.notifications?.student==="sent";
+         notify(added.message,!sent);close();layer.remove();await load();await manageAttendees(s);
+        }catch(e){error.textContent=e.message;button.disabled=false}
+       });
+      }catch(e){if(current===sequence)error.textContent=e.message}
+     },250);
+    };
+    input.focus();
+   });
    layer.querySelectorAll("[data-resend]").forEach(button=>button.onclick=async()=>{
     button.disabled=true;
     try{
