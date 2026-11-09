@@ -41,3 +41,15 @@
 @media(max-width:720px){.vl-heading{align-items:flex-start;flex-direction:column}.vl-stats{grid-template-columns:1fr}.vl-toolbar{flex-direction:column;align-items:stretch}.vl-pick-row{align-items:flex-start;flex-direction:column}}
 
 .vl-attachment{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:13px;border:1px solid #d9e3ee;border-radius:9px;background:#f8fbff}.vl-attachment strong{display:block;font-size:13px;color:#173455}.vl-attachment small{display:block;margin-top:4px;color:#647993;font-size:11px}.vl-attachment button{flex:none}@media(max-width:600px){.vl-attachment{align-items:flex-start;flex-direction:column}}
+
+/* Multi-course LMS media taxonomy */
+.vl-filters{display:grid;grid-template-columns:minmax(230px,1.6fr) repeat(3,minmax(155px,1fr));gap:12px;align-items:end}
+.vl-filters label{min-width:0}
+.vl-taxonomy{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px;padding:12px 14px;margin:12px 0;border:1px solid #dce5ef;border-radius:10px;background:#f7fafe}
+.vl-taxonomy label{min-width:0;margin:0!important}
+.vl-path{font-size:11px!important;font-weight:650;line-height:1.5;color:#57728e!important;min-height:0!important;margin:0 0 10px!important}
+.vl-topic{font-size:11px!important;min-height:0!important;color:#466987!important;margin:0 0 8px!important}
+.vl-modal .vl-taxonomy select:disabled{background:#eef2f6;color:#74849a}
+.vl-stats{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:1100px){.vl-filters{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:720px){.vl-filters,.vl-taxonomy{grid-template-columns:minmax(0,1fr)}.vl-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
