@@ -4,9 +4,25 @@ const env=(key:string)=>Deno.env.get(key)?.trim()||"";
 const clean=(x:any,max=250)=>String(x??"").trim().slice(0,max);
 const uuid=(x:any)=>/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(x||""));
 const err=(e:any)=>e?.message||String(e);
+const microsoftGuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const microsoftDomain=/^(?=.{4,253}$)[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/i;
+function checkMicrosoftSecrets(){
+ const names=["MICROSOFT_TENANT_ID","MICROSOFT_CLIENT_ID","MICROSOFT_CLIENT_SECRET","MICROSOFT_TEAMS_ORGANIZER_USER_ID"];
+ const missing=names.filter(name=>!env(name));
+ if(missing.length)throw new Error("Missing Microsoft Teams secrets: "+missing.join(", "));
+ const tenant=env("MICROSOFT_TENANT_ID");
+ if(!microsoftGuid.test(tenant)&&!microsoftDomain.test(tenant))
+  throw new Error("MICROSOFT_TENANT_ID must be your Microsoft Entra Directory (tenant) ID (a GUID with hyphens), or a verified tenant domain such as example.onmicrosoft.com. The current value is not a valid tenant identifier.");
+ if(!microsoftGuid.test(env("MICROSOFT_CLIENT_ID")))
+  throw new Error("MICROSOFT_CLIENT_ID must be the Microsoft Entra application's Application (client) ID in GUID format, not a secret value.");
+ const organizer=env("MICROSOFT_TEAMS_ORGANIZER_USER_ID");
+ if(!microsoftGuid.test(organizer)&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(organizer))
+  throw new Error("MICROSOFT_TEAMS_ORGANIZER_USER_ID must be an Entra user object ID (GUID) or the Teams organizer's user principal name (email format).");
+ return names;
+}
 async function teams(s:any){
  const tenant=env("MICROSOFT_TENANT_ID"),id=env("MICROSOFT_CLIENT_ID"),secret=env("MICROSOFT_CLIENT_SECRET"),organizer=env("MICROSOFT_TEAMS_ORGANIZER_USER_ID");
- if(!tenant||!id||!secret||!organizer)throw new Error("Microsoft Teams credentials are not configured in Andre Erving Supabase Edge Function secrets.");
+ checkMicrosoftSecrets();
  const t=await fetch("https://login.microsoftonline.com/"+encodeURIComponent(tenant)+"/oauth2/v2.0/token",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({client_id:id,client_secret:secret,grant_type:"client_credentials",scope:"https://graph.microsoft.com/.default"})});
  const j=await t.json();if(!t.ok||!j.access_token)throw new Error(j.error_description||"Microsoft token request failed");
  const base="https://graph.microsoft.com/v1.0/users/"+encodeURIComponent(organizer)+"/onlineMeetings";
@@ -38,7 +54,7 @@ Deno.serve(async(req:Request)=>{
  if(action==="config_status"){return reply({success:true,teams_configured:["MICROSOFT_TENANT_ID","MICROSOFT_CLIENT_ID","MICROSOFT_CLIENT_SECRET","MICROSOFT_TEAMS_ORGANIZER_USER_ID"].every(key=>!!env(key)),missing_secret_names:["MICROSOFT_TENANT_ID","MICROSOFT_CLIENT_ID","MICROSOFT_CLIENT_SECRET","MICROSOFT_TEAMS_ORGANIZER_USER_ID"].filter(key=>!env(key))})}
  if(action==="verify_teams"){
   const keys=["MICROSOFT_TENANT_ID","MICROSOFT_CLIENT_ID","MICROSOFT_CLIENT_SECRET","MICROSOFT_TEAMS_ORGANIZER_USER_ID"];
-  const missing=keys.filter(k=>!env(k));if(missing.length)return reply({success:false,error:"Missing Microsoft configuration: "+missing.join(", "),missing_secret_names:missing},409);
+  checkMicrosoftSecrets();
   const t=await fetch("https://login.microsoftonline.com/"+encodeURIComponent(env("MICROSOFT_TENANT_ID"))+"/oauth2/v2.0/token",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({client_id:env("MICROSOFT_CLIENT_ID"),client_secret:env("MICROSOFT_CLIENT_SECRET"),grant_type:"client_credentials",scope:"https://graph.microsoft.com/.default"})});
   const j=await t.json();if(!t.ok||!j.access_token)throw new Error(j.error_description||"Microsoft Graph authentication failed");
   const gr=await fetch("https://graph.microsoft.com/v1.0/users/"+encodeURIComponent(env("MICROSOFT_TEAMS_ORGANIZER_USER_ID"))+"?$select=id,displayName",{headers:{Authorization:"Bearer "+j.access_token}});
