@@ -53,3 +53,21 @@
 .vl-stats{grid-template-columns:repeat(4,minmax(0,1fr))}
 @media(max-width:1100px){.vl-filters{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:720px){.vl-filters,.vl-taxonomy{grid-template-columns:minmax(0,1fr)}.vl-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+
+/* Browse all course categories and their modules */
+.vl-course-explorer{margin-bottom:18px}
+.vl-explorer-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+.vl-explorer-head h2{font-size:17px;color:#142e50;margin:0}
+.vl-explorer-head button{border:1px solid #d1ddea;background:#fff;color:#1e4b7b;border-radius:8px;font-weight:700;padding:8px 12px;cursor:pointer}
+.vl-course-group{border-top:1px solid #e5ebf3;padding:12px 0}
+.vl-course-group>summary{cursor:pointer;font-size:13px;font-weight:800;color:#15385e}
+.vl-course-group>summary small{font-weight:500;color:#7488a0;margin-left:8px}
+.vl-course-group-items{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;padding-top:12px}
+.vl-course-tree-entry{border:1px solid #dfe7f1;border-radius:9px;background:#fafcff;padding:12px}
+.vl-course-tree-entry>button{border:0;background:transparent;text-align:left;width:100%;padding:3px 2px 9px;cursor:pointer;color:#15365d;font-size:13px;font-weight:800}
+.vl-course-tree-entry small{color:#7389a1;font-size:11px;font-weight:500}
+.vl-course-tree-modules{display:grid;gap:2px;max-height:260px;overflow:auto}
+.vl-course-tree-modules button{width:100%;text-align:left;display:flex;justify-content:space-between;gap:8px;background:transparent;border:0;border-radius:6px;color:#506b86;font-size:11px;padding:7px 6px;cursor:pointer}
+.vl-course-tree-entry button:hover,.vl-course-tree-entry button.active{background:#eaf2fc;color:#164e8b}
+.vl-course-tree-empty{font-size:11px;color:#8492a5;padding:5px 3px}
