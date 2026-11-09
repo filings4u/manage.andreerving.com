@@ -6,6 +6,20 @@ export function createLiveTrainingManagement({db,root,notify,isCurrent}){
   if(error){let detail=null;try{detail=await error.context?.json()}catch{}throw Error(detail?.error||error.message)}
   if(data?.error)throw Error(data.error);return data;
  };
+ const confirmAction=(title,description,confirmLabel="Confirm",danger=false)=>new Promise(resolve=>{
+  const layer=document.createElement("div");layer.className="lt-backdrop";
+  layer.innerHTML='<section class="lt-dialog" role="dialog" aria-modal="true" aria-labelledby="lt-confirm-title" aria-describedby="lt-confirm-description"><header><h2 id="lt-confirm-title">'+safe(title)+'</h2><button id="lt-confirm-x" type="button" aria-label="Close">×</button></header><p id="lt-confirm-description" style="padding:16px 24px;line-height:1.65">'+safe(description)+'</p><footer><button id="lt-confirm-no" type="button" class="btn secondary">Go Back</button><button id="lt-confirm-yes" type="button" class="'+(danger?'lt-danger':'lt-primary')+'">'+safe(confirmLabel)+'</button></footer></section>';
+  const prior=document.activeElement;
+  const done=answer=>{layer.remove();document.removeEventListener("keydown",keys);prior?.focus?.();resolve(answer)};
+  const keys=e=>{if(e.key==="Escape"){e.preventDefault();done(false)}};
+  layer.querySelector("#lt-confirm-no").onclick=()=>done(false);
+  layer.querySelector("#lt-confirm-x").onclick=()=>done(false);
+  layer.querySelector("#lt-confirm-yes").onclick=()=>done(true);
+  layer.addEventListener("click",e=>{if(e.target===layer)done(false)});
+  document.addEventListener("keydown",keys);
+  document.body.appendChild(layer);
+  layer.querySelector("#lt-confirm-no").focus();
+ });
  const date=x=>new Date(x).toLocaleString(undefined,{dateStyle:"medium",timeStyle:"short"});
  const toLocal=x=>{const d=new Date(x);return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16)};
  const timeValue=s=>s?toLocal(s):"";
@@ -132,11 +146,11 @@ export function createLiveTrainingManagement({db,root,notify,isCurrent}){
    const id=b.dataset.schedule||b.dataset.sync;b.disabled=true;
    try{const response=await api("schedule",{session_id:id});notify(response.calendar_status==="failed"?"Teams meeting ready, but Outlook calendar sync needs attention: "+response.calendar_error:"Teams meeting and Outlook calendar are ready.");await load()}catch(e){notify(e.message,true)}finally{b.disabled=false}
   });
-  root.querySelectorAll("[data-cancel]").forEach(b=>b.onclick=async()=>{if(!confirm("Cancel this live session? Registered students will lose access to its join link."))return;try{await api("cancel",{session_id:b.dataset.cancel});notify("Live session cancelled.");await load()}catch(e){notify(e.message,true)}});
+  root.querySelectorAll("[data-cancel]").forEach(b=>b.onclick=async()=>{if(!await confirmAction("Cancel live session?","Registered students will lose access to this meeting. This cannot be undone.","Cancel Session",true))return;try{await api("cancel",{session_id:b.dataset.cancel});notify("Live session cancelled.");await load()}catch(e){notify(e.message,true)}});
   root.querySelectorAll("[data-reassign]").forEach(b=>b.onclick=async()=>{
     const session=sessions.find(s=>s.id===b.dataset.reassign);
     if(!session)return;
-    if(!confirm("Create a NEW Microsoft Teams meeting hosted by support@andreerving.com for this session? Existing student registrations will be preserved and confirmation emails will be sent. The old Screenings4U meeting link will be replaced in the portal."))return;
+    if(!await confirmAction("Recreate with Andre Erving?","A new meeting will be created with support@andreerving.com as organizer. Student registrations will stay intact, confirmation emails will be sent, and the previous meeting link will be replaced.","Recreate Meeting"))return;
     b.disabled=true;b.textContent="Creating Andre Erving meeting…";
     try{
       const response=await api("reassign_organizer",{session_id:session.id});
