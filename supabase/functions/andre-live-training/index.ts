@@ -7,8 +7,8 @@ const err=(e:any)=>e?.message||String(e);
 const DEFAULT_TEAMS_MEETING_URL="https://teams.microsoft.com/meet/2407922688544968?p=OZT6iByBC2oLTUI1A0";
 function validatedMeetingUrl(input:any){
  const raw=clean(input,2000)||DEFAULT_TEAMS_MEETING_URL;
- let url:URL;try{url=new URL(raw)}catch{throw new Error("Enter a valid Microsoft Teams meeting link.")}
- if(url.protocol!=="https:"||url.hostname.toLowerCase()!=="teams.microsoft.com"||(!url.pathname.startsWith("/meet/")&&!url.pathname.startsWith("/l/meetup-join/"))||url.username||url.password)throw new Error("Use a valid https://teams.microsoft.com/meet/... or Teams meeting invitation link.");
+ let url:URL;try{url=new URL(raw)}catch{throw new Error("Enter a valid meeting link.")}
+ if(url.protocol!=="https:"||url.hostname.toLowerCase()!=="teams.microsoft.com"||(!url.pathname.startsWith("/meet/")&&!url.pathname.startsWith("/l/meetup-join/"))||url.username||url.password)throw new Error("Use a valid meeting invitation link.");
  return url.toString();
 }
 
@@ -20,7 +20,7 @@ function trainingEmail(session:any,person:any,kind:"student_registered"|"admin_r
  const name=escapeMail(person.full_name||person.email||"Student");
  const when=new Intl.DateTimeFormat("en-US",{dateStyle:"full",timeStyle:"short",timeZone:session.timezone||"America/Chicago"}).format(new Date(session.start_at));
  const end=new Intl.DateTimeFormat("en-US",{timeStyle:"short",timeZone:session.timezone||"America/Chicago"}).format(new Date(session.end_at));
- const description=isAdmin?(cancelled?"A student cancelled a reserved training session.":"A student registered for instructor-led training."):(cancelled?"Your seat has been cancelled.":"Your seat is reserved. You can attend the meeting inside the Andre Erving student portal. Join Meeting opens 30 minutes before the session.");
+ const description=isAdmin?(cancelled?"A student cancelled a reserved training session.":"New registration."):(cancelled?"Your seat has been cancelled.":"Your registration is confirmed. Open your student portal to join when the session begins.");
  return '<!doctype html><html><body style="margin:0;padding:30px 14px;background:#edf2f9;font-family:Arial,Helvetica,sans-serif;color:#173451"><table role="presentation" style="margin:auto;max-width:620px;width:100%;border-spacing:0;background:#fff;border-radius:12px;overflow:hidden"><tr><td align="center" style="background:#ffffff;padding:28px 26px 24px;border-bottom:4px solid #d59e25;text-align:center"><img src="'+brandLogo+'" alt="Andre Erving — Growth Strategy Education" width="340" style="display:block;width:100%;max-width:340px;height:auto;margin:0 auto;border:0;outline:none;text-decoration:none"></td></tr><tr><td style="padding:30px"><h1 style="font-size:24px;margin:0 0 16px">'+headline+'</h1><p style="font-size:15px;line-height:1.6">'+description+'</p><div style="background:#f4f7fc;border:1px solid #dfe7ef;padding:18px;border-radius:9px;line-height:1.9"><strong>Course:</strong> '+escapeMail(session.title)+'<br><strong>Date:</strong> '+escapeMail(when)+' – '+escapeMail(end)+' ('+escapeMail(session.timezone||"America/Chicago")+')<br><strong>Instructor:</strong> '+escapeMail(session.host_name||"Andre Erving Training")+(isAdmin?'<br><strong>Student:</strong> '+name+'<br><strong>Email:</strong> '+escapeMail(person.email):"")+'</div><p style="margin:28px 0"><a href="'+escapeMail(url)+'" style="display:inline-block;background:#2453a0;color:#fff;padding:14px 22px;border-radius:8px;text-decoration:none;font-weight:bold">'+(isAdmin?"Manage Live Training":"Open Live Training Sessions")+'</a></p><p style="font-size:13px;color:#647b96">Questions? Contact support@andreerving.com.</p></td></tr></table></body></html>';
 }
 function calendarIcs(s:any){
