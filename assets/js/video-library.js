@@ -10,8 +10,16 @@ export function createVideoLibrary({db,root,notify,safe,isCurrent}){
  const moduleName=id=>modules.find(m=>m.id===id)?.title||"No module";
  const lessonName=id=>lessons.find(l=>l.id===id)?.title||"No lesson";
  const catalogOptions=(items,selected,blank)=>'<option value="">'+safe(blank)+'</option>'+items.map(x=>'<option value="'+safe(x.id)+'" '+(x.id===selected?'selected':'')+'>'+safe(x.title)+'</option>').join('');
+ const groupedCourseOptions=(selected,blank)=>{
+   const groups=[...new Set(courses.map(c=>c.category||"Uncategorized"))].sort();
+   return '<option value="">'+safe(blank)+'</option>'+groups.map(group=>
+     '<optgroup label="'+safe(group)+'">'+courses.filter(c=>(c.category||"Uncategorized")===group).map(c=>
+       '<option value="'+safe(c.id)+'" '+(selected===c.id?'selected':'')+'>'+safe(c.title)+'</option>'
+     ).join('')+'</optgroup>'
+   ).join('');
+ };
  const taxonomyFields=(prefix,video={})=>'<div class="vl-taxonomy"><label>Course'+
-   '<select id="'+prefix+'-course">'+catalogOptions(courses,video.course_id,"Shared / choose later")+'</select></label>'+
+   '<select id="'+prefix+'-course">'+groupedCourseOptions(video.course_id,"Shared / choose later")+'</select></label>'+
    '<label>Module / section<select id="'+prefix+'-module"></select></label>'+
    '<label>Lesson (optional)<select id="'+prefix+'-lesson"></select></label>'+
    '<label>Topic / keywords<input id="'+prefix+'-topic" maxlength="180" placeholder="E.g., Load board search" value="'+safe(video.topic||"")+'"></label></div>'+
@@ -56,12 +64,12 @@ export function createVideoLibrary({db,root,notify,safe,isCurrent}){
    const shown=records.filter(v=>(!filter||v.category===filter)&&(!courseFilter||v.course_id===courseFilter)&&(!moduleFilter||v.module_id===moduleFilter)&&[v.title,v.category,v.topic,v.description,v.original_filename,courseName(v.course_id),moduleName(v.module_id),lessonName(v.lesson_id)].join(" ").toLowerCase().includes(term.toLowerCase()));
    const categories=[...new Set([...CATEGORIES,...records.map(v=>v.category)])].sort();
    root.innerHTML='<div class="vl-page"><div class="vl-heading"><div><span class="vl-eyebrow">ANDRE ERVING / LEARNING MANAGEMENT</span><h1>Video Library</h1><p>Upload once, organize by category, then use the same video across multiple course lessons.</p></div><button type="button" class="btn" id="vl-add">+ Upload video</button></div>'+
-    '<div class="vl-stats"><div><span>Library videos</span><strong>'+records.length+'</strong></div><div><span>Ready</span><strong>'+records.filter(v=>v.status==="ready").length+'</strong></div><div><span>Categories in use</span><strong>'+new Set(records.map(v=>v.category)).size+'</strong></div></div>'+
+    '<div class="vl-stats"><div><span>Library videos</span><strong>'+records.length+'</strong></div><div><span>Ready</span><strong>'+records.filter(v=>v.status==="ready").length+'</strong></div><div><span>Courses</span><strong>'+courses.length+'</strong></div><div><span>Modules</span><strong>'+modules.length+'</strong></div></div>'+
     '<section class="vl-panel"><div class="vl-toolbar vl-filters"><label>Search videos<input type="search" id="vl-search" placeholder="Search title, topic, module, filename…" value="'+safe(term)+'"></label>'+
-    '<label>Course<select id="vl-course-filter">'+catalogOptions(courses,courseFilter,"All courses / shared")+'</select></label>'+
+    '<label>Course<select id="vl-course-filter">'+groupedCourseOptions(courseFilter,"All courses / shared")+'</select></label>'+
     '<label>Module<select id="vl-module-filter">'+catalogOptions(modules.filter(m=>m.course_id===courseFilter),moduleFilter,"All modules")+'</select></label>'+
     '<label>Media type<select id="vl-filter"><option value="">All types</option>'+categories.map(c=>'<option value="'+safe(c)+'" '+(filter===c?'selected':'')+'>'+safe(c)+'</option>').join('')+'</select></label></div>'+
-    '<div class="vl-grid">'+shown.map(v=>'<article class="vl-card" data-card="'+safe(v.id)+'"><div class="vl-card-top"><span class="vl-category">'+safe(v.category)+'</span><span class="vl-status '+safe(v.status)+'">'+statusLabel(v.status)+'</span></div><p class="vl-path">'+safe(courseName(v.course_id))+' / '+safe(v.module_id?moduleName(v.module_id):"Unassigned module")+(v.lesson_id?' / '+safe(lessonName(v.lesson_id)):'')+'</p><h3>'+safe(v.title)+'</h3><p>'+safe(v.description||"No description added.")+'</p>'+(v.topic?'<p class="vl-topic">Topic: '+safe(v.topic)+'</p>':'')+'<small>'+Math.round(Number(v.duration_seconds)||0)+' seconds · '+safe(v.original_filename||"Cloudflare Stream")+'</small><div class="vl-actions"><button type="button" data-edit="'+safe(v.id)+'">Edit details</button><button type="button" data-check="'+safe(v.id)+'">Check status</button><button type="button" data-detach="'+safe(v.id)+'">Course attachments</button><button type="button" data-delete="'+safe(v.id)+'" class="vl-danger">Remove</button></div></article>').join('')+'</div>'+(shown.length?'':'<p class="vl-empty">No videos match. Upload a video to build your library.</p>')+'</section><div id="vl-modal-root"></div></div>';
+    '<div class="vl-grid">'+shown.map(v=>'<article class="vl-card" data-card="'+safe(v.id)+'"><div class="vl-card-top"><span class="vl-category">'+safe(v.category)+'</span><span class="vl-status '+safe(v.status)+'">'+statusLabel(v.status)+'</span></div><p class="vl-path">'+safe(courses.find(c=>c.id===v.course_id)?.category||"Shared")+' / '+safe(courseName(v.course_id))+' / '+safe(v.module_id?moduleName(v.module_id):"Unassigned module")+(v.lesson_id?' / '+safe(lessonName(v.lesson_id)):'')+'</p><h3>'+safe(v.title)+'</h3><p>'+safe(v.description||"No description added.")+'</p>'+(v.topic?'<p class="vl-topic">Topic: '+safe(v.topic)+'</p>':'')+'<small>'+Math.round(Number(v.duration_seconds)||0)+' seconds · '+safe(v.original_filename||"Cloudflare Stream")+'</small><div class="vl-actions"><button type="button" data-edit="'+safe(v.id)+'">Edit details</button><button type="button" data-check="'+safe(v.id)+'">Check status</button><button type="button" data-detach="'+safe(v.id)+'">Course attachments</button><button type="button" data-delete="'+safe(v.id)+'" class="vl-danger">Remove</button></div></article>').join('')+'</div>'+(shown.length?'':'<p class="vl-empty">No videos match. Upload a video to build your library.</p>')+'</section><div id="vl-modal-root"></div></div>';
    $("#vl-add").onclick=()=>showUpload();
    $("#vl-search").oninput=e=>{term=e.target.value;render();const input=$("#vl-search");input.focus();input.setSelectionRange(term.length,term.length)};
    $("#vl-filter").onchange=e=>{filter=e.target.value;render()};
