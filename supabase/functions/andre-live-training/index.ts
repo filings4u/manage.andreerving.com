@@ -30,12 +30,22 @@ Deno.serve(async(req:Request)=>{
  const {data:staff}=await db.from("admin_profiles").select("id,role,active").eq("id",user.id).maybeSingle();
  const isStaff=!!staff?.active&&["admin","manager","editor"].includes(staff.role);
  const body=await req.json().catch(()=>({}));const action=clean(body.action,30);
- const management=new Set(["config_status","staff_list","create","update","schedule","cancel","attendees","mark_attendance","delete"]);
+ const management=new Set(["config_status","verify_teams","staff_list","create","update","schedule","cancel","attendees","mark_attendance","delete"]);
  if(management.has(action)&&!isStaff)return reply({error:"Management access required"},403);
  const dbError=(r:any)=>{if(r.error)throw r.error;return r.data};
  const sessionId=clean(body.session_id,50);
  const selectSession=async()=>{if(!uuid(sessionId))throw new Error("Valid session ID required");const a=dbError(await db.from("live_training_sessions").select("*").eq("id",sessionId).maybeSingle());if(!a)throw new Error("Session not found");return a};
  if(action==="config_status"){return reply({success:true,teams_configured:["MICROSOFT_TENANT_ID","MICROSOFT_CLIENT_ID","MICROSOFT_CLIENT_SECRET","MICROSOFT_TEAMS_ORGANIZER_USER_ID"].every(key=>!!env(key)),missing_secret_names:["MICROSOFT_TENANT_ID","MICROSOFT_CLIENT_ID","MICROSOFT_CLIENT_SECRET","MICROSOFT_TEAMS_ORGANIZER_USER_ID"].filter(key=>!env(key))})}
+ if(action==="verify_teams"){
+  const keys=["MICROSOFT_TENANT_ID","MICROSOFT_CLIENT_ID","MICROSOFT_CLIENT_SECRET","MICROSOFT_TEAMS_ORGANIZER_USER_ID"];
+  const missing=keys.filter(k=>!env(k));if(missing.length)return reply({success:false,error:"Missing Microsoft configuration: "+missing.join(", "),missing_secret_names:missing},409);
+  const t=await fetch("https://login.microsoftonline.com/"+encodeURIComponent(env("MICROSOFT_TENANT_ID"))+"/oauth2/v2.0/token",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({client_id:env("MICROSOFT_CLIENT_ID"),client_secret:env("MICROSOFT_CLIENT_SECRET"),grant_type:"client_credentials",scope:"https://graph.microsoft.com/.default"})});
+  const j=await t.json();if(!t.ok||!j.access_token)throw new Error(j.error_description||"Microsoft Graph authentication failed");
+  const gr=await fetch("https://graph.microsoft.com/v1.0/users/"+encodeURIComponent(env("MICROSOFT_TEAMS_ORGANIZER_USER_ID"))+"?$select=id,displayName",{headers:{Authorization:"Bearer "+j.access_token}});
+  const identity=await gr.json();if(!gr.ok)throw new Error(identity?.error?.message||"Teams organizer cannot be accessed via Microsoft Graph");
+  const scope=Array.isArray(j.roles)?j.roles:[];
+  return reply({success:true,configured:true,organizer_name:identity.displayName||"Configured organizer",permissions:scope,online_meetings_permission:scope.includes("OnlineMeetings.ReadWrite.All"),note:"Microsoft Graph authentication and organizer lookup succeeded. A scheduled session is required to verify Microsoft Teams application access policy."});
+ }
  if(action==="staff_list"){
   const courses=dbError(await db.from("courses").select("id,title,status").order("title").limit(500));
   const sessions=dbError(await db.from("live_training_sessions").select("*").order("start_at",{ascending:false}).limit(500));
