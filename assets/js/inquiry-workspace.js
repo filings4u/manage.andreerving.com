@@ -47,6 +47,6 @@ export async function downloadInquiryPDF(r,button){
   for(let i=1;i<=pages;i++){pdf.setPage(i);pdf.setDrawColor(226,234,243);pdf.line(left,754,right,754);write('ANDRE ERVING  /  PRIVATE INQUIRY RECORD',left,770,8,false,[100,119,145]);write('Page '+i+' of '+pages,right-57,770,8,false,[100,119,145])}
   const name=String(r.name||'visitor').replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'').slice(0,45);
   pdf.save('Andre-Erving-Inquiry-'+String(r.created_at||'').slice(0,10)+'-'+(name||'visitor')+'.pdf');
- }catch(err){console.error('PDF export error',err);alert('Could not prepare the inquiry PDF. Please retry.')}
+ }catch(err){console.error('PDF export error',err);(()=>{const n=document.createElement('div');n.setAttribute('role','alert');n.textContent='Could not prepare the inquiry PDF. Please retry.';Object.assign(n.style,{position:'fixed',top:'24px',right:'24px',maxWidth:'380px',padding:'18px 24px',background:'#fff',color:'#123050',border:'1px solid #cbd7e9',borderLeft:'5px solid #d39b22',borderRadius:'10px',boxShadow:'0 12px 35px #13284533',zIndex:'99999'});document.body.append(n);n.onclick=()=>n.remove();setTimeout(()=>n.remove(),7000)})()}
  finally{if(button){button.disabled=false;button.textContent=label}}
 }
