@@ -128,7 +128,7 @@ Deno.serve(async(req:Request)=>{
  const {data:staff}=await db.from("admin_profiles").select("id,role,active").eq("id",user.id).maybeSingle();
  const isStaff=!!staff?.active&&["admin","manager","editor"].includes(staff.role);
  const body=await req.json().catch(()=>({}));const action=clean(body.action,30);
- const management=new Set(["config_status","verify_teams","staff_list","create","update","schedule","cancel","attendees","mark_attendance","delete"]);
+ const management=new Set(["config_status","verify_teams","staff_list","create","update","schedule","calendar_sync","cancel","attendees","mark_attendance","delete"]);
  if(management.has(action)&&!isStaff)return reply({error:"Management access required"},403);
  const dbError=(r:any)=>{if(r.error)throw r.error;return r.data};
  const sessionId=clean(body.session_id,50);
@@ -174,18 +174,43 @@ Deno.serve(async(req:Request)=>{
   if(!Number.isFinite(start.getTime())||!Number.isFinite(end.getTime()))throw new Error("Enter valid start and end dates.");if(start<=new Date())throw new Error("The session start must be in the future.");if(end<=start)throw new Error("The end time must be after the start time.");if(end.getTime()-start.getTime()>8*3600000)throw new Error("The selected session lasts longer than 8 hours. End it within 8 hours of the start, or create separate sessions for each training day.");
   const row={title:clean(body.title,160),description:clean(body.description,2500),start_at:start.toISOString(),end_at:end.toISOString(),timezone:clean(body.timezone,80)||"America/Chicago",capacity:Math.max(1,Math.min(1000,Math.trunc(Number(body.capacity)||30))),host_name:clean(body.host_name,120)||"Andre Erving Training",updated_at:new Date().toISOString()};
   if(session.status==="scheduled"&&session.meeting_id){const meeting=await teams({...session,...row});row["meeting_id"]=meeting.id;row["meeting_url"]=meeting.url}
-  return reply({success:true,session:dbError(await db.from("live_training_sessions").update(row).eq("id",session.id).select("*").single())});
+  const updated=dbError(await db.from("live_training_sessions").update(row).eq("id",session.id).select("*").single());
+  if(session.status==="scheduled"&&session.microsoft_event_id){
+   try{await syncCalendarEvent(updated);await db.from("live_training_sessions").update({calendar_sync_error:null}).eq("id",session.id)}
+   catch(e){await db.from("live_training_sessions").update({calendar_sync_error:err(e).slice(0,500)}).eq("id",session.id)}
+  }
+  return reply({success:true,session:updated});
  }
  if(action==="schedule"){
-  const session=await selectSession();if(session.status==="cancelled"||session.status==="completed")throw new Error("This session cannot be scheduled");
+  const session=await selectSession();if(["cancelled","completed"].includes(session.status))throw new Error("This session cannot be scheduled");
   if(new Date(session.start_at)<=new Date())throw new Error("Start date must be in the future");
   let meeting;try{meeting=await teams(session)}catch(e){await db.from("live_training_sessions").update({teams_error:err(e)}).eq("id",session.id);throw e}
-  const row={meeting_provider:"microsoft_teams",meeting_id:meeting.id,meeting_url:meeting.url,teams_error:null,status:"scheduled",updated_at:new Date().toISOString()};
-  return reply({success:true,session:dbError(await db.from("live_training_sessions").update(row).eq("id",session.id).select("*").single())});
+  const row:any={meeting_provider:"microsoft_teams",meeting_id:meeting.id,meeting_url:meeting.url,teams_error:null,status:"scheduled",updated_at:new Date().toISOString()};
+  let calendarStatus="synced",calendarError="";
+  try{const event=await syncCalendarEvent({...session,...row});row.microsoft_event_id=event.event_id;row.calendar_sync_error=null}
+  catch(e){calendarStatus="failed";calendarError=err(e);row.calendar_sync_error=calendarError.slice(0,500);console.error("Outlook event sync failed",{reason:calendarError.slice(0,160)})}
+  const saved=dbError(await db.from("live_training_sessions").update(row).eq("id",session.id).select("*").single());
+  return reply({success:true,session:saved,calendar_status:calendarStatus,calendar_error:calendarError});
+ }
+ if(action==="calendar_sync"){
+  const session=await selectSession();
+  if(session.status!=="scheduled")return reply({error:"Only scheduled live training sessions can sync to Outlook."},409);
+  try{
+   const event=await syncCalendarEvent(session);
+   const updated=dbError(await db.from("live_training_sessions").update({microsoft_event_id:event.event_id,calendar_sync_error:null}).eq("id",session.id).select("*").single());
+   return reply({success:true,session:updated,calendar_status:"synced"});
+  }catch(e){
+   const reason=err(e).slice(0,500);
+   await db.from("live_training_sessions").update({calendar_sync_error:reason}).eq("id",session.id);
+   return reply({error:reason,calendar_status:"failed"},409);
+  }
  }
  if(action==="cancel"){
   const session=await selectSession();
-  return reply({success:true,session:dbError(await db.from("live_training_sessions").update({status:"cancelled",updated_at:new Date().toISOString()}).eq("id",session.id).select("*").single())});
+  let calendarError=null;
+  if(session.microsoft_event_id){try{await syncCalendarEvent(session,"delete")}catch(e){calendarError=err(e).slice(0,500)}}
+  const saved=dbError(await db.from("live_training_sessions").update({status:"cancelled",microsoft_event_id:calendarError?session.microsoft_event_id:null,calendar_sync_error:calendarError,updated_at:new Date().toISOString()}).eq("id",session.id).select("*").single());
+  return reply({success:true,session:saved,calendar_error:calendarError});
  }
  if(action==="attendees"){
   const session=await selectSession();const attendees=dbError(await db.from("live_training_attendees").select("*").eq("session_id",session.id).order("registered_at"));
@@ -218,8 +243,18 @@ Deno.serve(async(req:Request)=>{
     auth:{persistSession:false,autoRefreshToken:false},
     global:{headers:{Authorization:"Bearer "+token}}
   });
-  const rpc=dbError(await learnerDb.rpc("live_training_registration",{p_session:sessionId,p_cancel:action==="unregister"}));
-  return reply({success:true,status:rpc});
+  const cancelling=action==="unregister";
+  const current=dbError(await db.from("live_training_attendees").select("status").eq("session_id",sessionId).eq("user_id",user.id).maybeSingle());
+  const rpc=dbError(await learnerDb.rpc("live_training_registration",{p_session:sessionId,p_cancel:cancelling}));
+  const changed=cancelling?current?.status==="registered":current?.status!=="registered";
+  let notifications={};
+  if(changed){
+   const session=await selectSession();
+   const profile=dbError(await db.from("customer_profiles").select("email,full_name").eq("id",user.id).maybeSingle());
+   const person={email:user.email,full_name:profile?.full_name||user.user_metadata?.full_name||user.email};
+   notifications=await sendRegistrationNotices(db,session,person,cancelling?"cancelled":"registered",user.id);
+  }
+  return reply({success:true,status:rpc,notifications,notification_attempted:changed});
  }
  if(action==="embedded_token"){
   const s=await selectSession();
