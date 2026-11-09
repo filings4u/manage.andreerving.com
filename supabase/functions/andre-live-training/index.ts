@@ -23,12 +23,25 @@ function checkMicrosoftSecrets(){
  }
  return names;
 }
+async function resolveTeamsOrganizer(accessToken:string){
+ const configured=env("MICROSOFT_TEAMS_ORGANIZER_USER_ID");
+ if(microsoftGuid.test(configured))return configured;
+ const target="https://graph.microsoft.com/v1.0/users/"+encodeURIComponent(configured)+"?%24select=id,userPrincipalName";
+ const response=await fetch(target,{headers:{Authorization:"Bearer "+accessToken}});
+ const payload=await response.json().catch(()=>({}));
+ if(response.status===403)return (()=>{throw new Error("Cannot resolve the organizer account. Add Microsoft Graph User.Read.All APPLICATION permission and grant admin consent, or set MICROSOFT_TEAMS_ORGANIZER_USER_ID to the user's Entra Object ID (GUID).")})();
+ if(response.status===404)throw new Error("The organizer "+configured+" was not found in the configured Microsoft tenant. Verify that MICROSOFT_TENANT_ID points to the Andre Erving Microsoft 365 tenant.");
+ if(!response.ok)throw new Error("Unable to resolve organizer in Microsoft Entra: "+(payload.error?.message||"HTTP "+response.status).slice(0,180));
+ if(!microsoftGuid.test(payload.id))throw new Error("Microsoft Entra did not return a valid organizer Object ID.");
+ return payload.id as string;
+}
 async function teams(s:any){
  const tenant=env("MICROSOFT_TENANT_ID"),id=env("MICROSOFT_CLIENT_ID"),secret=env("MICROSOFT_CLIENT_SECRET"),organizer=env("MICROSOFT_TEAMS_ORGANIZER_USER_ID");
  checkMicrosoftSecrets();
  const t=await fetch("https://login.microsoftonline.com/"+encodeURIComponent(tenant)+"/oauth2/v2.0/token",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({client_id:id,client_secret:secret,grant_type:"client_credentials",scope:"https://graph.microsoft.com/.default"})});
  const j=await t.json();if(!t.ok||!j.access_token)throw new Error(j.error_description||"Microsoft token request failed");
- const base="https://graph.microsoft.com/v1.0/users/"+encodeURIComponent(organizer)+"/onlineMeetings";
+ const organizerId=await resolveTeamsOrganizer(j.access_token);
+ const base="https://graph.microsoft.com/v1.0/users/"+encodeURIComponent(organizerId)+"/onlineMeetings";
  const isExisting=!!s.meeting_id;
  const r=await fetch(isExisting?base+"/"+encodeURIComponent(s.meeting_id):base,{method:isExisting?"PATCH":"POST",headers:{Authorization:"Bearer "+j.access_token,"Content-Type":"application/json"},body:JSON.stringify({subject:s.title,startDateTime:s.start_at,endDateTime:s.end_at})});
  const m=r.status===204?{}:await r.json().catch(()=>({}));
@@ -98,7 +111,7 @@ async function calendarAccessToken(){
  return j.access_token as string;
 }
 async function syncCalendarEvent(s:any,operation:"upsert"|"delete"="upsert"){
- const token=await calendarAccessToken(),organizer=encodeURIComponent(env("MICROSOFT_TEAMS_ORGANIZER_USER_ID"));
+ const token=await calendarAccessToken(),organizer=encodeURIComponent(await resolveTeamsOrganizer(token));
  const base="https://graph.microsoft.com/v1.0/users/"+organizer+"/events";
  const target=s.microsoft_event_id?base+"/"+encodeURIComponent(s.microsoft_event_id):base;
  const isDelete=operation==="delete",method=isDelete?"DELETE":s.microsoft_event_id?"PATCH":"POST";
