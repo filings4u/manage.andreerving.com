@@ -60,7 +60,6 @@ async function sendRegistrationNotices(db:any,s:any,person:any,kind:"registered"
   const event=(who+"_"+kind) as "student_registered"|"admin_registered"|"student_cancelled"|"admin_cancelled";
   for(const recipient of recipients){
    if(!recipient)continue;
-   const key=who+"_"+recipient;
    const subject=(kind==="registered"?(who==="student"?"Live Training Confirmed":"New Student Live Training Registration"):(who==="student"?"Live Training Registration Cancelled":"Student Cancelled Live Training"))+" — "+s.title;
    const url=who==="admin"?"https://manage.andreerving.com/#/admin/live_training":"https://app.andreerving.com/#/live-training";
    let status="failed",providerId=null,errorMessage="";
@@ -77,7 +76,7 @@ async function sendRegistrationNotices(db:any,s:any,person:any,kind:"registered"
     if(!response.ok)throw Error("Resend returned HTTP "+response.status);
     providerId=data.id||null;status="sent";
    }catch(e){errorMessage=String((e as Error).message||"Email not sent").slice(0,240);console.error("Live training notification delivery failed",{event,status,error: errorMessage})}
-   results[key]=status;
+   results[who]=results[who]==="failed"?"failed":status;
    // No student receives access to this audit table; all writes use the service role.
    const saved=await db.from("live_training_notification_log").upsert({session_id:s.id,user_id:userId,recipient_email:recipient,notification_type:event,delivery_status:status,provider_message_id:providerId,error_message:errorMessage||null,sent_at:new Date().toISOString()},{onConflict:"session_id,user_id,notification_type"});
    if(saved.error)console.error("Live training mail audit write failed",saved.error.code);
@@ -128,7 +127,7 @@ Deno.serve(async(req:Request)=>{
  const {data:staff}=await db.from("admin_profiles").select("id,role,active").eq("id",user.id).maybeSingle();
  const isStaff=!!staff?.active&&["admin","manager","editor"].includes(staff.role);
  const body=await req.json().catch(()=>({}));const action=clean(body.action,30);
- const management=new Set(["config_status","verify_teams","staff_list","create","update","schedule","calendar_sync","cancel","attendees","mark_attendance","delete"]);
+ const management=new Set(["config_status","verify_teams","staff_list","create","update","schedule","calendar_sync","delivery_status","cancel","attendees","mark_attendance","delete"]);
  if(management.has(action)&&!isStaff)return reply({error:"Management access required"},403);
  const dbError=(r:any)=>{if(r.error)throw r.error;return r.data};
  const sessionId=clean(body.session_id,50);
@@ -154,11 +153,15 @@ Deno.serve(async(req:Request)=>{
   },409);
   return reply({success:true,configured:true,authentication_ok:true,organizer_name:"Configured Teams organizer",online_meetings_permission:true,embedded_meeting_configured:!!(env("AZURE_COMMUNICATION_SERVICES_CONNECTION_STRING")||env("ACS_CONNECTION_STRING")),note:"Teams creation permission verified. Embedded in-portal calling additionally requires an Azure Communication Services connection string."});
  }
+ if(action==="delivery_status"){
+  return reply({success:true,resend_configured:!!env("RESEND_API_KEY"),sender_configured:!!env("ANDRE_LIVE_TRAINING_FROM_EMAIL"),admin_email_configured:!!env("ANDRE_LIVE_TRAINING_ADMIN_EMAIL"),admin_email_fallback:"support@andreerving.com"});
+ }
  if(action==="staff_list"){
   const courses=dbError(await db.from("courses").select("id,title,status").order("title").limit(500));
   const sessions=dbError(await db.from("live_training_sessions").select("*").order("start_at",{ascending:false}).limit(500));
   const attendees=dbError(await db.from("live_training_attendees").select("session_id,user_id,status,registered_at").limit(5000));
-  return reply({success:true,courses,sessions,attendees});
+  const recent_delivery=dbError(await db.from("live_training_notification_log").select("session_id,notification_type,delivery_status,sent_at").order("sent_at",{ascending:false}).limit(200));
+  return reply({success:true,courses,sessions,attendees,recent_delivery});
  }
  if(action==="create"){
   if(!uuid(body.course_id))throw new Error("Select a course");
