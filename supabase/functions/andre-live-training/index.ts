@@ -54,7 +54,11 @@ function calendarIcs(s:any){
 }
 async function sendRegistrationNotices(db:any,s:any,person:any,kind:"registered"|"cancelled",userId:string){
  const apiKey=env("RESEND_API_KEY"),sender=env("ANDRE_LIVE_TRAINING_FROM_EMAIL")||"Andre Erving <support@andreerving.com>";
- const customer=String(person.email||"").trim(),admins=String(env("ANDRE_LIVE_TRAINING_ADMIN_EMAIL")||"support@andreerving.com").split(/[,;]/).map(x=>x.trim()).filter(Boolean);
+ const customer=String(person.email||"").trim();
+ const adminEmails=String(env("ANDRE_LIVE_TRAINING_ADMIN_EMAIL")||"").split(/[,;]/).map(x=>x.trim()).filter(Boolean);
+ const adminRecords=await db.from("admin_profiles").select("email").eq("active",true).eq("role","admin").limit(20);
+ const admins=[...new Set([...adminEmails,...(adminRecords.data||[]).map((x:any)=>String(x.email||"").trim()).filter(Boolean)])];
+ if(!admins.length)admins.push("support@andreerving.com");
  const results:any={};
  for(const [who,recipients] of [["student",[customer]],["admin",admins]] as const){
   const event=(who+"_"+kind) as "student_registered"|"admin_registered"|"student_cancelled"|"admin_cancelled";
@@ -127,7 +131,7 @@ Deno.serve(async(req:Request)=>{
  const {data:staff}=await db.from("admin_profiles").select("id,role,active").eq("id",user.id).maybeSingle();
  const isStaff=!!staff?.active&&["admin","manager","editor"].includes(staff.role);
  const body=await req.json().catch(()=>({}));const action=clean(body.action,30);
- const management=new Set(["config_status","verify_teams","staff_list","create","update","schedule","calendar_sync","delivery_status","cancel","attendees","mark_attendance","delete"]);
+ const management=new Set(["config_status","verify_teams","staff_list","create","update","schedule","calendar_sync","delivery_status","resend_confirmation","cancel","attendees","mark_attendance","delete"]);
  if(management.has(action)&&!isStaff)return reply({error:"Management access required"},403);
  const dbError=(r:any)=>{if(r.error)throw r.error;return r.data};
  const sessionId=clean(body.session_id,50);
@@ -152,6 +156,19 @@ Deno.serve(async(req:Request)=>{
     error:"Microsoft authentication succeeded, but the app token does not have OnlineMeetings.ReadWrite.All. In Microsoft Entra > App registrations > API permissions, add Microsoft Graph APPLICATION permission OnlineMeetings.ReadWrite.All, then Grant admin consent. An application access policy for the Teams organizer is also needed to create meetings."
   },409);
   return reply({success:true,configured:true,authentication_ok:true,organizer_name:"Configured Teams organizer",online_meetings_permission:true,embedded_meeting_configured:!!(env("AZURE_COMMUNICATION_SERVICES_CONNECTION_STRING")||env("ACS_CONNECTION_STRING")),note:"Teams creation permission verified. Embedded in-portal calling additionally requires an Azure Communication Services connection string."});
+ }
+ if(action==="resend_confirmation"){
+   const s=await selectSession();
+   if(s.status!=="scheduled")return reply({error:"Only scheduled session registrations can be confirmed"},409);
+   const target=clean(body.user_id,50);
+   if(!uuid(target))return reply({error:"Select a registered student"},400);
+   const attendance=dbError(await db.from("live_training_attendees").select("status").eq("session_id",s.id).eq("user_id",target).maybeSingle());
+   if(!attendance||!["registered","attended"].includes(attendance.status))return reply({error:"No active registration for this student"},409);
+   const customer=dbError(await db.from("customer_profiles").select("email,full_name").eq("id",target).maybeSingle());
+   const {data:authUser}=await db.auth.admin.getUserById(target);
+   const person={email:customer?.email||authUser?.user?.email||"",full_name:customer?.full_name||authUser?.user?.user_metadata?.full_name||""};
+   const results=await sendRegistrationNotices(db,s,person,"registered",target);
+   return reply({success:true,notifications:results});
  }
  if(action==="delivery_status"){
   return reply({success:true,resend_configured:!!env("RESEND_API_KEY"),sender_configured:!!env("ANDRE_LIVE_TRAINING_FROM_EMAIL"),admin_email_configured:!!env("ANDRE_LIVE_TRAINING_ADMIN_EMAIL"),admin_email_fallback:"support@andreerving.com"});
