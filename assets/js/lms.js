@@ -16,7 +16,7 @@ export function createLMS({db,root,notify,safe,isCurrent}){
     for(let offset=0;offset<20000;offset+=batch){
       let q=db.from(table).select(cols);
       if(order)q=q.order(order,{ascending:order==="created_at"?false:true});
-      if(order!=="id")q=q.order("id",{ascending:true});
+      if(order!=="id"&&table!=="course_publications")q=q.order("id",{ascending:true});
       const r=await q.range(offset,offset+batch-1);
       if(r.error)throw r.error;
       items.push(...(r.data||[]));
