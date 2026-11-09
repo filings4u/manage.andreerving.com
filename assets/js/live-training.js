@@ -94,37 +94,17 @@ export function createLiveTrainingManagement({db,root,notify,isCurrent}){
    });
   }catch(e){notify(e.message,true)}
  }
- async function openRoom(s){
-  const roomRoot=document.createElement('div');roomRoot.id='ae-management-room';
-  root.replaceChildren(roomRoot);
-  let observer=null,room=null;
-  try{
-   const {createEmbeddedMeeting}=await import('./embedded-meeting.js?v=manual-teams-fallback-20261109');
-   if(!roomRoot.isConnected||!isCurrent())return;
-   const close=()=>{observer?.disconnect();observer=null;const r=room;room=null;if(r)void r.dispose();void load()};
-   room=createEmbeddedMeeting({root:roomRoot,api,sessionId:s.id,escapeHTML:safe,onExit:close});
-   observer=new MutationObserver(()=>{
-    if(!roomRoot.isConnected||!isCurrent()){
-     observer?.disconnect();observer=null;const r=room;room=null;if(r)void r.dispose();
-    }
-   });
-   observer.observe(document.body,{childList:true,subtree:true});
-  }catch(e){
-   notify(e.message||'Unable to open the embedded training room.',true);
-   observer?.disconnect();await load();
-  }
- }
  function render(){
   if(!isCurrent())return;
   const matching=sessions.filter(s=>!filter||s.course_id===filter);
   const next=sessions.filter(s=>s.status==="scheduled"&&new Date(s.start_at)>new Date()).length;
-  root.innerHTML='<div class="lt-page"><header class="lt-top"><div><span class="lt-eyebrow">ANDRE ERVING / LEARNING MANAGEMENT</span><h1>Live Training Sessions</h1><p>Schedule instructor-led Microsoft Teams sessions, manage registrations, and track attendance across your courses.</p></div><div class="lt-header-actions"><button type="button" class="btn secondary" id="lt-test-email">Check Email Delivery</button><button type="button" class="btn secondary" id="lt-test-teams">Check Embedded Meeting Setup</button><button type="button" class="btn" id="lt-new">+ New live session</button></div></header>'+
+  root.innerHTML='<div class="lt-page"><header class="lt-top"><div><span class="lt-eyebrow">ANDRE ERVING / LEARNING MANAGEMENT</span><h1>Live Training Sessions</h1><p>Schedule instructor-led Microsoft Teams sessions, manage registrations, and track attendance across your courses.</p></div><div class="lt-header-actions"><button type="button" class="btn secondary" id="lt-test-email">Check Email Delivery</button><button type="button" class="btn" id="lt-new">+ New live session</button></div></header>'+
    '<div class="lt-stats"><div><small>All sessions</small><strong>'+sessions.length+'</strong></div><div><small>Upcoming</small><strong>'+next+'</strong></div><div><small>Drafts</small><strong>'+sessions.filter(s=>s.status==="draft").length+'</strong></div><div><small>Registrations</small><strong>'+attendees.filter(a=>a.status==="registered").length+'</strong></div></div>'+
    '<div class="lt-panel"><div class="lt-panel-head"><h2>Scheduled training</h2><label>Course<select id="lt-filter"><option value="">All courses</option>'+courses.map(c=>'<option value="'+safe(c.id)+'" '+(filter===c.id?"selected":"")+'>'+safe(c.title)+'</option>').join("")+'</select></label></div>'+
    '<div class="lt-grid">'+(matching.length?matching.map(s=>{
      const count=attendees.filter(a=>a.session_id===s.id&&a.status==="registered").length;
-     return '<article class="lt-session"><div class="lt-row"><span class="lt-pill '+safe(s.status)+'">'+safe(s.status)+'</span><small>'+safe(courses.find(c=>c.id===s.course_id)?.title||"Course")+'</small></div><h3>'+safe(s.title)+'</h3><p>'+safe(s.description||"No description")+'</p><div class="lt-meta"><span>◷ '+safe(date(s.start_at))+' – '+safe(new Date(s.end_at).toLocaleTimeString(undefined,{timeStyle:"short"}))+'</span><span>Participants: '+count+' / '+s.capacity+'</span><span>Host: '+safe(s.host_name)+'</span></div>'+(s.teams_error?'<p class="lt-error">Teams setup: '+safe(s.teams_error)+'</p>':'')+(s.calendar_sync_error?'<p class="lt-error">Outlook calendar: '+safe(s.calendar_sync_error)+'</p>':'')+
-     '<div class="lt-actions"><button data-edit="'+safe(s.id)+'">Edit Session / Meeting Link</button>'+(s.status==="draft"?'<button class="lt-primary" data-schedule="'+safe(s.id)+'">Publish Session</button>':'')+''+(s.status==="scheduled"?'<button data-calendar="'+safe(s.id)+'">'+(s.microsoft_event_id?'Sync Outlook Calendar':'Add to Outlook Calendar')+'</button>':'')+'<button data-attendees="'+safe(s.id)+'">Attendees</button>'+(s.status==="scheduled"?'<button data-join="'+safe(s.id)+'">Join Room</button><button data-host="'+safe(s.id)+'">Start as Teams Host</button>':'')+(["draft","scheduled"].includes(s.status)?'<button class="lt-danger" data-cancel="'+safe(s.id)+'">Cancel session</button>':'')+'</div></article>'
+     return '<article class="lt-session"><div class="lt-row"><span class="lt-pill '+safe(s.status)+'">'+safe(s.status)+'</span><small>'+safe(courses.find(c=>c.id===s.course_id)?.title||"Course")+'</small></div><h3>'+safe(s.title)+'</h3><p>'+safe(s.description||"No description")+'</p><div class="lt-meta"><span>◷ '+safe(date(s.start_at))+' – '+safe(new Date(s.end_at).toLocaleTimeString(undefined,{timeStyle:"short"}))+'</span><span>Participants: '+count+' / '+s.capacity+'</span><span>Host: '+safe(s.host_name)+'</span></div>'+(s.teams_error?'<p class="lt-error">Teams setup: '+safe(s.teams_error)+'</p>':'')+
+     '<div class="lt-actions"><button data-edit="'+safe(s.id)+'">Edit Session / Meeting Link</button>'+(s.status==="draft"?'<button class="lt-primary" data-schedule="'+safe(s.id)+'">Publish Session</button>':'')+''+(s.status==="scheduled"?'<button data-calendar="'+safe(s.id)+'">'+"Sync Outlook Calendar"+'</button>':'')+'<button data-attendees="'+safe(s.id)+'">Attendees</button>'+(s.status==="scheduled"?'<button data-host="'+safe(s.id)+'">Start as Teams Host</button>':'')+(["draft","scheduled"].includes(s.status)?'<button class="lt-danger" data-cancel="'+safe(s.id)+'">Cancel session</button>':'')+'</div></article>'
    }).join(""):'<p class="lt-empty">No live sessions yet. Create a draft to start scheduling Freight Broker Training.</p>')+'</div></div></div>';
   root.querySelector("#lt-new").onclick=()=>editor();
   root.querySelector("#lt-test-email")?.addEventListener("click",async e=>{
@@ -132,12 +112,6 @@ export function createLiveTrainingManagement({db,root,notify,isCurrent}){
    try{const status=await api("delivery_status");notify(status.resend_configured?"Branded email provider is configured. Confirmations will be sent to active administrator addresses.":"RESEND_API_KEY is not configured in Andre Erving Supabase. Branded training emails cannot send.",!status.resend_configured)}
    catch(e){notify(e.message,true)}finally{button.disabled=false}
   });
-  root.querySelector("#lt-test-teams").onclick=async e=>{
-   const button=e.currentTarget;button.disabled=true;button.textContent="Checking classroom setup…";
-   try{const response=await api("config_status");notify(response.embedded_meeting_configured?"Embedded Azure calling is configured. Manual Teams links do not require meeting-creation permissions.":"Embedded meeting access requires the Azure Communication Services connection string.",!response.embedded_meeting_configured);}
-   catch(err){notify("Teams test failed: "+err.message,true)}
-   finally{button.disabled=false;button.textContent="Check Embedded Meeting Setup"}
-  };
   root.querySelector("#lt-filter").onchange=e=>{filter=e.target.value;render()};
   const on=(selector,fn)=>root.querySelectorAll(selector).forEach(b=>b.onclick=()=>fn(sessions.find(s=>s.id===b.dataset[selector.slice(6,-1)]),b));
   root.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>editor(sessions.find(s=>s.id===b.dataset.edit)));
@@ -147,24 +121,22 @@ export function createLiveTrainingManagement({db,root,notify,isCurrent}){
    try{await api("schedule",{session_id:id});notify("Session published with its saved Microsoft Teams meeting link. No separate meeting was created.");await load()}catch(e){notify(e.message,true)}finally{b.disabled=false}
   });
   root.querySelectorAll("[data-cancel]").forEach(b=>b.onclick=async()=>{if(!await confirmAction("Cancel live session?","Registered students will lose access to this meeting. This cannot be undone.","Cancel Session",true))return;try{await api("cancel",{session_id:b.dataset.cancel});notify("Live session cancelled.");await load()}catch(e){notify(e.message,true)}});
-  root.querySelectorAll("[data-calendar]").forEach(b=>b.onclick=async()=>{b.disabled=true;try{await api("calendar_sync",{session_id:b.dataset.calendar});notify("Session added to the organizer's Outlook calendar.");await load()}catch(e){notify("Outlook calendar sync failed: "+e.message,true);await load()}finally{b.disabled=false}});
-  root.querySelectorAll("[data-host]").forEach(b=>b.onclick=()=>{
-   const session=sessions.find(s=>s.id===b.dataset.host);
-   if(!session?.meeting_url)return notify("Teams meeting URL is missing.",true);
-   const backdrop=document.createElement("div");
-   backdrop.className="lt-backdrop";
-   backdrop.innerHTML='<section class="lt-dialog" role="dialog" aria-modal="true" aria-label="Host meeting in Teams"><header><h2>Start as Teams Host</h2><button id="lt-host-close" type="button" aria-label="Close">×</button></header><p class="lt-muted">'+safe(session.title)+'</p><p>Sign in to Teams on the web with the existing Screenings4U Microsoft 365 organizer account. Andre Erving remains the training brand students see.</p><p><strong>Step 1:</strong> Open Teams in your browser and sign in with the Screenings4U organizer account.</p><p><strong>Step 2:</strong> Copy the meeting link, open it in your signed-in browser, and choose <strong>Continue on this browser</strong> if prompted.</p><p class="lt-muted">The embedded Join Room is for participating through Azure Communication Services; it does not grant Teams organizer permissions.</p><footer><button type="button" class="btn secondary" id="lt-host-copy">Copy Meeting Link</button><button type="button" class="btn secondary" id="lt-host-teams">Open Teams Web</button><button type="button" class="btn" id="lt-host-browser">Open Meeting Link</button></footer></section>';
-   document.body.appendChild(backdrop);
-   const close=()=>backdrop.remove();
-   backdrop.querySelector("#lt-host-close").onclick=close;
-   backdrop.querySelector("#lt-host-copy").onclick=async()=>{
-    try{await navigator.clipboard.writeText(session.meeting_url);notify("Meeting link copied. Open it in the browser where you signed in as the organizer.")}
-    catch{const input=document.createElement("textarea");input.value=session.meeting_url;document.body.appendChild(input);input.select();document.execCommand("copy");input.remove();notify("Meeting link copied.")}
-   };
-   backdrop.querySelector("#lt-host-teams").onclick=()=>window.open("https://teams.microsoft.com/v2/","_blank","noopener,noreferrer");
-   backdrop.querySelector("#lt-host-browser").onclick=()=>window.open(session.meeting_url,"_blank","noopener,noreferrer");
+  root.querySelectorAll("[data-calendar]").forEach(button=>button.onclick=()=>{
+   const s=sessions.find(x=>x.id===button.dataset.calendar);if(!s)return;
+   const dt=x=>new Date(x).toISOString().replace(/[-:]/g,"").replace(/\\.\d{3}/,"");
+   const escI=x=>String(x||"").replace(/\\\\/g,"\\\\\\\\").replace(/[\r\n]+/g,"\\\\n").replace(/,/g,"\\\\,").replace(/;/g,"\\\\;");
+   const body=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Andre Erving//Live Training//EN","METHOD:PUBLISH","BEGIN:VEVENT","UID:"+s.id+"@andreerving.com","DTSTAMP:"+dt(new Date()),"DTSTART:"+dt(s.start_at),"DTEND:"+dt(s.end_at),"SUMMARY:"+escI(s.title),"DESCRIPTION:"+escI("Andre Erving training. Meeting: "+s.meeting_url),"URL:"+s.meeting_url,"LOCATION:Microsoft Teams","END:VEVENT","END:VCALENDAR"].join("\r\n");
+   const blob=new Blob([body],{type:"text/calendar;charset=utf-8"});const url=URL.createObjectURL(blob);
+   const link=document.createElement("a");link.href=url;link.download="Andre-Erving-Live-Training.ics";document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+   notify("Calendar invitation downloaded. Open the .ics file to add this session to Outlook or another calendar.");
   });
-  root.querySelectorAll("[data-join]").forEach(b=>b.onclick=()=>{const session=sessions.find(s=>s.id===b.dataset.join);if(session)void openRoom(session)});
+  root.querySelectorAll("[data-host]").forEach(button=>button.onclick=()=>{
+   const s=sessions.find(x=>x.id===button.dataset.host);
+   if(!s?.meeting_url)return notify("Save a Teams meeting link for this session.",true);
+   const url=new URL(s.meeting_url);
+   if(url.protocol!=="https:"||url.hostname!=="teams.microsoft.com")return notify("The saved Teams meeting link is invalid.",true);
+   window.open(url.toString(),"_blank","noopener,noreferrer");
+  });
  }
  return {start:load};
 }
