@@ -18,12 +18,13 @@ export function createVideoLibrary({db,root,notify,safe,isCurrent}){
    root.innerHTML='<div class="vl-page"><div class="vl-heading"><div><span class="vl-eyebrow">ANDRE ERVING / LEARNING MANAGEMENT</span><h1>Video Library</h1><p>Upload once, organize by category, then use the same video across multiple course lessons.</p></div><button type="button" class="btn" id="vl-add">+ Upload video</button></div>'+
     '<div class="vl-stats"><div><span>Library videos</span><strong>'+records.length+'</strong></div><div><span>Ready</span><strong>'+records.filter(v=>v.status==="ready").length+'</strong></div><div><span>Categories in use</span><strong>'+new Set(records.map(v=>v.category)).size+'</strong></div></div>'+
     '<section class="vl-panel"><div class="vl-toolbar"><label>Search videos<input type="search" id="vl-search" placeholder="Search by title, description or filename…" value="'+safe(term)+'"></label><label>Category<select id="vl-filter"><option value="">All categories</option>'+categories.map(c=>'<option value="'+safe(c)+'" '+(filter===c?'selected':'')+'>'+safe(c)+'</option>').join('')+'</select></label></div>'+
-    '<div class="vl-grid">'+shown.map(v=>'<article class="vl-card" data-card="'+safe(v.id)+'"><div class="vl-card-top"><span class="vl-category">'+safe(v.category)+'</span><span class="vl-status '+safe(v.status)+'">'+statusLabel(v.status)+'</span></div><h3>'+safe(v.title)+'</h3><p>'+safe(v.description||"No description added.")+'</p><small>'+Math.round(Number(v.duration_seconds)||0)+' seconds · '+safe(v.original_filename||"Cloudflare Stream")+'</small><div class="vl-actions"><button type="button" data-edit="'+safe(v.id)+'">Edit details</button><button type="button" data-check="'+safe(v.id)+'">Check status</button><button type="button" data-delete="'+safe(v.id)+'" class="vl-danger">Remove</button></div></article>').join('')+'</div>'+(shown.length?'':'<p class="vl-empty">No videos match. Upload a video to build your library.</p>')+'</section><div id="vl-modal-root"></div></div>';
+    '<div class="vl-grid">'+shown.map(v=>'<article class="vl-card" data-card="'+safe(v.id)+'"><div class="vl-card-top"><span class="vl-category">'+safe(v.category)+'</span><span class="vl-status '+safe(v.status)+'">'+statusLabel(v.status)+'</span></div><h3>'+safe(v.title)+'</h3><p>'+safe(v.description||"No description added.")+'</p><small>'+Math.round(Number(v.duration_seconds)||0)+' seconds · '+safe(v.original_filename||"Cloudflare Stream")+'</small><div class="vl-actions"><button type="button" data-edit="'+safe(v.id)+'">Edit details</button><button type="button" data-check="'+safe(v.id)+'">Check status</button><button type="button" data-detach="'+safe(v.id)+'">Course attachments</button><button type="button" data-delete="'+safe(v.id)+'" class="vl-danger">Remove</button></div></article>').join('')+'</div>'+(shown.length?'':'<p class="vl-empty">No videos match. Upload a video to build your library.</p>')+'</section><div id="vl-modal-root"></div></div>';
    $("#vl-add").onclick=()=>showUpload();
    $("#vl-search").oninput=e=>{term=e.target.value;filter=$("#vl-filter").value;render();const input=$("#vl-search");input.focus();input.setSelectionRange(term.length,term.length)};
    $("#vl-filter").onchange=e=>{filter=e.target.value;render()};
    all("[data-edit]").forEach(b=>b.onclick=()=>showEdit(records.find(v=>v.id===b.dataset.edit)));
    all("[data-check]").forEach(b=>b.onclick=()=>check(records.find(v=>v.id===b.dataset.check)));
+   all("[data-detach]").forEach(b=>b.onclick=()=>detach(records.find(v=>v.id===b.dataset.detach)));
    all("[data-delete]").forEach(b=>b.onclick=()=>remove(records.find(v=>v.id===b.dataset.delete)));
  }
  function modal(title,content){
@@ -84,6 +85,40 @@ export function createVideoLibrary({db,root,notify,safe,isCurrent}){
      const {error:saveError}=await db.from("course_video_library").update({status,duration_seconds:Number(data.duration)||0,updated_at:new Date().toISOString()}).eq("id",video.id);
      if(saveError)throw saveError;notify(data.ready?"Video is ready to attach.":"Video is still processing.");await load();
    }catch(e){notify(e.message||String(e),true)}
+ }
+ async function detach(video){
+   if(!video)return;
+   const ref="cfstream:"+video.stream_uid;
+   const {data:lessons,error}=await db.from("course_lessons").select("id,title,course_id,lesson_type,content_html,video_url").eq("video_url",ref).limit(100);
+   if(error)return notify(error.message,true);
+   if(!lessons?.length)return notify("This video is not attached to any course lessons.");
+   const courseIds=[...new Set(lessons.map(x=>x.course_id))];
+   const {data:courses,error:courseError}=await db.from("courses").select("id,title").in("id",courseIds);
+   if(courseError)return notify(courseError.message,true);
+   const names=new Map((courses||[]).map(x=>[x.id,x.title]));
+   const {host,close}=modal("Manage course attachments",
+     '<p class="vl-help">Detach a video from a specific lesson. The lesson is kept as a written article, and existing student progress is preserved. You can delete an unwanted lesson separately in the course editor.</p>'+
+     '<div class="vl-pick-list">'+lessons.map(l=>
+       '<div class="vl-attachment"><div><strong>'+safe(l.title)+'</strong><small>'+safe(names.get(l.course_id)||"Course")+'</small></div><button type="button" class="btn secondary" data-detach-lesson="'+safe(l.id)+'">Detach video</button></div>'
+     ).join('')+'</div><div class="vl-modal-actions"><button type="button" class="btn secondary" id="vl-done">Done</button></div>');
+   host.querySelector("#vl-done").onclick=close;
+   host.querySelectorAll("[data-detach-lesson]").forEach(button=>button.onclick=async()=>{
+     const lesson=lessons.find(x=>x.id===button.dataset.detachLesson);
+     if(!lesson)return;
+     button.disabled=true;
+     try{
+       const fallback="<p>This video has been detached. Your instructor will update the written lesson content.</p>";
+       const content=String(lesson.content_html||"").trim()||fallback;
+       const {data:changed,error:saveError}=await db.from("course_lessons")
+         .update({lesson_type:"text",video_url:null,content_html:content,updated_at:new Date().toISOString()})
+         .eq("id",lesson.id).eq("video_url",ref).select("id");
+       if(saveError)throw saveError;
+       if(!changed?.length)throw Error("The lesson was changed elsewhere. Refresh the library and try again.");
+       button.closest(".vl-attachment")?.remove();
+       notify("Video detached from "+lesson.title+". The written lesson and student progress remain.");
+       if(!host.querySelector("[data-detach-lesson]")){close();await load()}
+     }catch(e){notify(e.message||String(e),true);button.disabled=false}
+   });
  }
  async function remove(video){
    if(!video)return;
