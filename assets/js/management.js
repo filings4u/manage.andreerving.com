@@ -1,5 +1,5 @@
-import {createLMS} from './lms.js?v=video-library-20261108';
-import {createVideoLibrary} from './video-library.js?v=detach-20261108';
+import {createLMS} from './lms.js?v=multi-course-20261108';
+import {createVideoLibrary} from './video-library.js?v=multi-course-20261108';
 import {createManagementOperations} from './management-operations.js?v=customer-return-20261107g';
 import {createBlogStudio,cleanBlogHTML} from './blog-studio.js?v=unsaved-20261107';
 import {createPodcastStudio} from './podcast-studio.js?v=upload-unsaved-20261107';
