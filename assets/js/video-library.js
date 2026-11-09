@@ -124,7 +124,7 @@ export function createVideoLibrary({db,root,notify,safe,isCurrent}){
    if(!video)return;
    const {data:uses,error:useError}=await db.from("course_lessons").select("id").eq("video_url","cfstream:"+video.stream_uid).limit(1);
    if(useError)return notify(useError.message,true);
-   if(uses?.length)return notify("This video is attached to a lesson. Detach it before removing its library record.",true);
+   if(uses?.length){notify("This video is still used in a course. Choose which lesson to detach it from first.",true);return detach(video)}
    const yes=await new Promise(resolve=>{const m=modal("Remove video from library",'<p>Remove “'+safe(video.title)+'” from the library? This does not delete the Cloudflare recording.</p><div class="vl-modal-actions"><button type="button" class="btn secondary" id="vl-no">Cancel</button><button type="button" class="btn" id="vl-yes">Remove library record</button></div>');m.host.querySelector("#vl-no").onclick=()=>{m.close();resolve(false)};m.host.querySelector("#vl-yes").onclick=()=>{m.close();resolve(true)}});if(!yes)return;
    const {error}=await db.from("course_video_library").delete().eq("id",video.id);if(error)return notify(error.message,true);notify("Library record removed. Cloudflare media remains available.");await load();
  }
