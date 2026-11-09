@@ -137,8 +137,18 @@ export function createLiveTrainingManagement({db,root,notify,isCurrent}){
   root.querySelectorAll("[data-host]").forEach(b=>b.onclick=()=>{
    const session=sessions.find(s=>s.id===b.dataset.host);
    if(!session?.meeting_url)return notify("Teams meeting URL is missing.",true);
-   window.open(session.meeting_url,"_blank","noopener,noreferrer");
-   notify("Opening the meeting in Microsoft Teams. Sign in as the organizer to admit students from the waiting room.");
+   const backdrop=document.createElement("div");
+   backdrop.className="lt-backdrop";
+   backdrop.innerHTML='<section class="lt-dialog" role="dialog" aria-modal="true" aria-label="Host meeting in Teams"><header><h2>Start as Teams Host</h2><button id="lt-host-close" type="button" aria-label="Close">×</button></header><p class="lt-muted">'+safe(session.title)+'</p><p>Sign in to Teams on the web with the Microsoft 365 account configured as the meeting organizer. Then use the meeting link to join with organizer controls.</p><p><strong>Step 1:</strong> Open Teams in your browser and sign in as the organizer.</p><p><strong>Step 2:</strong> Copy the meeting link, open it in your signed-in browser, and choose <strong>Continue on this browser</strong> if prompted.</p><p class="lt-muted">The embedded Join Room is for participating through Azure Communication Services; it does not grant Teams organizer permissions.</p><footer><button type="button" class="btn secondary" id="lt-host-copy">Copy Meeting Link</button><button type="button" class="btn secondary" id="lt-host-teams">Open Teams Web</button><button type="button" class="btn" id="lt-host-browser">Open Meeting Link</button></footer></section>';
+   document.body.appendChild(backdrop);
+   const close=()=>backdrop.remove();
+   backdrop.querySelector("#lt-host-close").onclick=close;
+   backdrop.querySelector("#lt-host-copy").onclick=async()=>{
+    try{await navigator.clipboard.writeText(session.meeting_url);notify("Meeting link copied. Open it in the browser where you signed in as the organizer.")}
+    catch{const input=document.createElement("textarea");input.value=session.meeting_url;document.body.appendChild(input);input.select();document.execCommand("copy");input.remove();notify("Meeting link copied.")}
+   };
+   backdrop.querySelector("#lt-host-teams").onclick=()=>window.open("https://teams.microsoft.com/v2/","_blank","noopener,noreferrer");
+   backdrop.querySelector("#lt-host-browser").onclick=()=>window.open(session.meeting_url,"_blank","noopener,noreferrer");
   });
   root.querySelectorAll("[data-join]").forEach(b=>b.onclick=()=>{const session=sessions.find(s=>s.id===b.dataset.join);if(session)void openRoom(session)});
  }
