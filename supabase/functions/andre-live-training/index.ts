@@ -144,7 +144,7 @@ Deno.serve(async(req:Request)=>{
  const {data:staff}=await db.from("admin_profiles").select("id,role,active").eq("id",user.id).maybeSingle();
  const isStaff=!!staff?.active&&["admin","manager","editor"].includes(staff.role);
  const body=await req.json().catch(()=>({}));const action=clean(body.action,30);
- const management=new Set(["config_status","verify_teams","staff_list","create","update","schedule","calendar_sync","reassign_organizer","delivery_status","resend_confirmation","cancel","attendees","mark_attendance","delete"]);
+ const management=new Set(["config_status","verify_teams","staff_list","create","update","schedule","calendar_sync","delivery_status","resend_confirmation","cancel","attendees","mark_attendance","delete"]);
  if(management.has(action)&&!isStaff)return reply({error:"Management access required"},403);
  const dbError=(r:any)=>{if(r.error)throw r.error;return r.data};
  const sessionId=clean(body.session_id,50);
@@ -224,38 +224,6 @@ Deno.serve(async(req:Request)=>{
   catch(e){calendarStatus="failed";calendarError=err(e);row.calendar_sync_error=calendarError.slice(0,500);console.error("Outlook event sync failed",{reason:calendarError.slice(0,160)})}
   const saved=dbError(await db.from("live_training_sessions").update(row).eq("id",session.id).select("*").single());
   return reply({success:true,session:saved,calendar_status:calendarStatus,calendar_error:calendarError});
- }
- if(action==="reassign_organizer"){
-  const session=await selectSession();
-  if(session.status!=="scheduled")return reply({error:"Only scheduled sessions can be reassigned."},409);
-  if(new Date(session.start_at).getTime()<=Date.now())return reply({error:"This session has already started. Create a new future session instead of replacing an active or past meeting."},409);
-  if(String(session.meeting_organizer_user_id||"").toLowerCase()==="support@andreerving.com"){
-    return reply({success:true,already_assigned:true,session,organizer:"support@andreerving.com",registrations_preserved:null});
-  }
-  // Verify the target identity before changing any existing meeting.
-  const target=env("MICROSOFT_TEAMS_ORGANIZER_USER_ID");
-  if(target.toLowerCase()!=="support@andreerving.com")return reply({error:"Organizer configuration does not match support@andreerving.com. Update MICROSOFT_TEAMS_ORGANIZER_USER_ID first."},409);
-  // Do not PATCH the meeting created by Screenings4U. Microsoft Teams meetings
-  // cannot be transferred: create a new meeting and retain the prior link if it fails.
-  let meeting;
-  try{meeting=await teams({...session,meeting_id:null,meeting_url:null})}
-  catch(e){return reply({error:"Could not create a new Teams meeting for support@andreerving.com: "+err(e).slice(0,450)},409)}
-  // Calendar event ownership is separate. Do not carry an old event ID over.
-  const row:any={meeting_id:meeting.id,meeting_url:meeting.url,meeting_provider:"microsoft_teams",meeting_organizer_user_id:target,teams_error:null,microsoft_event_id:null,calendar_sync_error:null,updated_at:new Date().toISOString()};
-  let calendarStatus="synced",calendarError="";
-  try{const event=await syncCalendarEvent({...session,...row});row.microsoft_event_id=event.event_id}
-  catch(e){calendarStatus="failed";calendarError=err(e).slice(0,450);row.calendar_sync_error=calendarError}
-  const updated=dbError(await db.from("live_training_sessions").update(row).eq("id",session.id).select("*").single());
-  const registrations=dbError(await db.from("live_training_attendees").select("user_id").eq("session_id",session.id).in("status",["registered","attended"]));
-  let mailed=0,failed=0;
-  for(const reg of registrations){
-   const customer=dbError(await db.from("customer_profiles").select("email,full_name").eq("id",reg.user_id).maybeSingle());
-   const {data:u}=await db.auth.admin.getUserById(reg.user_id);
-   const person={email:customer?.email||u?.user?.email||"",full_name:customer?.full_name||u?.user?.user_metadata?.full_name||""};
-   const delivery=await sendRegistrationNotices(db,updated,person,"registered",reg.user_id);
-   if(delivery.student==="sent")mailed++;else failed++;
-  }
-  return reply({success:true,session:updated,organizer:target,calendar_status:calendarStatus,calendar_error:calendarError,registrations_preserved:registrations.length,students_emailed:mailed,student_email_failures:failed});
  }
  if(action==="calendar_sync"){
   const session=await selectSession();
