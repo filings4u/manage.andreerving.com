@@ -1,4 +1,4 @@
-import {createLiveTrainingManagement} from './live-training.js?v=embedded-lobby-clear-20261109';
+import {createLiveTrainingManagement} from './live-training.js?v=live-notifications-calendar-20261109';
 import {createLMS} from './lms.js?v=publish-order-fix-20261108';
 import {createVideoLibrary} from './video-library.js?v=multi-course-paged-20261108';
 import {createManagementOperations} from './management-operations.js?v=customer-return-20261107g';
