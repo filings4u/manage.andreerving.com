@@ -107,7 +107,23 @@ export function createEmbeddedMeeting({root,api,sessionId,escapeHTML,onExit}){
     const pre=$('ae-room-prejoin'),live=$('ae-room-in-call');
     if(pre)pre.hidden=true;if(live)live.hidden=false;
     stateChanged();
-  }catch(e){started=false;message(e.message||'Could not join the embedded classroom.',true);button.disabled=false;button.textContent='Enter Waiting Room'}
+  }catch(e){
+    started=false;
+    message((e.message||'Could not join the embedded classroom.')+' Teams Free/personal meetings may not support embedded Azure calling. Use the meeting link below if needed.',true);
+    button.disabled=false;button.textContent='Try Embedded Meeting Again';
+    const fallback=$('ae-room-open-teams');
+    if(fallback){
+      try{
+        const alt=await api('join',{session_id:sessionId});
+        if(destroyed)return;
+        const link=new URL(alt.url);
+        if(link.protocol==='https:'&&link.hostname==='teams.microsoft.com'){
+          fallback.hidden=false;
+          fallback.onclick=()=>window.open(link.toString(),'_blank','noopener,noreferrer');
+        }
+      }catch{fallback.hidden=true}
+    }
+  }
  }
  async function dispose(){
    if(destroyed)return;destroyed=true;
@@ -123,6 +139,7 @@ export function createEmbeddedMeeting({root,api,sessionId,escapeHTML,onExit}){
  root.innerHTML='<div class="ae-room-shell">'+
  '<div class="ae-room-heading"><div><span class="eyebrow">ANDRE ERVING / LIVE CLASSROOM</span><h1>Live Training Room</h1><p id="ae-room-status">Prepare your camera and microphone before entering.</p></div><button type="button" class="action secondary" id="ae-room-back">← Back to Live Sessions</button></div>'+
  '<p id="ae-room-message" class="ae-room-message" role="alert" hidden></p>'+
+ '<button type="button" id="ae-room-open-teams" class="action secondary" hidden>Open Meeting in Microsoft Teams</button>'+
  '<section class="ae-room-prejoin" id="ae-room-prejoin"><div class="ae-room-preview" id="ae-room-preview"><div class="ae-room-camera-off">Camera is off</div></div><div class="ae-room-prejoin-details"><span class="eyebrow">DEVICE CHECK</span><h2>Ready to join?</h2><p>This meeting takes place inside your student portal. Choose your camera and microphone settings before entering the waiting room.</p><div class="ae-room-controls"><button class="action secondary" id="ae-room-camera" type="button">Turn camera on</button><button class="action secondary" id="ae-room-mic" type="button">Unmute microphone</button></div><button class="action" id="ae-room-enter" type="button">Enter Waiting Room</button><p class="ae-room-note">Your instructor may need to admit you into the meeting.</p></div></section>'+
  '<section class="ae-room-in-call" id="ae-room-in-call" hidden><div class="ae-room-lobby" id="ae-room-lobby" hidden><h2>Waiting for your instructor</h2><p>You are connected to the waiting room. Your instructor will admit you when the class begins.</p></div><div id="ae-room-connected" hidden><div class="ae-room-gallery" id="ae-room-gallery"><p class="ae-room-empty" id="ae-room-empty">Connected. Video from participants will appear here.</p></div></div><div class="ae-room-call-controls"><button id="ae-room-mic-live" class="action secondary" type="button">Unmute microphone</button><button id="ae-room-camera-live" class="action secondary" type="button">Turn camera on</button><button id="ae-room-leave" class="action" type="button">Leave Meeting</button></div></section></div>';
  callClient=new CallClient();
