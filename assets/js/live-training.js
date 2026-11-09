@@ -101,8 +101,8 @@ export function createLiveTrainingManagement({db,root,notify,isCurrent}){
    '<div class="lt-panel"><div class="lt-panel-head"><h2>Scheduled training</h2><label>Course<select id="lt-filter"><option value="">All courses</option>'+courses.map(c=>'<option value="'+safe(c.id)+'" '+(filter===c.id?"selected":"")+'>'+safe(c.title)+'</option>').join("")+'</select></label></div>'+
    '<div class="lt-grid">'+(matching.length?matching.map(s=>{
      const count=attendees.filter(a=>a.session_id===s.id&&a.status==="registered").length;
-     return '<article class="lt-session"><div class="lt-row"><span class="lt-pill '+safe(s.status)+'">'+safe(s.status)+'</span><small>'+safe(courses.find(c=>c.id===s.course_id)?.title||"Course")+'</small></div><h3>'+safe(s.title)+'</h3><p>'+safe(s.description||"No description")+'</p><div class="lt-meta"><span>◷ '+safe(date(s.start_at))+' – '+safe(new Date(s.end_at).toLocaleTimeString(undefined,{timeStyle:"short"}))+'</span><span>Participants: '+count+' / '+s.capacity+'</span><span>Host: '+safe(s.host_name)+'</span></div>'+(s.teams_error?'<p class="lt-error">Teams setup: '+safe(s.teams_error)+'</p>':'')+
-     '<div class="lt-actions"><button data-edit="'+safe(s.id)+'">Edit</button>'+(s.status==="draft"?'<button class="lt-primary" data-schedule="'+safe(s.id)+'">Schedule & Create Teams</button>':'')+(s.status==="scheduled"?'<button data-sync="'+safe(s.id)+'">Sync Teams</button>':'')+'<button data-attendees="'+safe(s.id)+'">Attendees</button>'+(s.status==="scheduled"?'<button data-join="'+safe(s.id)+'">Join</button>':'')+(["draft","scheduled"].includes(s.status)?'<button class="lt-danger" data-cancel="'+safe(s.id)+'">Cancel session</button>':'')+'</div></article>'
+     return '<article class="lt-session"><div class="lt-row"><span class="lt-pill '+safe(s.status)+'">'+safe(s.status)+'</span><small>'+safe(courses.find(c=>c.id===s.course_id)?.title||"Course")+'</small></div><h3>'+safe(s.title)+'</h3><p>'+safe(s.description||"No description")+'</p><div class="lt-meta"><span>◷ '+safe(date(s.start_at))+' – '+safe(new Date(s.end_at).toLocaleTimeString(undefined,{timeStyle:"short"}))+'</span><span>Participants: '+count+' / '+s.capacity+'</span><span>Host: '+safe(s.host_name)+'</span></div>'+(s.teams_error?'<p class="lt-error">Teams setup: '+safe(s.teams_error)+'</p>':'')+(s.calendar_sync_error?'<p class="lt-error">Outlook calendar: '+safe(s.calendar_sync_error)+'</p>':'')+
+     '<div class="lt-actions"><button data-edit="'+safe(s.id)+'">Edit</button>'+(s.status==="draft"?'<button class="lt-primary" data-schedule="'+safe(s.id)+'">Schedule & Create Teams</button>':'')+(s.status==="scheduled"?'<button data-sync="'+safe(s.id)+'">Sync Teams</button>':'')+(s.status==="scheduled"?'<button data-calendar="'+safe(s.id)+'">'+(s.microsoft_event_id?'Sync Outlook Calendar':'Add to Outlook Calendar')+'</button>':'')+'<button data-attendees="'+safe(s.id)+'">Attendees</button>'+(s.status==="scheduled"?'<button data-join="'+safe(s.id)+'">Join Room</button><button data-host="'+safe(s.id)+'">Start as Teams Host</button>':'')+(["draft","scheduled"].includes(s.status)?'<button class="lt-danger" data-cancel="'+safe(s.id)+'">Cancel session</button>':'')+'</div></article>'
    }).join(""):'<p class="lt-empty">No live sessions yet. Create a draft to start scheduling Freight Broker Training.</p>')+'</div></div></div>';
   root.querySelector("#lt-new").onclick=()=>editor();
   root.querySelector("#lt-test-teams").onclick=async e=>{
@@ -117,9 +117,16 @@ export function createLiveTrainingManagement({db,root,notify,isCurrent}){
   root.querySelectorAll("[data-attendees]").forEach(b=>b.onclick=()=>manageAttendees(sessions.find(s=>s.id===b.dataset.attendees)));
   root.querySelectorAll("[data-schedule],[data-sync]").forEach(b=>b.onclick=async()=>{
    const id=b.dataset.schedule||b.dataset.sync;b.disabled=true;
-   try{await api("schedule",{session_id:id});notify("Microsoft Teams meeting is ready. Students can now register.");await load()}catch(e){notify(e.message,true)}finally{b.disabled=false}
+   try{const response=await api("schedule",{session_id:id});notify(response.calendar_status==="failed"?"Teams meeting ready, but Outlook calendar sync needs attention: "+response.calendar_error:"Teams meeting and Outlook calendar are ready.");await load()}catch(e){notify(e.message,true)}finally{b.disabled=false}
   });
   root.querySelectorAll("[data-cancel]").forEach(b=>b.onclick=async()=>{if(!confirm("Cancel this live session? Registered students will lose access to its join link."))return;try{await api("cancel",{session_id:b.dataset.cancel});notify("Live session cancelled.");await load()}catch(e){notify(e.message,true)}});
+  root.querySelectorAll("[data-calendar]").forEach(b=>b.onclick=async()=>{b.disabled=true;try{await api("calendar_sync",{session_id:b.dataset.calendar});notify("Session added to the organizer's Outlook calendar.");await load()}catch(e){notify("Outlook calendar sync failed: "+e.message,true);await load()}finally{b.disabled=false}});
+  root.querySelectorAll("[data-host]").forEach(b=>b.onclick=()=>{
+   const session=sessions.find(s=>s.id===b.dataset.host);
+   if(!session?.meeting_url)return notify("Teams meeting URL is missing.",true);
+   window.open(session.meeting_url,"_blank","noopener,noreferrer");
+   notify("Opening the meeting in Microsoft Teams. Sign in as the organizer to admit students from the waiting room.");
+  });
   root.querySelectorAll("[data-join]").forEach(b=>b.onclick=()=>{const session=sessions.find(s=>s.id===b.dataset.join);if(session)void openRoom(session)});
  }
  return {start:load};
