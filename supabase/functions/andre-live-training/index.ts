@@ -83,7 +83,7 @@ Deno.serve(async(req:Request)=>{
  if(action==="create"){
   if(!uuid(body.course_id))throw new Error("Select a course");
   const start=new Date(body.start_at),end=new Date(body.end_at);
-  if(!Number.isFinite(start.getTime())||!Number.isFinite(end.getTime())||start<=new Date()||end<=start||end.getTime()-start.getTime()>8*3600000)throw new Error("Enter a future start and end time, up to 8 hours");
+  if(!Number.isFinite(start.getTime())||!Number.isFinite(end.getTime()))throw new Error("Enter valid start and end dates.");if(start<=new Date())throw new Error("The session start must be in the future.");if(end<=start)throw new Error("The end time must be after the start time.");if(end.getTime()-start.getTime()>8*3600000)throw new Error("The selected session lasts longer than 8 hours. End it within 8 hours of the start, or create separate sessions for each training day.");
   const {data:course,error:ce}=await db.from("courses").select("id,title").eq("id",body.course_id).maybeSingle();if(ce||!course)throw new Error("Course not found");
   const row={course_id:course.id,title:clean(body.title,160)||course.title+" — Live Training",description:clean(body.description,2500),start_at:start.toISOString(),end_at:end.toISOString(),timezone:clean(body.timezone,80)||"America/Chicago",capacity:Math.max(1,Math.min(1000,Math.trunc(Number(body.capacity)||30))),status:"draft",host_name:clean(body.host_name,120)||"Andre Erving Training",created_by:user.id};
   return reply({success:true,session:dbError(await db.from("live_training_sessions").insert(row).select("*").single())});
@@ -91,7 +91,7 @@ Deno.serve(async(req:Request)=>{
  if(action==="update"){
   const session=await selectSession();if(session.status==="cancelled"||session.status==="completed")throw new Error("Completed or cancelled sessions cannot be edited");
   const start=new Date(body.start_at),end=new Date(body.end_at);
-  if(!Number.isFinite(start.getTime())||!Number.isFinite(end.getTime())||start<=new Date()||end<=start||end.getTime()-start.getTime()>8*3600000)throw new Error("Invalid future session times");
+  if(!Number.isFinite(start.getTime())||!Number.isFinite(end.getTime()))throw new Error("Enter valid start and end dates.");if(start<=new Date())throw new Error("The session start must be in the future.");if(end<=start)throw new Error("The end time must be after the start time.");if(end.getTime()-start.getTime()>8*3600000)throw new Error("The selected session lasts longer than 8 hours. End it within 8 hours of the start, or create separate sessions for each training day.");
   const row={title:clean(body.title,160),description:clean(body.description,2500),start_at:start.toISOString(),end_at:end.toISOString(),timezone:clean(body.timezone,80)||"America/Chicago",capacity:Math.max(1,Math.min(1000,Math.trunc(Number(body.capacity)||30))),host_name:clean(body.host_name,120)||"Andre Erving Training",updated_at:new Date().toISOString()};
   if(session.status==="scheduled"&&session.meeting_id){const meeting=await teams({...session,...row});row["meeting_id"]=meeting.id;row["meeting_url"]=meeting.url}
   return reply({success:true,session:dbError(await db.from("live_training_sessions").update(row).eq("id",session.id).select("*").single())});
