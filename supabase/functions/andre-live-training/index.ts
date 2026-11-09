@@ -1,4 +1,5 @@
 import {createClient} from "npm:@supabase/supabase-js@2.113.0";
+import {CommunicationIdentityClient} from "npm:@azure/communication-identity@1.3.1";
 const origins=new Set(["https://manage.andreerving.com","https://app.andreerving.com","http://localhost:3000","http://127.0.0.1:3000"]);
 const env=(key:string)=>Deno.env.get(key)?.trim()||"";
 const clean=(x:any,max=250)=>String(x??"").trim().slice(0,max);
@@ -140,6 +141,26 @@ Deno.serve(async(req:Request)=>{
   });
   const rpc=dbError(await learnerDb.rpc("live_training_registration",{p_session:sessionId,p_cancel:action==="unregister"}));
   return reply({success:true,status:rpc});
+ }
+ if(action==="embedded_token"){
+  const s=await selectSession();
+  if(s.status!=="scheduled"||!s.meeting_url)return reply({error:"The meeting has not been scheduled yet."},409);
+  if(!isStaff){
+    const a=dbError(await db.from("live_training_attendees").select("status").eq("session_id",s.id).eq("user_id",user.id).maybeSingle());
+    if(!["registered","attended"].includes(a?.status))return reply({error:"Register for this session before joining."},403);
+    const enrollment=dbError(await db.from("course_enrollments").select("id,status,expires_at").eq("course_id",s.course_id).eq("user_id",user.id).in("status",["active","completed"]).limit(1));
+    if(!enrollment.length||enrollment.every((e:any)=>e.expires_at&&new Date(e.expires_at)<=new Date()))return reply({error:"Active course access is required to join this meeting."},403);
+  }
+  const now=Date.now(),start=new Date(s.start_at).getTime(),end=new Date(s.end_at).getTime();
+  if(now<start-30*60000||now>end+60*60000)return reply({error:"The meeting room opens 30 minutes before class and closes one hour afterward.",join_available_at:new Date(start-30*60000).toISOString()},403);
+  const connection=env("AZURE_COMMUNICATION_SERVICES_CONNECTION_STRING")||env("ACS_CONNECTION_STRING");
+  if(!connection)return reply({error:"Embedded meetings need Azure Communication Services. Add AZURE_COMMUNICATION_SERVICES_CONNECTION_STRING to the Andre Erving Supabase Edge Function secrets. Your Microsoft Teams credentials alone do not enable embedded video."},409);
+  let issued;
+  try{
+   const identity=new CommunicationIdentityClient(connection);
+   issued=await identity.createUserAndToken(["voip"],{tokenExpiresInMinutes:60});
+  }catch(e){console.error("ACS identity token issuance failed",e);return reply({error:"The embedded meeting service could not issue a calling token. Check the Azure Communication Services connection string."},503)}
+  return reply({success:true,session_id:s.id,title:s.title,starts_at:s.start_at,ends_at:s.end_at,meeting_link:s.meeting_url,acs:{user_id:issued.user.communicationUserId,token:issued.token,expires_at:issued.expiresOn?.toISOString?.()||null},display_name:clean(user.user_metadata?.full_name||user.email?.split("@")[0]||"Student",120)});
  }
  if(action==="join"){
   const s=await selectSession();if(s.status!=="scheduled"||!s.meeting_url)throw new Error("Session meeting is unavailable");
