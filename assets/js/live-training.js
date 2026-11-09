@@ -87,7 +87,7 @@ export function createLiveTrainingManagement({db,root,notify,isCurrent}){
   root.querySelector("#lt-new").onclick=()=>editor();
   root.querySelector("#lt-test-teams").onclick=async e=>{
    const button=e.currentTarget;button.disabled=true;button.textContent="Checking Microsoft Teams…";
-   try{const response=await api("verify_teams");notify("Teams authenticated: "+response.organizer_name+(response.online_meetings_permission?". OnlineMeetings.ReadWrite.All confirmed.":". Meeting creation permission needs attention."));}
+   try{const response=await api("verify_teams");if(!response.embedded_meeting_configured)notify("Microsoft Teams is connected, but embedded portal meetings require the AZURE_COMMUNICATION_SERVICES_CONNECTION_STRING secret in Andre Erving Supabase.",true);else notify("Microsoft Teams and embedded Azure Communication Services are configured. OnlineMeetings.ReadWrite.All confirmed.");}
    catch(err){notify("Teams test failed: "+err.message,true)}
    finally{button.disabled=false;button.textContent="Test Teams connection"}
   };
