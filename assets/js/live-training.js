@@ -72,6 +72,26 @@ export function createLiveTrainingManagement({db,root,notify,isCurrent}){
    });
   }catch(e){notify(e.message,true)}
  }
+ async function openRoom(s){
+  const roomRoot=document.createElement('div');roomRoot.id='ae-management-room';
+  root.replaceChildren(roomRoot);
+  let observer=null,room=null;
+  try{
+   const {createEmbeddedMeeting}=await import('./embedded-meeting.js?v=20261109a');
+   if(!roomRoot.isConnected||!isCurrent())return;
+   const close=()=>{observer?.disconnect();observer=null;const r=room;room=null;if(r)void r.dispose();void load()};
+   room=createEmbeddedMeeting({root:roomRoot,api,sessionId:s.id,escapeHTML:safe,onExit:close});
+   observer=new MutationObserver(()=>{
+    if(!roomRoot.isConnected||!isCurrent()){
+     observer?.disconnect();observer=null;const r=room;room=null;if(r)void r.dispose();
+    }
+   });
+   observer.observe(document.body,{childList:true,subtree:true});
+  }catch(e){
+   notify(e.message||'Unable to open the embedded training room.',true);
+   observer?.disconnect();await load();
+  }
+ }
  function render(){
   if(!isCurrent())return;
   const matching=sessions.filter(s=>!filter||s.course_id===filter);
@@ -100,7 +120,7 @@ export function createLiveTrainingManagement({db,root,notify,isCurrent}){
    try{await api("schedule",{session_id:id});notify("Microsoft Teams meeting is ready. Students can now register.");await load()}catch(e){notify(e.message,true)}finally{b.disabled=false}
   });
   root.querySelectorAll("[data-cancel]").forEach(b=>b.onclick=async()=>{if(!confirm("Cancel this live session? Registered students will lose access to its join link."))return;try{await api("cancel",{session_id:b.dataset.cancel});notify("Live session cancelled.");await load()}catch(e){notify(e.message,true)}});
-  root.querySelectorAll("[data-join]").forEach(b=>b.onclick=async()=>{try{const a=await api("join",{session_id:b.dataset.join});window.open(a.url,"_blank","noopener,noreferrer")}catch(e){notify(e.message,true)}});
+  root.querySelectorAll("[data-join]").forEach(b=>b.onclick=()=>{const session=sessions.find(s=>s.id===b.dataset.join);if(session)void openRoom(session)});
  }
  return {start:load};
 }
