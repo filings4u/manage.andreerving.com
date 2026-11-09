@@ -1,4 +1,4 @@
-import {createLMS} from './lms.js?v=publish-revision-20261108';
+import {createLMS} from './lms.js?v=publish-order-fix-20261108';
 import {createVideoLibrary} from './video-library.js?v=multi-course-paged-20261108';
 import {createManagementOperations} from './management-operations.js?v=customer-return-20261107g';
 import {createBlogStudio,cleanBlogHTML} from './blog-studio.js?v=unsaved-20261107';
