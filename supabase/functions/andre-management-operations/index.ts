@@ -239,6 +239,26 @@ async function sendInvoiceForOrder(orderId:string){
  }catch(e){await update("crm_order_invoices","?order_id=eq."+orderId,{last_error:String(e).slice(0,400)}).catch(()=>{});throw e}
  return {sent:true,orderId,invoiceUrl:link};
 }
+async function invoiceDetail(orderId:string){
+ if(!uuidPattern.test(orderId))throw Error("Invalid invoice order");
+ const found=await rows("orders","?select=id,user_id,customer_email,customer_name,customer_phone,order_number,status,total,subtotal,currency,external_payment_id,created_at,updated_at&id=eq."+orderId+"&limit=1");
+ if(!found.length)throw Error("Order not found");
+ const [items,metas]=await Promise.all([
+  rows("order_items","?select=id,item_name,item_type,course_id,quantity,unit_price,line_total&order_id=eq."+orderId+"&order=created_at.asc&limit=100"),
+  rows("crm_order_invoices","?select=order_id,mode,status,price_key,payment_intent_id,invoice_sent_at,receipt_sent_at,invite_sent_at,completed_at,last_error&order_id=eq."+orderId+"&limit=1")
+ ]);
+ return {order:found[0],items,invoice:metas[0]||null};
+}
+async function voidInvoice(orderId:string){
+ if(!uuidPattern.test(orderId))throw Error("Invalid invoice");
+ const data=await invoiceDetail(orderId),o=data.order,m=data.invoice;
+ if(!m||m.mode!=="invoice"||o.status!=="pending")throw Error("Only unpaid invoices can be voided");
+ if(m.payment_intent_id)throw Error("This invoice has a payment attempt. Verify or cancel the payment in Stripe before voiding.");
+ const updated=await update("orders","?id=eq."+orderId+"&status=eq.pending",{status:"void"});
+ if(updated.length!==1)throw Error("Invoice was modified. Refresh and retry.");
+ await update("crm_order_invoices","?order_id=eq."+orderId,{status:"void",token_hash:await hashInvoiceToken(crypto.randomUUID()),updated_at:new Date().toISOString()});
+ return {orderId,status:"void"};
+}
 async function createOrder(input:Record<string,unknown>,staff:{id:string}){
  const address=email(input.email),itemKey=String(input.priceKey||""),mode=String(input.mode||"");
  if(!emailPattern.test(address)||!/^offering\.[a-z0-9-]+$/.test(itemKey)||!["free","invoice"].includes(mode))throw Error("Enter customer details, an offering, and Free Access or Accept Payment");
@@ -280,6 +300,7 @@ async function createOrder(input:Record<string,unknown>,staff:{id:string}){
   await fulfillFreeOrder(id,staff);
   return {orderId:id,orderNumber:ref,status:"paid",mode,total:0};
  }
+ if(input.saveDraft===true)return {orderId:id,orderNumber:ref,status:"pending",invoiceStatus:"draft",mode,total:amount};
  const sent=await sendInvoiceForOrder(id);
  return {orderId:id,orderNumber:ref,status:"pending",mode,total:amount,invoiceUrl:sent.invoiceUrl};
 }
@@ -342,6 +363,8 @@ Deno.serve(async(request)=>{
    case "send_invite":result=await invite(input,staff);break;
    case "create_order":result=await createOrder(input,staff);break;
    case "send_invoice":result=await sendInvoiceForOrder(String(input.orderId||""));break;
+   case "invoice_detail":result=await invoiceDetail(String(input.orderId||""));break;
+   case "void_invoice":result=await voidInvoice(String(input.orderId||""));break;
    case "enroll":result=await enroll(input);break;
    case "change_enrollment":result=await modifyEnrollment(input);break;
    case "customer_detail":result=await customerDetail(input);break;
