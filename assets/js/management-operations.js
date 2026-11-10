@@ -135,15 +135,15 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
   const returning=(()=>{try{return JSON.parse(sessionStorage.getItem("ae_order_course_context")||sessionStorage.getItem("ae_enrollment_return")||"null")}catch{return null}})();
   root.innerHTML=head(p.full_name||p.email,"Customer CRM / Full account record")+
    '<div class="ae-mgmt-header-actions"><button class="btn secondary" id="crm-back">All customers</button><button class="btn secondary" id="crm-edit">Edit customer details</button>'+
-   '<button class="btn" id="crm-order">Create an order</button></div>'+
+   '<button class="btn" id="crm-order">+ Create Invoice</button><button class="btn secondary" id="crm-free">+ Free Order</button><button class="btn secondary" id="crm-account-invite">Send Account Invite</button></div>'+
    '<div class="ae-crm-overview">'+
    [['Customer email',p.email],['Phone',p.phone||"Not provided"],['Purchases',orders.length],['Courses',items.length]].map(x=>'<section class="ae-crm-stat"><span>'+escapeHtml(x[0])+'</span><strong>'+escapeHtml(x[1])+'</strong></section>').join("")+'</div>'+
    '<section class="panel ae-mgmt-panel"><h2>Courses and access</h2><div class="tablewrap"><table><thead><tr><th>Course</th><th>Status</th><th>Enrolled</th><th>Expires</th><th>Manage</th></tr></thead><tbody>'+
    items.map(e=>'<tr><td>'+escapeHtml(courses.get(e.course_id)?.title||e.course_id)+'</td><td>'+escapeHtml(e.status)+'</td><td>'+formatDate(e.enrolled_at)+'</td><td>'+formatDate(e.expires_at)+'</td><td><button class="ae-inline-btn" data-access="'+escapeHtml(e.id)+'">Change access</button></td></tr>').join("")+
    '</tbody></table></div></section>'+
    '<section class="panel ae-mgmt-panel"><h2>Purchase and billing history</h2><p class="muted">Only recorded order details are displayed. Card numbers and payment credentials are never stored in this portal.</p>'+
-   '<div class="tablewrap"><table><thead><tr><th>Order</th><th>Date</th><th>Products or services</th><th>Total</th><th>Payment reference</th><th>Status</th></tr></thead><tbody>'+
-   orders.map(o=>'<tr><td><strong>'+escapeHtml(o.order_number)+'</strong></td><td>'+formatDate(o.created_at)+'</td><td>'+escapeHtml(rows.filter(x=>x.order_id===o.id).map(x=>x.item_name).join(", ")||"Not recorded")+'</td><td>'+money(o.total)+'</td><td>'+escapeHtml(o.external_payment_id||'Not available')+'</td><td>'+escapeHtml(o.status)+'</td></tr>').join("")+'</tbody></table></div></section>'+
+   '<div class="tablewrap"><table><thead><tr><th>Order</th><th>Date</th><th>Products or services</th><th>Total</th><th>Payment reference</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+
+   orders.map(o=>'<tr><td><strong>'+escapeHtml(o.order_number)+'</strong></td><td>'+formatDate(o.created_at)+'</td><td>'+escapeHtml(rows.filter(x=>x.order_id===o.id).map(x=>x.item_name).join(", ")||"Not recorded")+'</td><td>'+money(o.total)+'</td><td>'+escapeHtml(o.external_payment_id||'Not available')+'</td><td>'+escapeHtml(o.status)+'</td><td><button class="ae-inline-btn" type="button" data-profile-invoice="'+escapeHtml(o.id)+'">View Invoice / Order</button></td></tr>').join("")+'</tbody></table></div></section>'+
    '<div class="ae-mgmt-two"><section class="panel ae-mgmt-panel"><h2>Customer documents</h2>'+
    (documents.map(d=>'<p class="ae-crm-item">'+escapeHtml(d.title)+' <small>'+formatDate(d.created_at)+'</small></p>').join("")||'<p class="muted">No documents yet.</p>')+
    '</section><section class="panel ae-mgmt-panel"><h2>Support history</h2>'+
@@ -155,7 +155,10 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
     const btn=document.createElement("button");btn.type="button";btn.className="btn ae-return-enroll";btn.textContent="Create course order for this customer";btn.onclick=()=>returnToEnrollment(uid);
     actions?.prepend(btn);
   }
-  root.querySelector("#crm-order").onclick=async()=>{await navigateTo("orders");await ordersPage(uid,p.email)};
+  root.querySelector("#crm-order").onclick=async()=>{await navigateTo("orders");await invoiceEditor(uid)};
+  root.querySelector("#crm-free").onclick=async()=>{await navigateTo("orders");await invoiceEditor(uid,"",true)};
+  root.querySelector("#crm-account-invite").onclick=async()=>{try{await api("send_invite",{email:p.email});notify("Branded account invitation sent.")}catch(e){showError(e)}};
+  root.querySelectorAll("[data-profile-invoice]").forEach(btn=>btn.onclick=async()=>{await navigateTo("orders");await invoiceViewer(btn.dataset.profileInvoice)});
   root.querySelectorAll("[data-access]").forEach(b=>b.onclick=()=>changeAccess(b.dataset.access,uid,items,courses));
  }
  async function enrollments(prefill=""){
