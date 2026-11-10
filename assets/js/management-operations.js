@@ -199,6 +199,9 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
  }
 
  async function ordersPage(prefillUser="",prefillEmail=""){
+  const invoiceRoute=location.hash.match(/^#\/admin\/orders\/invoice\/([a-f0-9-]{36})$/i);
+  if(invoiceRoute)return invoiceViewer(invoiceRoute[1]);
+  if(location.hash==="#/admin/orders/invoice/new")return invoiceEditor(prefillUser);
   const [customerResult,orderResult]=await Promise.all([api("list_customers"),api("list_orders")]);
   if(!isCurrent("orders")&&!isCurrent("customer_profiles"))return;
   const people=customerResult.items||[],orders=orderResult.items||[];
@@ -251,6 +254,7 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
   root.querySelectorAll("[data-invoice-open]").forEach(btn=>btn.onclick=()=>invoiceViewer(btn.dataset.invoiceOpen,customerEmail));
  }
  async function invoiceEditor(prefillUser="",courseId="",free=false){
+  if(!courseId&&location.hash==="#/admin/orders")history.pushState(null,"","#/admin/orders/invoice/new");
   const [customers,catalog,coursesResult]=await Promise.all([api("list_customers"),api("list_prices"),api("list_courses")]);
   if(!isCurrent("orders")&&!isCurrent("customer_profiles"))return;
   const people=customers.items||[],allPrices=(catalog.items||[]).filter(p=>p.active&&p.price_key.startsWith("offering.")&&!p.price_key.startsWith("offering.extension-"));
@@ -281,7 +285,7 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
   customer.value=person?.id||"";fillCustomer();customer.onchange=fillCustomer;
   if(requiredKey)selection.value=requiredKey;
   if(free)mode.value="free";selection.onchange=updateTotal;mode.onchange=updateTotal;updateTotal();
-  root.querySelector("#ae-invoice-back").onclick=()=>{sessionStorage.removeItem("ae_order_course_context");ordersPage()};
+  root.querySelector("#ae-invoice-back").onclick=()=>{sessionStorage.removeItem("ae_order_course_context");history.pushState(null,"","#/admin/orders");ordersPage()};
   let submitMode="send";
   form.querySelectorAll('[name="submitMode"]').forEach(btn=>btn.onclick=()=>{submitMode=btn.value});
   onSubmit("#ae-invoice-create",async fd=>{
@@ -296,6 +300,7 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
   });
  }
  async function invoiceViewer(orderId,customerEmail=""){
+  if(location.hash!=="#/admin/orders/invoice/"+orderId)history.pushState(null,"","#/admin/orders/invoice/"+orderId);
   const data=await api("invoice_detail",{orderId}),o=data.order,items=data.items||[],meta=data.invoice;
   const isPending=o.status==="pending",invoiced=meta?.mode==="invoice",canSend=isPending&&invoiced&&!meta?.payment_intent_id;
   root.innerHTML=head(invoiced?"Invoice "+o.order_number:"Order "+o.order_number,"Customer billing and payment detail")+
@@ -310,7 +315,10 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
    '<div class="ae-invoice-view-meta"><div><span>Sent</span><strong>'+formatDate(meta?.invoice_sent_at)+'</strong></div><div><span>Payment status</span><strong>'+escapeHtml(o.status)+'</strong></div></div>'+
    (meta?.last_error?'<p class="notice error">'+escapeHtml(meta.last_error)+'</p>':"")+
    '</section></div>';
-  root.querySelector("#ae-invoice-return").onclick=()=>customerEmail?orderCustomerDetail(customerEmail):ordersPage();
+  root.querySelector("#ae-invoice-return").onclick=()=>{
+   history.pushState(null,"","#/admin/orders");
+   return customerEmail?orderCustomerDetail(customerEmail):ordersPage();
+  };
   root.querySelector("#ae-invoice-send")?.addEventListener("click",async()=>{
    try{await api("send_invoice",{orderId});notify("Branded invoice sent.");await invoiceViewer(orderId,customerEmail)}catch(e){showError(e)}
   });
