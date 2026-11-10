@@ -171,6 +171,11 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
  }
  async function changeAccess(id,returnUid,records,courses){
   const selected=records.find(e=>e.id===id);if(!selected)return;
+  if(!selected.order_id){
+   notify('A completed order is required before granting course access. Create the order first.',true);
+   sessionStorage.setItem('ae_order_course_context',JSON.stringify({courseId:selected.course_id,userId:selected.user_id}));
+   await navigateTo('orders');await ordersPage(selected.user_id);return;
+  }
   const course=courses.get?.(selected.course_id);
   root.innerHTML=head("Manage course access","Change enrollment expiration and status without modifying purchase history.")+
    '<section class="panel ae-mgmt-panel ae-narrow"><h2>'+escapeHtml(course?.title||"Course")+'</h2>'+
