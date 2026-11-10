@@ -213,7 +213,7 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
    '<label>Existing customer<select name="customerId" id="ae-order-customer" required>'+optionList(people,"Choose existing customer",p=>p.id,p=>(p.full_name||p.email)+" — "+p.email)+'</select></label>'+
    '<label>First name<input required name="firstName" maxlength="80" value="'+escapeHtml(first)+'"></label>'+
    '<label>Last name<input required name="lastName" maxlength="80" value="'+escapeHtml(last)+'"></label>'+
-   '<label>Customer email<input required type="email" name="email" maxlength="254" value="'+escapeHtml(existing?.email||prefillEmail)+'"></label>'+
+   '<label>Customer email<input required readonly type="email" name="email" maxlength="254" value="'+escapeHtml(existing?.email||prefillEmail)+'"></label>'+
    '<label>Phone (optional)<input type="tel" name="phone" maxlength="32" value="'+escapeHtml(existing?.phone||"")+'"></label>'+
    '<label>Product or service<select name="priceKey" required>'+optionList(orderPriceOptions,"Choose a product or service",p=>p.price_key,p=>p.label+" — "+money(p.amount))+'</select></label>'+
    '<label>Order type<select name="mode" required><option value="invoice">Accept Payment — Send Invoice</option><option value="free">Free Access — $0.00</option></select></label>'+
@@ -245,7 +245,7 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
    submit.textContent=free?"Grant Free Access & Send Emails":"Create Order & Send Invoice";
   };
   onSubmit("#ae-create-order",async fd=>{
-   const values=Object.fromEntries(fd);if(!people.some(p=>p.id===values.customerId))throw Error("Create or select an existing customer before making an order.");if(initialCourse)values.courseId=initialCourse.id;
+   const values=Object.fromEntries(fd);const selected=people.find(p=>p.id===values.customerId);if(!selected)throw Error("Select an existing customer before creating an order.");values.email=String(selected.email||"").trim();if(initialCourse)values.courseId=initialCourse.id;
    const result=await api("create_order",values);
    notify(values.mode==="free"?"Free access order "+result.orderNumber+" completed.":"Invoice "+result.orderNumber+" sent to "+values.email);
    sessionStorage.removeItem("ae_order_course_context");sessionStorage.removeItem("ae_enrollment_return");
