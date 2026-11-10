@@ -33,7 +33,7 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
    let state;try{state=JSON.parse(sessionStorage.getItem("ae_enrollment_return")||"null")}catch{}
    if(!/^[a-f0-9-]{36}$/i.test(state?.courseId||"")){notify("No course enrollment return path is available.",true);return}
    if(customerId&&/^[a-f0-9-]{36}$/i.test(customerId)){state.userId=customerId;sessionStorage.setItem("ae_enrollment_return",JSON.stringify(state))}
-   history.replaceState(null,"","#/lms/edit/enrollment/new/"+state.courseId);location.reload();
+   sessionStorage.setItem("ae_order_course_context",JSON.stringify({courseId:state.courseId,userId:state.userId||customerId||null}));history.replaceState(null,"","#/admin/orders");location.reload();
  }
  async function customers(){
   const res=await api("list_customers");
@@ -41,7 +41,7 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
   const people=res.items||[];
   const backEnrollment=(()=>{try{return JSON.parse(sessionStorage.getItem("ae_enrollment_return")||"null")}catch{return null}})();
   root.innerHTML=head("Customer CRM","Manage complete customer profiles, purchases, courses, documents, and support.")+
-   '<div class="ae-mgmt-header-actions"><button type="button" class="btn" id="crm-start-order">+ Create Order</button>'+(backEnrollment?.courseId?'<button type="button" class="btn secondary ae-return-enroll" data-return-enrollment>Back to course enrollment</button>':'')+'</div>'+
+   '<div class="ae-mgmt-header-actions"><button type="button" class="btn" id="crm-start-order">+ Create Order</button>'+(backEnrollment?.courseId?'<button type="button" class="btn secondary ae-return-enroll" data-return-enrollment>Continue to course order</button>':'')+'</div>'+
    '<section class="panel ae-mgmt-panel"><div class="ae-mgmt-panel-heading"><div><span class="ae-mini-eyebrow">CUSTOMER RELATIONSHIPS</span><h2>Customer directory</h2></div><span class="ae-mgmt-counter">'+people.length+' customers</span></div>'+
    '<label class="ae-mgmt-search-label">Search customer records<input id="crm-search" type="search" placeholder="Find a customer by name, email, or phone"></label>'+
    '<div class="tablewrap"><table class="ae-crm-table"><thead><tr><th>Customer</th><th>Email</th><th>Phone</th><th>Created</th><th></th></tr></thead><tbody id="crm-rows"></tbody></table></div></section>';
@@ -107,7 +107,7 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
   const returning=(()=>{try{return JSON.parse(sessionStorage.getItem("ae_enrollment_return")||"null")}catch{return null}})();
   if(returning?.courseId){
     const bar=root.querySelector(".ae-customer-actions");
-    if(bar){const btn=document.createElement("button");btn.type="button";btn.className="btn secondary ae-return-enroll";btn.textContent="Back to course enrollment";btn.onclick=()=>returnToEnrollment();bar.prepend(btn);}
+    if(bar){const btn=document.createElement("button");btn.type="button";btn.className="btn secondary ae-return-enroll";btn.textContent="Continue to course order";btn.onclick=()=>returnToEnrollment();bar.prepend(btn);}
   }
   root.querySelector("#crm-back").onclick=()=>isEdit?profile(p.id):customers();
   onSubmit("#crm-create",async fd=>{
@@ -149,7 +149,7 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
   root.querySelector("#crm-edit").onclick=()=>customerForm(p,data.crmDetails||{});
   if(returning?.courseId){
     const actions=root.querySelector(".ae-mgmt-header-actions");
-    const btn=document.createElement("button");btn.type="button";btn.className="btn ae-return-enroll";btn.textContent="Enroll this customer in the course";btn.onclick=()=>returnToEnrollment(uid);
+    const btn=document.createElement("button");btn.type="button";btn.className="btn ae-return-enroll";btn.textContent="Create course order for this customer";btn.onclick=()=>returnToEnrollment(uid);
     actions?.prepend(btn);
   }
   root.querySelector("#crm-order").onclick=async()=>{await navigateTo("orders");await ordersPage(uid,p.email)};
@@ -158,25 +158,15 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
  async function enrollments(prefill=""){
   const [people,catalog,enrolled]=await Promise.all([api("list_customers"),api("list_courses"),api("list_enrollments")]);
   if(!isCurrent("course_enrollments")&&!isCurrent("customer_profiles"))return;
-  const users=people.items||[],courses=(catalog.items||[]).filter(c=>c.status==="published"),records=enrolled.items||[];
-  root.innerHTML=head("Course enrollments","Grant course access, edit expiration dates, and review existing enrollments.")+
-   '<div class="ae-mgmt-two"><section class="panel ae-mgmt-panel"><h2>Assign a course</h2>'+
-   '<form id="ae-enrollment" class="ae-mgmt-form"><label>Customer<select name="userId" required>'+optionList(users,"Choose a customer",p=>p.id,p=>p.full_name||p.email).replace('value="'+escapeHtml(prefill)+'"','value="'+escapeHtml(prefill)+'" selected')+'</select></label>'+
-   '<label>Course<select name="courseId" required>'+optionList(courses,"Choose a course",c=>c.id,c=>c.title)+'</select></label>'+
-   '<label>Expiration date <span class="ae-form-hint">Leave empty to use the course default.</span><input name="expiresAt" type="date"></label>'+
-   '<button class="btn" type="submit">Grant course access</button></form></section>'+
-   '<section class="panel ae-mgmt-panel"><h2>Access durations</h2><p>Trucking Pro and Freight Broker Training have a 60-day default. All other published courses have a 30-day default.</p>'+
-   '<p>Every course access record can have its own expiration date, which you can change at any time.</p></section></div>'+
+  const users=people.items||[],courses=catalog.items||[],records=enrolled.items||[];
+  root.innerHTML=head("Course enrollments","Course access is granted only through a completed order. Paid invoices must be paid first; complimentary access requires a recorded free order.")+
+   '<section class="panel ae-mgmt-panel"><div class="ae-mgmt-panel-heading"><div><h2>Order-required enrollment</h2><p>Create a customer order to assign paid or complimentary course access.</p></div><button id="ae-enroll-to-order" type="button" class="btn">+ Create Course Order</button></div></section>'+
    '<section class="panel ae-mgmt-panel"><h2>Enrollment records</h2><div class="tablewrap"><table><thead><tr><th>Customer</th><th>Course</th><th>Status</th><th>Expires</th><th>Action</th></tr></thead><tbody>'+
    records.map(e=>'<tr><td>'+escapeHtml(users.find(p=>p.id===e.user_id)?.email||e.user_id)+'</td><td>'+escapeHtml(courses.find(c=>c.id===e.course_id)?.title||e.course_id)+'</td><td>'+escapeHtml(e.expires_at&&new Date(e.expires_at)<=new Date()?"Expired":e.status)+'</td><td>'+formatDate(e.expires_at)+'</td><td><button class="ae-inline-btn" data-edit-access="'+escapeHtml(e.id)+'">Manage</button></td></tr>').join("")+'</tbody></table></div></section>';
-  if(prefill){const select=root.querySelector('select[name="userId"]');select.value=prefill}
-  onSubmit("#ae-enrollment",async fd=>{
-   const payload=Object.fromEntries(fd);
-   if(payload.expiresAt)payload.expiresAt=new Date(payload.expiresAt+"T23:59:59Z").toISOString();
-   const res=await api("enroll",payload);
-   notify(res.updated?"Existing course access updated":"Course access granted");
-   await enrollments(prefill);
-  });
+  root.querySelector("#ae-enroll-to-order").onclick=async()=>{
+   if(prefill&&validUUID(prefill))sessionStorage.setItem("ae_order_course_context",JSON.stringify({userId:prefill}));
+   await navigateTo("orders");await ordersPage(prefill);
+  };
   root.querySelectorAll("[data-edit-access]").forEach(b=>b.onclick=()=>changeAccess(b.dataset.editAccess,null,records,new Map(courses.map(c=>[c.id,c]))));
  }
  async function changeAccess(id,returnUid,records,courses){
@@ -200,10 +190,14 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
   const [customers,orders,catalog]=await Promise.all([api("list_customers"),api("list_orders"),api("list_prices")]);
   if(!isCurrent("orders")&&!isCurrent("customer_profiles"))return;
   const people=customers.items||[],records=orders.items||[],prices=(catalog.items||[]).filter(p=>p.active&&p.price_key.startsWith("offering."));
-  const existing=people.find(p=>p.id===prefillUser||p.email?.toLowerCase()===prefillEmail.toLowerCase());
+  const context=(()=>{try{return JSON.parse(sessionStorage.getItem("ae_order_course_context")||"null")}catch{return null}})();
+  const courseChoice=(context?.courseId&&validUUID(context.courseId))?context.courseId:"";
+  const existing=people.find(p=>p.id===(prefillUser||context?.userId)||p.email?.toLowerCase()===prefillEmail.toLowerCase());
   const names=String(existing?.full_name||"").trim().split(/\s+/);
   const first=names.shift()||"",last=names.join(" ");
   const meta=new Map((orders.invoices||[]).map(x=>[x.order_id,x]));
+  const initialCourse=courseChoice?(await api("list_courses")).items?.find(c=>c.id===courseChoice):null;
+  const initialKey=initialCourse?("offering."+initialCourse.slug):"";
   root.innerHTML=head("Orders & invoices","Create orders using customer details. Free access is provisioned immediately; paid access begins only after verified checkout payment.")+
    '<div class="ae-mgmt-two"><section class="panel ae-mgmt-panel"><h2>Create an order</h2><p class="muted">Enter the customer information first. No account is created for unpaid invoices.</p>'+
    '<form id="ae-create-order" class="ae-mgmt-form">'+
@@ -221,6 +215,7 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
      (o.status==="pending"&&m?.mode==="invoice"?'<button class="ae-inline-btn" type="button" data-send-invoice="'+escapeHtml(o.id)+'">'+(m.status==="sent"?"Resend Invoice":"Send Invoice")+'</button>':o.status==="paid"?'<span>Paid / Free</span>':'<span>Pending</span>')+'</td></tr>'}).join("")||'<tr><td colspan="6">No orders yet.</td></tr>')+
    '</tbody></table></div></section>';
   const flow=root.querySelector('#ae-order-flow-explanation'),submit=root.querySelector('#ae-create-order [type="submit"]');
+  if(initialKey&&prices.some(p=>p.price_key===initialKey))root.querySelector('#ae-create-order [name="priceKey"]').value=initialKey;
   root.querySelector('#ae-create-order [name="mode"]').onchange=e=>{
    const free=e.target.value==="free";
    flow.textContent=free?"Free Access: create or reuse the customer account, grant any purchased course, and send branded invitation and $0 receipt. No payment is charged.":"An invoice will be emailed with a link to review the order and pay securely using checkout.html. Access begins only after verified payment.";
@@ -229,6 +224,7 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
   onSubmit("#ae-create-order",async fd=>{
    const values=Object.fromEntries(fd),result=await api("create_order",values);
    notify(values.mode==="free"?"Free access order "+result.orderNumber+" completed.":"Invoice "+result.orderNumber+" sent to "+values.email);
+   sessionStorage.removeItem("ae_order_course_context");sessionStorage.removeItem("ae_enrollment_return");
    await ordersPage();
   });
   root.querySelectorAll("[data-send-invoice]").forEach(btn=>btn.onclick=async()=>{
