@@ -1,0 +1,154 @@
+{
+  "course": "How to Find Shippers",
+  "purpose": "Resource attachment inventory for LMS course import",
+  "attachmentStatus": "pending-upload",
+  "note": "These entries record intended resource attachments; the binaries have not yet been uploaded to the LMS. The action plan PDF specifies Module 9 despite the previously described eight-module curriculum.",
+  "resources": [
+    {
+      "title": "Ideal Shipper Profile Worksheet",
+      "filename": "Ideal Shipper Profile Worksheet.pdf",
+      "format": "pdf",
+      "modules": [
+        1
+      ],
+      "resource_url": null
+    },
+    {
+      "title": "Shipper Research Checklist",
+      "filename": "Shipper Research Checklist.pdf",
+      "format": "pdf",
+      "modules": [
+        2
+      ],
+      "resource_url": null
+    },
+    {
+      "title": "Google Maps Prospecting Worksheet",
+      "filename": "Google Maps Prospecting Worksheet.pdf",
+      "format": "pdf",
+      "modules": [
+        2
+      ],
+      "resource_url": null
+    },
+    {
+      "title": "Freight Directory Research Checklist",
+      "filename": "Freight Directory Research Checklist.pdf",
+      "format": "pdf",
+      "modules": [
+        3
+      ],
+      "resource_url": null
+    },
+    {
+      "title": "Transportation Decision-Maker Research Worksheet",
+      "filename": "Transportation Decision-Maker Research Worksheet.pdf",
+      "format": "pdf",
+      "modules": [
+        4
+      ],
+      "resource_url": null
+    },
+    {
+      "title": "Shipper Prospect Database Template",
+      "filename": "Shipper Prospect Database Template.xlsx",
+      "format": "xlsx",
+      "modules": [
+        5
+      ],
+      "resource_url": null
+    },
+    {
+      "title": "Freight Broker Cold-Calling Script",
+      "filename": "Freight Broker Cold-Calling Script.pdf",
+      "format": "pdf",
+      "modules": [
+        6
+      ],
+      "resource_url": null
+    },
+    {
+      "title": "Shipper Introductory Email Templates",
+      "filename": "Shipper Introductory Email Templates.pdf",
+      "format": "pdf",
+      "modules": [
+        6
+      ],
+      "resource_url": null
+    },
+    {
+      "title": "Shipper Discovery Questionnaire",
+      "filename": "Shipper Discovery Questionnaire.pdf",
+      "format": "pdf",
+      "modules": [
+        6,
+        8
+      ],
+      "resource_url": null
+    },
+    {
+      "title": "Shipper Objection Handling Guide",
+      "filename": "Shipper Objection Handling Guide.pdf",
+      "format": "pdf",
+      "modules": [
+        6,
+        8
+      ],
+      "resource_url": null
+    },
+    {
+      "title": "30-Day Follow-Up Calendar",
+      "filename": "30-Day Follow-Up Calendar.xlsx",
+      "format": "xlsx",
+      "modules": [
+        7
+      ],
+      "resource_url": null
+    },
+    {
+      "title": "Shipper CRM Tracking Template",
+      "filename": "Shipper CRM Tracking Template.xlsx",
+      "format": "xlsx",
+      "modules": [
+        7
+      ],
+      "resource_url": null
+    },
+    {
+      "title": "Freight Opportunity Qualification Worksheet",
+      "filename": "Freight Opportunity Qualification Worksheet.pdf",
+      "format": "pdf",
+      "modules": [
+        8
+      ],
+      "resource_url": null
+    },
+    {
+      "title": "Shipper Needs Assessment Template",
+      "filename": "Shipper Needs Assessment Template.pdf",
+      "format": "pdf",
+      "modules": [
+        8
+      ],
+      "resource_url": null
+    },
+    {
+      "title": "Transportation Service Proposal Template",
+      "filename": "Transportation Service Proposal Template.pdf",
+      "format": "pdf",
+      "modules": [
+        8
+      ],
+      "resource_url": null
+    },
+    {
+      "title": "30-Day Shipper Acquisition Action Plan",
+      "filename": "30-Day Shipper Acquisition Action Plan.pdf",
+      "format": "pdf",
+      "modules": [
+        9
+      ],
+      "resource_url": null
+    }
+  ]
+}
