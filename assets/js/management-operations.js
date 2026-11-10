@@ -30,11 +30,14 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
   });
  };
  function returnToEnrollment(customerId=""){
-   let state;try{state=JSON.parse(sessionStorage.getItem("ae_enrollment_return")||"null")}catch{}
-   if(!/^[a-f0-9-]{36}$/i.test(state?.courseId||"")){notify("No course enrollment return path is available.",true);return}
-   if(customerId&&/^[a-f0-9-]{36}$/i.test(customerId)){state.userId=customerId;sessionStorage.setItem("ae_enrollment_return",JSON.stringify(state))}
-   sessionStorage.setItem("ae_order_course_context",JSON.stringify({courseId:state.courseId,userId:state.userId||customerId||null}));history.replaceState(null,"","#/admin/orders");location.reload();
+   let state;try{state=JSON.parse(sessionStorage.getItem("ae_order_course_context")||sessionStorage.getItem("ae_enrollment_return")||"null")}catch{}
+   if(!validUUID(state?.courseId||"")){notify("No course order return path is available.",true);return}
+   if(customerId&&validUUID(customerId))state.userId=customerId;
+   sessionStorage.setItem("ae_order_course_context",JSON.stringify({courseId:state.courseId,userId:state.userId||null}));
+   sessionStorage.removeItem("ae_enrollment_return");
+   history.replaceState(null,"","#/admin/orders");location.reload();
  }
+
  async function customers(){
   const res=await api("list_customers");
   if(!isCurrent("customer_profiles"))return;
