@@ -203,6 +203,7 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
   const meta=new Map((orders.invoices||[]).map(x=>[x.order_id,x]));
   const initialCourse=courseChoice?(await api("list_courses")).items?.find(c=>c.id===courseChoice):null;
   const initialKey=initialCourse?("offering."+initialCourse.slug):"";
+  const orderPriceOptions=initialKey?prices.filter(p=>p.price_key===initialKey):prices;
   root.innerHTML=head("Orders & invoices","Create orders using customer details. Free access is provisioned immediately; paid access begins only after verified checkout payment.")+
    '<div class="ae-mgmt-two"><section class="panel ae-mgmt-panel"><h2>Create an order</h2><p class="muted">Enter the customer information first. No account is created for unpaid invoices.</p>'+
    '<form id="ae-create-order" class="ae-mgmt-form">'+
@@ -210,7 +211,7 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
    '<label>Last name<input required name="lastName" maxlength="80" value="'+escapeHtml(last)+'"></label>'+
    '<label>Customer email<input required type="email" name="email" maxlength="254" value="'+escapeHtml(existing?.email||prefillEmail)+'"></label>'+
    '<label>Phone (optional)<input type="tel" name="phone" maxlength="32" value="'+escapeHtml(existing?.phone||"")+'"></label>'+
-   '<label>Product or service<select name="priceKey" required>'+optionList(prices,"Choose a product or service",p=>p.price_key,p=>p.label+" — "+money(p.amount))+'</select></label>'+
+   '<label>Product or service<select name="priceKey" required>'+optionList(orderPriceOptions,"Choose a product or service",p=>p.price_key,p=>p.label+" — "+money(p.amount))+'</select></label>'+
    '<label>Order type<select name="mode" required><option value="invoice">Accept Payment — Send Invoice</option><option value="free">Free Access — $0.00</option></select></label>'+
    '<p class="ae-form-hint" id="ae-order-flow-explanation">An invoice will be emailed with a link to view the order and pay securely using checkout.html. Customer access begins after confirmed payment.</p>'+
    '<div class="ae-mgmt-actions"><button class="btn" type="submit">Create Order &amp; Send Invoice</button></div></form></section>'+
@@ -227,7 +228,8 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
    submit.textContent=free?"Grant Free Access & Send Emails":"Create Order & Send Invoice";
   };
   onSubmit("#ae-create-order",async fd=>{
-   const values=Object.fromEntries(fd),result=await api("create_order",values);
+   const values=Object.fromEntries(fd);if(initialCourse)values.courseId=initialCourse.id;
+   const result=await api("create_order",values);
    notify(values.mode==="free"?"Free access order "+result.orderNumber+" completed.":"Invoice "+result.orderNumber+" sent to "+values.email);
    sessionStorage.removeItem("ae_order_course_context");sessionStorage.removeItem("ae_enrollment_return");
    await ordersPage();
