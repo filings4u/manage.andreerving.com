@@ -226,7 +226,7 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
   if(existing)customerSelect.value=existing.id;
   customerSelect.onchange=()=>{
    const person=people.find(p=>p.id===customerSelect.value);
-   const parts=String(person?.full_name||"").trim().split(/\\s+/);
+   const parts=String(person?.full_name||"").trim().split(/\s+/);
    const fields=root.querySelector('#ae-create-order');
    fields.querySelector('[name="firstName"]').value=parts.shift()||"";
    fields.querySelector('[name="lastName"]').value=parts.join(" ");
