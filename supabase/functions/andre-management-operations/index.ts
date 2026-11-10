@@ -166,26 +166,8 @@ async function invite(input:Record<string,unknown>,staff:{id:string}){
  }
 }
 function expiresFrom(days:number){return new Date(Date.now()+days*86400000).toISOString()}
-async function enroll(input:Record<string,unknown>){
- const uid=String(input.userId||""),course=String(input.courseId||"");
- if(!uuidPattern.test(uid)||!uuidPattern.test(course))throw Error("Choose a valid student and course");
- const account=await fetch(base+"/auth/v1/admin/users/"+uid,{headers:headers()});
- if(!account.ok)throw Error("Customer account not found");
- const users=await rows("customer_profiles","?select=id&id=eq."+uid+"&limit=1");
- if(!users.length)throw Error("Create the customer account first");
- const courses=await rows("courses","?select=id,title,access_days,status&id=eq."+course+"&limit=1");
- if(!courses.length||courses[0].status!=="published")throw Error("Published course required");
- const days=Number(courses[0].access_days)||30;
- const requested=String(input.expiresAt||"");
- const expiry=requested?new Date(requested):new Date(expiresFrom(days));
- if(!Number.isFinite(expiry.getTime())||expiry.getTime()<=Date.now())throw Error("Expiration must be in the future");
- const previous=await rows("course_enrollments","?select=id,user_id,course_id&id=not.is.null&user_id=eq."+uid+"&course_id=eq."+course+"&limit=1");
- if(previous.length){
-  const updated=await update("course_enrollments","?id=eq."+previous[0].id,{status:"active",expires_at:expiry.toISOString()});
-  return {enrollment:updated[0],updated:true};
- }
- const added=await create("course_enrollments",{user_id:uid,course_id:course,status:"active",enrolled_at:new Date().toISOString(),expires_at:expiry.toISOString()},true);
- return {enrollment:added[0],updated:false};
+async function enroll(_input:Record<string,unknown>){
+ throw Error("Direct course enrollment is disabled. Create a completed paid or approved free order containing the course.");
 }
 async function modifyEnrollment(input:Record<string,unknown>){
  const id=String(input.enrollmentId||"");
