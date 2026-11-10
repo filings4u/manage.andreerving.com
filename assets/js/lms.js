@@ -90,7 +90,7 @@ export function createLMS({db,root,notify,safe,isCurrent}){
       '<div id="lms-tab-body"></div>';
     by("lms-back").onclick=()=>{s.courseId=null;openRoute("courses");render()};
     by("lms-preview").onclick=()=>{location.assign("training-preview.html?course="+encodeURIComponent(s.courseId)+"&preview=admin")};
-    by("lms-invite").onclick=()=>{sessionStorage.setItem("ae_enrollment_return",JSON.stringify({courseId:s.courseId}));history.replaceState(null,"","#/admin/customer_profiles");location.reload()};
+    by("lms-invite").onclick=()=>{sessionStorage.setItem("ae_order_course_context",JSON.stringify({courseId:s.courseId}));history.replaceState(null,"","#/admin/orders");location.reload()};
     const addButton=by("lms-add-menu"),drop=by("lms-add-dropdown");
     addButton.onclick=()=>{drop.hidden=!drop.hidden;addButton.setAttribute("aria-expanded",String(!drop.hidden))};
     drop.querySelectorAll("[data-add-kind]").forEach(b=>b.onclick=()=>{drop.hidden=true;quickAdd(b.dataset.addKind)});
@@ -308,7 +308,7 @@ export function createLMS({db,root,notify,safe,isCurrent}){
     const total=related("lessons").length;
     const finished=rows?enrollments.filter(en=>total>0&&rows.filter(p=>p.user_id===en.user_id&&p.completed).length>=total).length:null;
     const active=enrollments.filter(e=>e.status==="active").length;
-    return '<section class="panel lms-students-panel"><div class="lms-panel-head"><div><h2>Participants & learning progress</h2><p class="muted">Track lessons completed and manage access to this course.</p></div><button class="btn" id="lms-enroll">+ Enroll student</button></div>'+
+    return '<section class="panel lms-students-panel"><div class="lms-panel-head"><div><h2>Participants & learning progress</h2><p class="muted">Track lessons completed and manage access to this course.</p></div><button class="btn" id="lms-enroll">+ Create course order</button></div>'+
       '<div class="lms-participant-stats"><div><span>Total participants</span><strong>'+enrollments.length+'</strong></div><div><span>Active access</span><strong>'+active+'</strong></div><div><span>Finished every lesson</span><strong>'+(finished===null?"—":finished)+'</strong></div></div>'+
       (enrollments.length?'<div class="tablewrap"><table><thead><tr><th>Student</th><th>Joined</th><th>Learning progress</th><th>Access</th><th>Expires</th><th>Action</th></tr></thead><tbody>'+
       enrollments.map(en=>{
@@ -907,21 +907,17 @@ export function createLMS({db,root,notify,safe,isCurrent}){
     const select=root.querySelector("#ae-module");if(select)select.value=parentModule;
   }
   function openEnrollment(record=null){
-    const c=current();if(!c)return;s.tab="students";
-    let returnedCustomer="";
-    if(!record){try{const back=JSON.parse(sessionStorage.getItem("ae_enrollment_return")||"null");if(back?.courseId===c.id&&/^[a-f0-9-]{36}$/i.test(back.userId||""))returnedCustomer=back.userId}catch{}}
-
-    s.nextEditRoute="enrollment/"+(record?.id||"new")+"/"+c.id;
-    const fields='<div class="form-grid">'+(record?'<p class="field wide">Customer: '+esc(s.customers.find(x=>x.id===record.user_id)?.email||record.user_id)+'</p>':select("Select customer","user_id",[["","Choose a customer"],...s.customers.map(p=>[p.id,p.full_name?p.full_name+" ("+p.email+")":p.email])],returnedCustomer))+
-      select("Access status","status",[["active","Active"],["completed","Completed"],["cancelled","Cancelled"],["expired","Expired"]],record?.status||"active")+
-      input("Expiration date (optional; defaults to course access term)","expires_at",record?(record.expires_at?.slice(0,10)||""):(c.access_days?new Date(Date.now()+Number(c.access_days)*86400000).toISOString().slice(0,10):""),"date")+'</div><p class="muted">Enrolling a student grants access. It does not create a payment or purchase record.</p>';
-    modal(record?"Manage enrollment":"Enroll student",fields,async fd=>{
-      const status=String(fd.get("status")||"active"),expires=String(fd.get("expires_at")||"");
-      const data={status,expires_at:expires?new Date(expires+"T23:59:59Z").toISOString():null};
-      if(!record){data.user_id=String(fd.get("user_id")||"");data.course_id=c.id;if(!s.customers.some(p=>p.id===data.user_id))throw Error("Select a valid customer");if(s.enrollments.some(e=>e.course_id===c.id&&e.user_id===data.user_id))throw Error("Enrollment exists. Manage it using the existing student row.");}
-      await save("course_enrollments",data,record?.id);if(!record)sessionStorage.removeItem("ae_enrollment_return");notify(record?"Enrollment updated":"Student enrolled");
-    });
+    if(record?.id){
+      const msg=record.order_id
+        ?"Course access is managed through its completed order. Renewals require a new order."
+        :"This participant does not have a qualifying order. Create an order before granting access.";
+      notify(msg,true);
+    }
+    sessionStorage.setItem("ae_order_course_context",JSON.stringify({courseId:s.courseId,userId:record?.user_id||null}));
+    history.replaceState(null,"","#/admin/orders");
+    location.reload();
   }
+
   async function publishRevision(c){
     const {data,error}=await db.rpc("publish_course_revision",{p_course_id:c.id});
     if(error)throw error;
