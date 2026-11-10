@@ -255,11 +255,15 @@ async function createOrder(input:Record<string,unknown>,staff:{id:string}){
  const item=products[0];if(!item||!item.active)throw Error("Offering is unavailable");
  const price=Number(item.amount);if(!Number.isFinite(price)||price<0)throw Error("Invalid catalog amount");
  if(mode==="invoice"&&price<=0)throw Error("Choose Free Access for zero-dollar offerings");
- const matched=await rows("customer_profiles","?select=id,email&email=eq."+encodeURIComponent(address)+"&limit=1");
- const existingId=matched[0]?.id||null;
  const selectedCustomerId=String(input.customerId||"");
- if(!existingId||!uuidPattern.test(selectedCustomerId)||existingId!==selectedCustomerId)
-  throw Error("Create and select the customer in Customer CRM before creating the order.");
+ if(!uuidPattern.test(selectedCustomerId))throw Error("Select an existing customer for this order.");
+ const customerRows=await rows("customer_profiles","?select=id,email,full_name,phone&id=eq."+selectedCustomerId+"&limit=1");
+ const selectedCustomer=customerRows[0];
+ if(!selectedCustomer)throw Error("The selected customer account could not be found. Refresh the customer list.");
+ const existingId=selectedCustomer.id;
+ const customerAddress=email(selectedCustomer.email);
+ if(!emailPattern.test(customerAddress))throw Error("The selected customer needs a valid email address in Customer CRM.");
+ if(address!==customerAddress)throw Error("The customer email changed. Select the customer again to refresh their details.");
  const ref="AE-MAN-"+crypto.randomUUID().slice(0,12).toUpperCase(),amount=mode==="free"?0:price;
  const order={order_number:ref,user_id:existingId,customer_email:address,customer_name:first+" "+last,customer_first_name:first,customer_last_name:last,customer_phone:phone||null,status:mode==="free"?"paid":"pending",subtotal:amount,total:amount,currency:"USD",external_payment_id:mode==="free"?"free_"+crypto.randomUUID().replace(/-/g,""):null};
  const saved=await create("orders",order,true),id=saved[0]?.id;
