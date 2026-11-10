@@ -1,3 +1,13 @@
+async function readVideoDuration(file){
+  return new Promise(resolve=>{
+    const url=URL.createObjectURL(file),video=document.createElement("video");
+    let settled=false;
+    const finish=value=>{if(settled)return;settled=true;clearTimeout(timer);video.removeAttribute("src");video.load();URL.revokeObjectURL(url);resolve(value)};
+    const timer=setTimeout(()=>finish(0),7000);
+    video.preload="metadata";video.onloadedmetadata=()=>finish(Number.isFinite(video.duration)&&video.duration>0?Math.ceil(video.duration):0);
+    video.onerror=()=>finish(0);video.src=url;
+  });
+}
 import {createLessonStudio} from './lms-lesson-studio.js?v=unsaved-20261107';
 
 /* Andre Erving LMS studio. Auth and authorization are supplied by the management app;
@@ -756,7 +766,7 @@ export function createLMS({db,root,notify,safe,isCurrent}){
       onLibrarySelect:chooseLibraryVideo,
       onUpload:async(file,onProgress)=>{
         const {data,error}=await db.functions.invoke("andre-stream",{body:{
-          mode:"init-upload",courseId:course.id,fileSize:file.size,fileName:file.name
+          mode:"init-upload",courseId:course.id,fileSize:file.size,fileName:file.name,durationSeconds:await readVideoDuration(file)
         }});
         if(error||!data?.success||!data?.uploadURL||!data?.uid){let reason=data?.error||"";if(error?.context?.json){try{const details=await error.context.json();reason=details?.error||reason}catch{}}throw Error(reason||error?.message||"Unable to initialize Cloudflare upload. Check Stream credentials.")}
         const url=new URL(data.uploadURL);
