@@ -39,7 +39,7 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
   const res=await api("list_customers");
   if(!isCurrent("customer_profiles"))return;
   const people=res.items||[];
-  const backEnrollment=(()=>{try{return JSON.parse(sessionStorage.getItem("ae_enrollment_return")||"null")}catch{return null}})();
+  const backEnrollment=(()=>{try{return JSON.parse(sessionStorage.getItem("ae_order_course_context")||sessionStorage.getItem("ae_enrollment_return")||"null")}catch{return null}})();
   root.innerHTML=head("Customer CRM","Manage complete customer profiles, purchases, courses, documents, and support.")+
    '<div class="ae-mgmt-header-actions"><button type="button" class="btn" id="crm-start-order">+ Create Order</button>'+(backEnrollment?.courseId?'<button type="button" class="btn secondary ae-return-enroll" data-return-enrollment>Continue to course order</button>':'')+'</div>'+
    '<section class="panel ae-mgmt-panel"><div class="ae-mgmt-panel-heading"><div><span class="ae-mini-eyebrow">CUSTOMER RELATIONSHIPS</span><h2>Customer directory</h2></div><span class="ae-mgmt-counter">'+people.length+' customers</span></div>'+
@@ -104,7 +104,7 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
    '<section class="ae-customer-next"><strong>One email. One customer.</strong><p>The email address is the unique customer identity. Purchases and course enrollments belong to the existing record.</p></section>'+
    '</aside></div>'+
    '<div class="ae-customer-actionbar"><div><strong>'+(isEdit?"Update customer details":"Ready to create this customer?")+'</strong><span>'+(isEdit?"Changes are saved to the customer CRM.":"No account invitation will be emailed until you choose to send one.")+'</span></div><div class="ae-customer-actions"><button class="btn secondary" type="button" id="crm-back">Cancel</button><button class="btn" type="submit">'+(isEdit?"Save customer changes":"Create customer account")+'</button></div></div></form>';
-  const returning=(()=>{try{return JSON.parse(sessionStorage.getItem("ae_enrollment_return")||"null")}catch{return null}})();
+  const returning=(()=>{try{return JSON.parse(sessionStorage.getItem("ae_order_course_context")||sessionStorage.getItem("ae_enrollment_return")||"null")}catch{return null}})();
   if(returning?.courseId){
     const bar=root.querySelector(".ae-customer-actions");
     if(bar){const btn=document.createElement("button");btn.type="button";btn.className="btn secondary ae-return-enroll";btn.textContent="Continue to course order";btn.onclick=()=>returnToEnrollment();bar.prepend(btn);}
@@ -129,7 +129,7 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
   if(!data||!isCurrent("customer_profiles")||selectedCustomer!==uid)return;
   const p=data.profile,items=data.enrollments||[],orders=data.orders||[],courses=new Map((data.courses||[]).map(c=>[c.id,c]));
   const rows=data.orderItems||[],documents=data.documents||[],tickets=data.tickets||[];
-  const returning=(()=>{try{return JSON.parse(sessionStorage.getItem("ae_enrollment_return")||"null")}catch{return null}})();
+  const returning=(()=>{try{return JSON.parse(sessionStorage.getItem("ae_order_course_context")||sessionStorage.getItem("ae_enrollment_return")||"null")}catch{return null}})();
   root.innerHTML=head(p.full_name||p.email,"Customer CRM / Full account record")+
    '<div class="ae-mgmt-header-actions"><button class="btn secondary" id="crm-back">All customers</button><button class="btn secondary" id="crm-edit">Edit customer details</button>'+
    '<button class="btn" id="crm-order">Create an order</button></div>'+
@@ -205,8 +205,9 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
   const initialKey=initialCourse?("offering."+initialCourse.slug):"";
   const orderPriceOptions=initialKey?prices.filter(p=>p.price_key===initialKey):prices;
   root.innerHTML=head("Orders & invoices","Create orders using customer details. Free access is provisioned immediately; paid access begins only after verified checkout payment.")+
-   '<div class="ae-mgmt-two"><section class="panel ae-mgmt-panel"><h2>Create an order</h2><p class="muted">Enter the customer information first. No account is created for unpaid invoices.</p>'+
+   '<div class="ae-mgmt-two"><section class="panel ae-mgmt-panel"><h2>Create an order</h2><p class="muted">Select a customer already created in Customer CRM, then create a paid invoice or a recorded free-access order.</p>'+
    '<form id="ae-create-order" class="ae-mgmt-form">'+
+   '<label>Existing customer<select name="customerId" id="ae-order-customer" required>'+optionList(people,"Choose existing customer",p=>p.id,p=>(p.full_name||p.email)+" — "+p.email)+'</select></label>'+
    '<label>First name<input required name="firstName" maxlength="80" value="'+escapeHtml(first)+'"></label>'+
    '<label>Last name<input required name="lastName" maxlength="80" value="'+escapeHtml(last)+'"></label>'+
    '<label>Customer email<input required type="email" name="email" maxlength="254" value="'+escapeHtml(existing?.email||prefillEmail)+'"></label>'+
@@ -214,13 +215,26 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
    '<label>Product or service<select name="priceKey" required>'+optionList(orderPriceOptions,"Choose a product or service",p=>p.price_key,p=>p.label+" — "+money(p.amount))+'</select></label>'+
    '<label>Order type<select name="mode" required><option value="invoice">Accept Payment — Send Invoice</option><option value="free">Free Access — $0.00</option></select></label>'+
    '<p class="ae-form-hint" id="ae-order-flow-explanation">An invoice will be emailed with a link to view the order and pay securely using checkout.html. Customer access begins after confirmed payment.</p>'+
-   '<div class="ae-mgmt-actions"><button class="btn" type="submit">Create Order &amp; Send Invoice</button></div></form></section>'+
+   '<div class="ae-mgmt-actions"><button class="btn" type="submit">Create Order &amp; Send Invoice</button><button class="btn secondary" type="button" id="ae-order-create-customer">+ Create Customer</button></div></form></section>'+
    '<section class="panel ae-mgmt-panel"><h2>Order workflow</h2><p><strong>1.</strong> Create an order using the customer name and email.</p><p><strong>2.</strong> Send a branded invoice, or choose Free Access.</p><p><strong>3.</strong> Payment is verified, then an account is created or reused.</p><p><strong>4.</strong> Course access is granted and branded account invitation and receipt emails are sent.</p><p class="muted">An unpaid invoice never creates an account or activates course access.</p></section></div>'+
    '<section class="panel ae-mgmt-panel"><h2>All orders</h2><div class="tablewrap"><table><thead><tr><th>Order</th><th>Customer</th><th>Amount</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody>'+
    (records.map(o=>{const m=meta.get(o.id);return '<tr><td><strong>'+escapeHtml(o.order_number)+'</strong></td><td>'+escapeHtml(o.customer_email)+'</td><td>'+money(o.total)+'</td><td><span class="pill '+escapeHtml(o.status)+'">'+escapeHtml(o.status)+'</span></td><td>'+formatDate(o.created_at)+'</td><td>'+
      (o.status==="pending"&&m?.mode==="invoice"?'<button class="ae-inline-btn" type="button" data-send-invoice="'+escapeHtml(o.id)+'">'+(m.status==="sent"?"Resend Invoice":"Send Invoice")+'</button>':o.status==="paid"?'<span>Paid / Free</span>':'<span>Pending</span>')+'</td></tr>'}).join("")||'<tr><td colspan="6">No orders yet.</td></tr>')+
    '</tbody></table></div></section>';
   const flow=root.querySelector('#ae-order-flow-explanation'),submit=root.querySelector('#ae-create-order [type="submit"]');
+  const customerSelect=root.querySelector('#ae-order-customer');
+  if(existing)customerSelect.value=existing.id;
+  customerSelect.onchange=()=>{
+   const person=people.find(p=>p.id===customerSelect.value);
+   const parts=String(person?.full_name||"").trim().split(/\\s+/);
+   const fields=root.querySelector('#ae-create-order');
+   fields.querySelector('[name="firstName"]').value=parts.shift()||"";
+   fields.querySelector('[name="lastName"]').value=parts.join(" ");
+   fields.querySelector('[name="email"]').value=person?.email||"";
+   fields.querySelector('[name="phone"]').value=person?.phone||"";
+  };
+  root.querySelector('#ae-order-create-customer').onclick=async()=>{await navigateTo('customer_profiles');customerForm()};
+
   if(initialKey&&prices.some(p=>p.price_key===initialKey))root.querySelector('#ae-create-order [name="priceKey"]').value=initialKey;
   root.querySelector('#ae-create-order [name="mode"]').onchange=e=>{
    const free=e.target.value==="free";
@@ -228,7 +242,7 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
    submit.textContent=free?"Grant Free Access & Send Emails":"Create Order & Send Invoice";
   };
   onSubmit("#ae-create-order",async fd=>{
-   const values=Object.fromEntries(fd);if(initialCourse)values.courseId=initialCourse.id;
+   const values=Object.fromEntries(fd);if(!people.some(p=>p.id===values.customerId))throw Error("Create or select an existing customer before making an order.");if(initialCourse)values.courseId=initialCourse.id;
    const result=await api("create_order",values);
    notify(values.mode==="free"?"Free access order "+result.orderNumber+" completed.":"Invoice "+result.orderNumber+" sent to "+values.email);
    sessionStorage.removeItem("ae_order_course_context");sessionStorage.removeItem("ae_enrollment_return");
