@@ -82,7 +82,7 @@ export function createLMS({db,root,notify,safe,isCurrent}){
       return;
     }
     const modules=related("modules"),lessons=related("lessons"),enrollments=related("enrollments");
-    const displayTabs=[["overview","Overview"],["curriculum","Content"],["students","Participants"],["settings","Settings"]];
+    const displayTabs=[["overview","Overview"],["curriculum","Content"],["documents","Document Library"],["students","Participants"],["settings","Settings"]];
     root.innerHTML='<div class="lms-builder-breadcrumb"><button type="button" id="lms-back">‹ &nbsp; Courses & Programs</button><span> / '+esc(c.title)+'</span></div>'+
       '<div class="lms-builder-top"><div class="lms-builder-identity"><span class="lms-builder-book" aria-hidden="true">▤</span><div><div class="lms-builder-title"><h1>'+esc(c.title)+'</h1><span class="lms-course-kind">Course</span></div><div class="lms-builder-sub">'+esc(c.category||"Learning program")+' <span>·</span> <span class="lms-status-text">'+esc(c.status)+'</span></div></div></div>'+
       '<div class="lms-builder-actions"><button type="button" class="lms-white-action" id="lms-preview">◉ &nbsp; Preview</button><button type="button" class="lms-white-action" id="lms-invite">♙ &nbsp; Invite Participants</button><div class="lms-add-container"><button type="button" class="lms-gold-action" id="lms-add-menu" aria-haspopup="true" aria-expanded="false">＋ &nbsp; Add <svg class="ae-add-chevron" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button><div class="lms-add-dropdown" id="lms-add-dropdown" hidden><span class="lms-menu-heading">SECTION</span><button type="button" data-add-kind="section">▣ &nbsp; Add section</button><span class="lms-menu-heading">LESSONS</span><button type="button" data-add-kind="text">▤ &nbsp; Article</button><button type="button" data-add-kind="video">▷ &nbsp; Video</button><button type="button" data-add-kind="quiz">☷ &nbsp; Quiz</button><button type="button" data-add-kind="download">↓ &nbsp; Download</button></div></div></div></div>'+
@@ -98,6 +98,7 @@ export function createLMS({db,root,notify,safe,isCurrent}){
     const body=by("lms-tab-body");
     if(s.tab==="overview")body.innerHTML=renderOverview(c,modules,lessons,enrollments);
     if(s.tab==="curriculum")body.innerHTML=renderCurriculum(modules,lessons);
+    if(s.tab==="documents"){body.innerHTML=renderDocumentsShell();void loadDocumentLibrary()}
     if(s.tab==="students"){body.innerHTML=renderStudents(enrollments);if(!s.progressCache.has(s.courseId))void loadCourseProgress(s.courseId)}
     if(s.tab==="settings")body.innerHTML=renderSettings(c,enrollments);
     if(s.tab==="preview")body.innerHTML=renderPreview(c,modules,lessons);
@@ -175,6 +176,93 @@ export function createLMS({db,root,notify,safe,isCurrent}){
       '<div class="lms-course-benefits"><span class="ae-benefit-icon">◷</span><div><strong>Access duration</strong><span>'+(c.access_days?esc(c.access_days)+' days':'Lifetime access')+'</span></div></div><div class="lms-two-col ae-course-operations"><section class="panel"><div class="lms-panel-head"><div><span class="ae-editor-eyebrow">PROGRAM INFORMATION</span><h2>Course details</h2></div><button class="btn secondary" data-edit-course>Edit details</button></div><dl class="lms-facts"><div><dt>Course title</dt><dd>'+esc(c.title)+'</dd></div><div><dt>Category</dt><dd>'+esc(c.category||"—")+'</dd></div><div><dt>Short description</dt><dd>'+esc(c.short_description||"Not added")+'</dd></div><div><dt>URL slug</dt><dd>'+esc(c.slug)+'</dd></div><div><dt>Access duration</dt><dd>'+(c.access_days?esc(c.access_days)+" days":"No limit")+'</dd></div></dl></section>'+
       '<section class="panel ae-progress-checklist"><span class="ae-editor-eyebrow">COURSE READINESS</span><h2>Prepare your course</h2><p class="muted">Follow these milestones to get your program ready for learners.</p><div class="ae-readiness-meter"><div style="width:'+Math.round(steps.filter(x=>x.done).length/steps.length*100)+'%"></div></div><div class="ae-readiness-steps">'+steps.map(x=>'<div class="ae-readiness-step '+(x.done?'complete':'')+'"><span class="ae-readiness-icon">'+(x.done?'✓':'○')+'</span><div><strong>'+x.name+'</strong><small>'+x.text+'</small></div></div>').join('')+'</div><button class="btn" data-go-tab="curriculum">Open curriculum →</button></section></div>';
   }
+
+  /* Course Document Library: private Supabase Storage, course-scoped resources.
+     A file becomes student-visible only when attached to a download lesson and
+     the course revision is published. Storage RLS enforces staff/student access. */
+  const documentBucket="andreerving-lms-resources";
+  const documentExt={pdf:"application/pdf",doc:"application/msword",docx:"application/vnd.openxmlformats-officedocument.wordprocessingml.document",xlsx:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",pptx:"application/vnd.openxmlformats-officedocument.presentationml.presentation",txt:"text/plain",png:"image/png",jpg:"image/jpeg",jpeg:"image/jpeg"};
+  const fileLabel=name=>String(name||"").replace(/^[a-f0-9]{8}-[a-f0-9-]{27,}_/i,"");
+  const documentPath=(name)=>s.courseId+"/library/"+name;
+  const resourceAttached=(path)=>related("lessons").some(l=>l.resource_url===path);
+  function renderDocumentsShell(){
+    return '<section class="lms-builder-panel ae-doc-library" style="padding:24px"><div class="lms-content-heading"><div><h2>Document Library</h2><p>Upload PDF, Word, Excel and other learning resources. Attach them to a course section when ready. Files remain private.</p></div></div>'+
+      '<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin:18px 0">'+
+      '<label style="flex:1;min-width:220px">Search documents<input id="ae-doc-search" type="search" placeholder="Search uploaded documents" style="width:100%"></label>'+
+      '<label class="btn" style="cursor:pointer">＋ Upload Documents<input id="ae-doc-upload" type="file" multiple accept=".pdf,.doc,.docx,.xlsx,.pptx,.txt,.png,.jpg,.jpeg" hidden></label>'+
+      '<button type="button" class="btn secondary" id="ae-doc-refresh">Refresh</button></div>'+
+      '<p id="ae-doc-status" class="muted" role="status">Loading course documents…</p><div id="ae-doc-list"></div></section>';
+  }
+  async function loadDocumentLibrary(){
+    if(s.tab!=="documents"||!s.courseId)return;
+    const courseId=s.courseId,status=by("ae-doc-status"),body=by("ae-doc-list");if(!body)return;
+    const storage=db.storage.from(documentBucket);
+    async function reload(){
+      if(status)status.textContent="Loading course documents…";
+      const {data,error}=await storage.list(courseId+"/library",{limit:1000,sortBy:{column:"name",order:"asc"}});
+      if(error){if(status)status.textContent="Unable to read library: "+error.message;return}
+      const files=(data||[]).filter(f=>f.name&&!f.name.startsWith(".")&&f.id);
+      if(status)status.textContent=files.length+" uploaded document"+(files.length===1?"":"s")+" · PDF, Word, Excel and supported course resources · max 20 MB each";
+      function draw(term=""){
+        if(s.courseId!==courseId||s.tab!=="documents"||!by("ae-doc-list"))return;
+        const matching=files.filter(f=>fileLabel(f.name).toLowerCase().includes(term.toLowerCase()));
+        const modules=related("modules").slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
+        body.innerHTML=matching.length?'<div style="display:grid;gap:10px">'+matching.map(f=>{
+          const path=documentPath(f.name),attached=resourceAttached(path);
+          return '<div style="border:1px solid #d8e1ed;border-radius:10px;padding:14px;display:flex;flex-wrap:wrap;gap:12px;align-items:center">'+
+            '<div style="flex:1;min-width:220px"><strong>'+esc(fileLabel(f.name))+'</strong><div class="muted" style="font-size:12px">'+esc((f.name.split(".").pop()||"").toUpperCase())+' · '+((f.metadata?.size||0)/1048576).toFixed(2)+' MB'+(attached?' · Attached to lesson':' · In library')+'</div></div>'+
+            '<button type="button" class="btn secondary" data-doc-preview="'+escAttr(f.name)+'">Download</button>'+
+            '<label style="min-width:160px">Course section<select data-doc-module="'+escAttr(f.name)+'" style="width:100%"><option value="">Choose section</option>'+modules.map(m=>'<option value="'+escAttr(m.id)+'">'+esc(m.title)+'</option>').join("")+'</select></label>'+
+            '<button type="button" class="btn secondary" data-doc-attach="'+escAttr(f.name)+'">Attach</button>'+
+            '<button type="button" class="btn secondary" data-doc-delete="'+escAttr(f.name)+'" '+(attached?'disabled title="Remove the lesson attachment before deleting"':'')+'>Delete</button></div>';
+        }).join("")+'</div>':'<div class="lms-empty">No documents found. Upload a file to get started.</div>';
+        body.querySelectorAll("[data-doc-preview]").forEach(b=>b.onclick=async()=>{
+          b.disabled=true;try{const path=courseId+"/library/"+b.dataset.docPreview;const {data,error}=await storage.createSignedUrl(path,120);if(error||!data?.signedUrl)throw error||Error("Could not create download link");const a=document.createElement("a");a.href=data.signedUrl;a.target="_blank";a.rel="noopener";a.download=fileLabel(b.dataset.docPreview);document.body.append(a);a.click();a.remove()}catch(error){warn(error)}finally{b.disabled=false}
+        });
+        body.querySelectorAll("[data-doc-attach]").forEach(b=>b.onclick=async()=>{
+          const filename=b.dataset.docAttach,select=body.querySelector('[data-doc-module="'+CSS.escape(filename)+'"]'),moduleId=select?.value;
+          if(!moduleId)return notify("Choose a course section before attaching the document.",true);
+          const path=courseId+"/library/"+filename;
+          if(related("lessons").some(l=>l.module_id===moduleId&&l.resource_url===path))return notify("This document is already attached to that section.",true);
+          b.disabled=true;
+          try{
+            const others=related("lessons").filter(l=>l.module_id===moduleId);
+            const {error}=await db.from("course_lessons").insert({course_id:courseId,module_id:moduleId,title:fileLabel(filename).replace(/\.[^.]+$/,""),lesson_type:"download",resource_url:path,allow_download:true,is_preview:false,sort_order:Math.max(0,...others.map(l=>Number(l.sort_order)||0))+10});
+            if(error)throw error;
+            notify("Document attached as a download lesson. Publish course changes to make it visible to students.");
+            await refresh();
+          }catch(error){warn(error);b.disabled=false}
+        });
+        body.querySelectorAll("[data-doc-delete]").forEach(b=>b.onclick=async()=>{
+          const filename=b.dataset.docDelete,path=courseId+"/library/"+filename;
+          if(resourceAttached(path))return notify("Remove the lesson attachment first.",true);
+          if(!confirm("Permanently delete "+fileLabel(filename)+" from this course library?"))return;
+          b.disabled=true;const {error}=await storage.remove([path]);
+          if(error){warn(error);b.disabled=false;return}notify("Document deleted");await reload();
+        });
+      }
+      draw(by("ae-doc-search")?.value||"");
+      by("ae-doc-search").oninput=e=>draw(e.target.value);
+    }
+    by("ae-doc-upload").onchange=async e=>{
+      const chosen=[...(e.target.files||[])];e.target.value="";if(!chosen.length)return;
+      const uploader=by("ae-doc-upload");uploader.disabled=true;
+      let done=0;
+      for(const file of chosen){
+        const extension=(file.name.split(".").pop()||"").toLowerCase();
+        if(!documentExt[extension]||file.size===0||file.size>20*1048576){notify("Unsupported or oversized document: "+file.name,true);continue}
+        if(status)status.textContent="Uploading "+(++done)+" of "+chosen.length+": "+file.name;
+        const filename=crypto.randomUUID()+"_"+file.name.replace(/[^a-zA-Z0-9._-]/g,"_").slice(0,130);
+        const {error}=await storage.upload(courseId+"/library/"+filename,file,{cacheControl:"3600",upsert:false,contentType:documentExt[extension]});
+        if(error)notify("Upload failed: "+file.name+" — "+error.message,true);
+        else notify("Uploaded "+file.name);
+      }
+      uploader.disabled=false;await reload();
+    };
+    by("ae-doc-refresh").onclick=reload;
+    await reload();
+  }
+
   function renderCurriculum(modules,lessons){
     const ordered=[...modules].sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
     return '<section class="lms-builder-panel" id="lms-content-builder"><div class="lms-content-heading"><div><h2>Content</h2><p>Manage chapters here, or open the full visual LMS lesson editor to create and edit multimedia lessons.</p></div><div class="lms-content-actions"><button type="button" class="lms-gold-action" id="lms-open-visual-editor">✎ &nbsp; Open Visual LMS Editor</button><button type="button" class="lms-outline-add" id="lms-add-module">＋ Add section</button></div></div>'+
@@ -469,7 +557,7 @@ export function createLMS({db,root,notify,safe,isCurrent}){
   function route(){
     const parts=(location.hash||"").replace(/^#\/?/,"").split("/");
     if(parts[0]!=="lms")return;
-    if(parts[1]==="course"&&s.courses.some(x=>x.id===parts[2])){s.courseId=parts[2];s.tab=["overview","curriculum","students","settings","preview"].includes(parts[3])?parts[3]:"curriculum"}
+    if(parts[1]==="course"&&s.courses.some(x=>x.id===parts[2])){s.courseId=parts[2];s.tab=["overview","curriculum","documents","students","settings","preview"].includes(parts[3])?parts[3]:"curriculum"}
     else if(parts[1]==="edit"){
       const type=parts[2],id=parts[3],parent=parts[4];
       if(type==="course"){const record=s.courses.find(x=>x.id===id);s.courseId=record?.id||null;openCourseForm(record||null)}
