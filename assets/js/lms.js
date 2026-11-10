@@ -186,11 +186,11 @@ export function createLMS({db,root,notify,safe,isCurrent}){
   const documentPath=(name)=>s.courseId+"/library/"+name;
   const resourceAttached=(path)=>related("lessons").some(l=>l.resource_url===path);
   function renderDocumentsShell(){
-    return '<section class="lms-builder-panel ae-doc-library" style="padding:24px"><div class="lms-content-heading"><div><h2>Document Library</h2><p>Upload PDF, Word, Excel and other learning resources. Attach them to a course section when ready. Files remain private.</p></div></div>'+
-      '<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin:18px 0">'+
-      '<label style="flex:1;min-width:220px">Search documents<input id="ae-doc-search" type="search" placeholder="Search uploaded documents" style="width:100%"></label>'+
-      '<label class="btn" style="cursor:pointer">＋ Upload Documents<input id="ae-doc-upload" type="file" multiple accept=".pdf,.doc,.docx,.xlsx,.pptx,.txt,.png,.jpg,.jpeg" hidden></label>'+
-      '<button type="button" class="btn secondary" id="ae-doc-refresh">Refresh</button></div>'+
+    return '<section class="lms-builder-panel ae-doc-library"><div class="lms-content-heading"><div><h2>Document Library</h2><p>Upload PDF, Word, Excel and other learning resources. Attach them to a course section when ready. Files remain private.</p></div></div>'+
+      '<div class="ae-doc-toolbar">'+
+      '<label class="ae-doc-search-label"><span>Search documents</span><input id="ae-doc-search" type="search" placeholder="Search uploaded documents"></label>'+
+      '<label class="lms-gold-action ae-doc-upload-button">＋ Upload Documents<input id="ae-doc-upload" type="file" multiple accept=".pdf,.doc,.docx,.xlsx,.pptx,.txt,.png,.jpg,.jpeg" hidden></label>'+
+      '<button type="button" class="lms-white-action ae-doc-refresh" id="ae-doc-refresh">Refresh</button></div>'+
       '<p id="ae-doc-status" class="muted" role="status">Loading course documents…</p><div id="ae-doc-list"></div></section>';
   }
   async function loadDocumentLibrary(){
@@ -207,14 +207,14 @@ export function createLMS({db,root,notify,safe,isCurrent}){
         if(s.courseId!==courseId||s.tab!=="documents"||!by("ae-doc-list"))return;
         const matching=files.filter(f=>fileLabel(f.name).toLowerCase().includes(term.toLowerCase()));
         const modules=related("modules").slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
-        body.innerHTML=matching.length?'<div style="display:grid;gap:10px">'+matching.map(f=>{
+        body.innerHTML=matching.length?'<div class="ae-doc-items">'+matching.map(f=>{
           const path=documentPath(f.name),attached=resourceAttached(path);
-          return '<div style="border:1px solid #d8e1ed;border-radius:10px;padding:14px;display:flex;flex-wrap:wrap;gap:12px;align-items:center">'+
-            '<div style="flex:1;min-width:220px"><strong>'+esc(fileLabel(f.name))+'</strong><div class="muted" style="font-size:12px">'+esc((f.name.split(".").pop()||"").toUpperCase())+' · '+((f.metadata?.size||0)/1048576).toFixed(2)+' MB'+(attached?' · Attached to lesson':' · In library')+'</div></div>'+
-            '<button type="button" class="btn secondary" data-doc-preview="'+escAttr(f.name)+'">Download</button>'+
-            '<label style="min-width:160px">Course section<select data-doc-module="'+escAttr(f.name)+'" style="width:100%"><option value="">Choose section</option>'+modules.map(m=>'<option value="'+escAttr(m.id)+'">'+esc(m.title)+'</option>').join("")+'</select></label>'+
-            '<button type="button" class="btn secondary" data-doc-attach="'+escAttr(f.name)+'">Attach</button>'+
-            '<button type="button" class="btn secondary" data-doc-delete="'+escAttr(f.name)+'" '+(attached?'disabled title="Remove the lesson attachment before deleting"':'')+'>Delete</button></div>';
+          return '<div class="ae-doc-item">'+
+            '<div class="ae-doc-file"><strong>'+esc(fileLabel(f.name))+'</strong><div class="ae-doc-file-meta">'+esc((f.name.split(".").pop()||"").toUpperCase())+' · '+((f.metadata?.size||0)/1048576).toFixed(2)+' MB'+(attached?' · Attached to lesson':' · In library')+'</div></div>'+
+            '<button type="button" class="lms-white-action ae-doc-action" data-doc-preview="'+escAttr(f.name)+'">Download</button>'+
+            '<label class="ae-doc-module">Course section<select data-doc-module="'+escAttr(f.name)+'"><option value="">Choose section</option>'+modules.map(m=>'<option value="'+escAttr(m.id)+'">'+esc(m.title)+'</option>').join("")+'</select></label>'+
+            '<button type="button" class="lms-gold-action ae-doc-action" data-doc-attach="'+escAttr(f.name)+'">Attach</button>'+
+            '<button type="button" class="lms-white-action ae-doc-action ae-doc-delete" data-doc-delete="'+escAttr(f.name)+'" '+(attached?'disabled title="Remove the lesson attachment before deleting"':'')+'>Delete</button></div>';
         }).join("")+'</div>':'<div class="lms-empty">No documents found. Upload a file to get started.</div>';
         body.querySelectorAll("[data-doc-preview]").forEach(b=>b.onclick=async()=>{
           b.disabled=true;try{const path=courseId+"/library/"+b.dataset.docPreview;const {data,error}=await storage.createSignedUrl(path,120);if(error||!data?.signedUrl)throw error||Error("Could not create download link");const a=document.createElement("a");a.href=data.signedUrl;a.target="_blank";a.rel="noopener";a.download=fileLabel(b.dataset.docPreview);document.body.append(a);a.click();a.remove()}catch(error){warn(error)}finally{b.disabled=false}
