@@ -1,0 +1,90 @@
+{
+  "schema": "ae-shipper-video-curriculum-alignment-v1",
+  "courseId": "c6318b43-8347-4f41-b576-4f8fbfb0165b",
+  "status": "reviewed-visual-sampling-needs-narration-review",
+  "policy": "Curriculum, narration, on-screen demonstrations, activities and knowledge checks must teach the same skill. No video publishing until narration is verified and any outdated/private content is reviewed.",
+  "sources": [
+    {
+      "filename": "1.mp4",
+      "sourceArchive": "shipper1.zip",
+      "durationSeconds": 2978,
+      "observed": [
+        "Google Maps and geographic prospecting",
+        "Spreadsheet prospect lists",
+        "Web search for prospect businesses and company sites"
+      ],
+      "module": "Finding Shippers and Building Target Lists",
+      "recommendedLessons": [
+        "Use Maps, Search and Industry Events",
+        "Create a Prioritized Prospect List"
+      ],
+      "review": "Long recording: cut at true topic boundaries and verify precise workflow before final lesson placement."
+    },
+    {
+      "filename": "2.mp4",
+      "sourceArchive": "shipper1.zip",
+      "durationSeconds": 462,
+      "observed": [
+        "LinkedIn company and professional-search interface",
+        "Connection or contact research workflow"
+      ],
+      "module": "Finding Decision Makers and Contact Research",
+      "recommendedLessons": [
+        "Find Business Contact Channels",
+        "Who Controls Transportation Decisions?"
+      ],
+      "review": "Review account names, visibility and current LinkedIn UI before use."
+    },
+    {
+      "filename": "3.mp4",
+      "sourceArchive": "shipper2.zip",
+      "durationSeconds": 1709,
+      "observed": [
+        "Freight and manufacturing company websites",
+        "Contact details, contact forms and company research"
+      ],
+      "module": "Finding Shippers and Building Target Lists / Finding Decision Makers and Contact Research",
+      "recommendedLessons": [
+        "Find Manufacturers and Distributors",
+        "Verify a Shipper Before Outreach",
+        "Find Business Contact Channels"
+      ],
+      "review": "Segment by company verification versus locating authorized business contact channels."
+    },
+    {
+      "filename": "4.mp4",
+      "sourceArchive": "shipper2.zip",
+      "durationSeconds": 630,
+      "observed": [
+        "Google Alerts setup and keyword/monitoring options"
+      ],
+      "module": "Follow-Up, CRM and Pipeline Management",
+      "recommendedLessons": [
+        "Set Up Industry and Shipper Monitoring Alerts"
+      ],
+      "review": "Create a dedicated narrative/text lesson matched to this recorded monitoring workflow; verify date-sensitive interface."
+    },
+    {
+      "filename": "5.mp4",
+      "sourceArchive": "direct upload",
+      "durationSeconds": 848,
+      "observed": [
+        "Trucking Planet directory",
+        "Freight broker or shipper lead search and company directory interface"
+      ],
+      "module": "Finding Shippers and Building Target Lists",
+      "recommendedLessons": [
+        "Use Freight Directories to Research Shippers"
+      ],
+      "review": "Check directory categorization, freshness and whether listings are actually shippers versus carriers/brokers."
+    }
+  ],
+  "next": [
+    "Review complete audio narration and storyboard timestamps for every video",
+    "Split long screen recordings at real instruction transitions",
+    "Finalize matching lesson text, worked examples, practice tasks and quiz questions",
+    "Create supplemental voice narration only for nonvideo lessons after text approval",
+    "Prepare processed course videos, upload with private playback and validate accessible student experience"
+  ],
+  "published": false
+}
