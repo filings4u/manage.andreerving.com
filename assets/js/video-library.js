@@ -1,3 +1,13 @@
+async function readVideoDuration(file){
+  return new Promise(resolve=>{
+    const url=URL.createObjectURL(file),video=document.createElement("video");
+    let settled=false;
+    const finish=value=>{if(settled)return;settled=true;clearTimeout(timer);video.removeAttribute("src");video.load();URL.revokeObjectURL(url);resolve(value)};
+    const timer=setTimeout(()=>finish(0),7000);
+    video.preload="metadata";video.onloadedmetadata=()=>finish(Number.isFinite(video.duration)&&video.duration>0?Math.ceil(video.duration):0);
+    video.onerror=()=>finish(0);video.src=url;
+  });
+}
 /* Shared video library: Cloudflare Stream holds media once; lessons store cfstream:uid references. */
 export function createVideoLibrary({db,root,notify,safe,isCurrent}){
  const CATEGORIES=["Software Walkthrough","Practical Demonstration","Case Study","Lecture","Compliance Training","Assessment","Reference","Other"];
@@ -127,7 +137,7 @@ export function createVideoLibrary({db,root,notify,safe,isCurrent}){
      let uid="";
      try{
        report("Preparing secure upload…");
-       const {data,error}=await db.functions.invoke("andre-stream",{body:{mode:"init-library-upload",fileSize:file.size,fileName:file.name}});
+       const {data,error}=await db.functions.invoke("andre-stream",{body:{mode:"init-library-upload",fileSize:file.size,fileName:file.name,durationSeconds:await readVideoDuration(file)}});
        if(error||!data?.success||!data.uid||!data.uploadURL){
          let details=data||null;
          if(error?.context?.json){try{details=await error.context.json()}catch{}}
