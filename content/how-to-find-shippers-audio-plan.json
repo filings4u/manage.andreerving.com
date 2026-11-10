@@ -1,0 +1,69 @@
+{
+  "schema": "ae-course-audio-plan-v1",
+  "courseId": "c6318b43-8347-4f41-b576-4f8fbfb0165b",
+  "course": "How to Find Shippers",
+  "courseStatus": "draft",
+  "phase": "curriculum-first-audio-not-generated",
+  "lessonAudio": {
+    "scope": "35 written instructional lessons",
+    "format": "MP3 or WAV, per-lesson narration",
+    "delivery": "Private R2 lesson-media linked in course_lessons.content_html with data-ae-media='audio'",
+    "steps": [
+      "Finalize and review each lesson text and any practice activities.",
+      "Write narration that matches the approved lesson; natural instructional voice with examples and action steps.",
+      "Generate and review audio, consistent pronunciation and volume across all modules.",
+      "Upload each finished file through the management lesson studio and attach to matching lesson.",
+      "Verify audio access and playback in the student portal on desktop and mobile."
+    ]
+  },
+  "quizAudio": {
+    "scope": "8 knowledge checks",
+    "policy": "Optional question reading for accessibility after quiz review; do not narrate answer keys before submission."
+  },
+  "video": {
+    "scope": "5 uploaded MP4 source files",
+    "policy": "Review and map to lessons only after curriculum approval; no video files uploaded or published yet."
+  },
+  "modules": [
+    {
+      "order": 1,
+      "title": "Shipper Prospecting Foundations",
+      "audioLessons": 4
+    },
+    {
+      "order": 2,
+      "title": "Finding Shippers and Building Target Lists",
+      "audioLessons": 5
+    },
+    {
+      "order": 3,
+      "title": "Finding Decision Makers and Contact Research",
+      "audioLessons": 4
+    },
+    {
+      "order": 4,
+      "title": "Cold Calling, Email and First Contact",
+      "audioLessons": 5
+    },
+    {
+      "order": 5,
+      "title": "Shipper Discovery and Qualification",
+      "audioLessons": 4
+    },
+    {
+      "order": 6,
+      "title": "Follow-Up, CRM and Pipeline Management",
+      "audioLessons": 4
+    },
+    {
+      "order": 7,
+      "title": "Proposals, Shipper Onboarding and Account Growth",
+      "audioLessons": 4
+    },
+    {
+      "order": 8,
+      "title": "Final Practicum: Build a 30-Day Shipper Acquisition Plan",
+      "audioLessons": 5
+    }
+  ]
+}
