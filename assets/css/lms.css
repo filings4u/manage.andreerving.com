@@ -241,3 +241,42 @@
 .ae-media-block figcaption{margin-top:10px;font-size:12px;color:#687d96;text-align:center;overflow-wrap:anywhere}
 .ae-preview-stage-body{font-size:15px}
 @media(max-width:680px){.ae-formatbar{gap:4px}.ae-formatbar #ae-insert-image,.ae-formatbar #ae-insert-audio{flex:1}.ae-media-block{padding:10px!important}}
+
+
+/* Course Document Library — match the LMS management interface */
+.ae-doc-library{padding:0 0 24px;overflow:hidden}
+.ae-doc-library .lms-content-heading{padding:26px 28px 22px;margin:0;border-bottom:1px solid #e3e9f1}
+.ae-doc-library .lms-content-heading h2{font-size:21px;line-height:1.3;color:#102d4e;letter-spacing:-.025em}
+.ae-doc-library .lms-content-heading p{font-size:13px;line-height:1.6;color:#70829c;max-width:750px}
+.ae-doc-toolbar{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;padding:24px 28px 14px}
+.ae-doc-search-label{display:flex;flex:1 1 300px;min-width:220px;flex-direction:column;gap:8px;color:#294361;font-weight:650;font-size:12px}
+.ae-doc-library .ae-doc-search-label input{display:block;box-sizing:border-box;width:100%;height:44px;min-height:44px;padding:0 14px;border:1px solid #ccd8e6;border-radius:9px;background:#fff;color:#132e4b;box-shadow:none;font:inherit;font-size:13px}
+.ae-doc-library .ae-doc-search-label input:focus,.ae-doc-library .ae-doc-module select:focus{border-color:#c8952d;outline:3px solid #d7a23b30;outline-offset:1px}
+.ae-doc-library .ae-doc-upload-button,.ae-doc-library .ae-doc-refresh{height:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;box-sizing:border-box;margin:0;padding:0 18px;font-size:13px;line-height:1;cursor:pointer;border-radius:9px}
+.ae-doc-library .ae-doc-upload-button{background:#d99a13;border:1px solid #d99a13;color:#fff;font-weight:750}
+.ae-doc-library .ae-doc-refresh{border:1px solid #d1deed;background:white;color:#163451;font-weight:700}
+.ae-doc-library #ae-doc-status{margin:0;padding:2px 28px 17px;font-size:12px;line-height:1.5;color:#667e99}
+.ae-doc-library #ae-doc-list{padding:0 28px}
+.ae-doc-library .lms-empty{margin:0;padding:36px 16px;min-height:85px;display:flex;align-items:center;justify-content:center;border:1px dashed #d5e0ec;background:#f6f9fc;border-radius:11px;color:#8294aa}
+.ae-doc-items{display:grid;gap:12px}
+.ae-doc-item{display:flex;align-items:flex-end;flex-wrap:wrap;gap:12px;padding:16px;background:#fff;border:1px solid #dae3ef;border-radius:11px}
+.ae-doc-file{flex:1 1 260px;min-width:220px;align-self:center;overflow-wrap:anywhere;color:#112e50}
+.ae-doc-file strong{font-size:14px}
+.ae-doc-file-meta{margin-top:6px;color:#6c8199;font-size:12px;line-height:1.45}
+.ae-doc-module{display:flex;flex-direction:column;gap:6px;min-width:195px;flex:0 1 240px;font-size:12px;font-weight:700;color:#294361}
+.ae-doc-library .ae-doc-module select{width:100%;height:40px;box-sizing:border-box;border:1px solid #cdd9e7;border-radius:8px;background:white;padding:0 10px;color:#193653;font-size:13px}
+.ae-doc-library .ae-doc-action{min-height:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;padding:0 15px;margin:0;border-radius:8px;font-size:12px;white-space:nowrap;cursor:pointer}
+.ae-doc-library .ae-doc-delete{color:#95443e}
+.ae-doc-library .ae-doc-action:disabled{opacity:.48;cursor:not-allowed}
+@media(max-width:760px){
+ .ae-doc-library .lms-content-heading{padding:20px 18px}
+ .ae-doc-toolbar{padding:18px 18px 12px;gap:10px}
+ .ae-doc-search-label{flex-basis:100%;min-width:0}
+ .ae-doc-library .ae-doc-upload-button{flex:1}
+ .ae-doc-library #ae-doc-status{padding:3px 18px 14px}
+ .ae-doc-library #ae-doc-list{padding:0 18px}
+ .ae-doc-item{align-items:stretch}
+ .ae-doc-file{flex-basis:100%;min-width:0}
+ .ae-doc-module{flex:1 1 100%;min-width:0}
+ .ae-doc-library .ae-doc-action{flex:1 1 auto}
+}
