@@ -242,6 +242,12 @@ async function sendInvoiceForOrder(orderId:string){
 async function createOrder(input:Record<string,unknown>,staff:{id:string}){
  const address=email(input.email),itemKey=String(input.priceKey||""),mode=String(input.mode||"");
  if(!emailPattern.test(address)||!/^offering\.[a-z0-9-]+$/.test(itemKey)||!["free","invoice"].includes(mode))throw Error("Enter customer details, an offering, and Free Access or Accept Payment");
+ const requestedCourseId=String(input.courseId||"");
+ if(requestedCourseId&&!uuidPattern.test(requestedCourseId))throw Error("Invalid selected course");
+ if(requestedCourseId){
+  const match=await rows("courses","?select=id,slug,status&id=eq."+requestedCourseId+"&limit=1");
+  if(!match.length||match[0].status!=="published"||itemKey!=="offering."+match[0].slug)throw Error("This order must contain the selected course");
+ }
  const first=name(input.firstName),last=name(input.lastName),phone=String(input.phone||"").slice(0,32);
  if(!first||!last)throw Error("Customer first and last name are required");
  if(await staffExclusion(address))throw Error("Management accounts cannot be added as customers through invoice orders");
@@ -259,6 +265,7 @@ async function createOrder(input:Record<string,unknown>,staff:{id:string}){
  if(item.section==="Courses"&&!itemKey.startsWith("offering.extension-")){
   const found=await rows("courses","?select=id&slug=eq."+encodeURIComponent(orderCourseForKey(itemKey))+"&status=eq.published&limit=1");
   courseId=found[0]?.id||null;
+  if(requestedCourseId&&courseId!==requestedCourseId)throw Error("Unable to associate this order with the selected course");
  }
  await create("order_items",{order_id:id,course_id:courseId,item_type:item.section==="Courses"?"course":"product",item_name:item.label,unit_price:amount,line_total:amount,quantity:1});
  await create("crm_order_invoices",{order_id:id,mode,token_hash:await hashInvoiceToken(crypto.randomUUID()),price_key:itemKey,status:mode==="free"?"free":"draft"});
