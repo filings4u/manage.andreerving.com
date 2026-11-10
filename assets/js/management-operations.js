@@ -222,7 +222,7 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
    '<section class="panel ae-mgmt-panel"><h2>Order workflow</h2><p><strong>1.</strong> Create an order using the customer name and email.</p><p><strong>2.</strong> Send a branded invoice, or choose Free Access.</p><p><strong>3.</strong> Payment is verified, then an account is created or reused.</p><p><strong>4.</strong> Course access is granted and branded account invitation and receipt emails are sent.</p><p class="muted">An unpaid invoice never creates an account or activates course access.</p></section></div>'+
    '<section class="panel ae-mgmt-panel"><h2>All orders</h2><div class="tablewrap"><table><thead><tr><th>Order</th><th>Customer</th><th>Amount</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody>'+
    (records.map(o=>{const m=meta.get(o.id);return '<tr><td><strong>'+escapeHtml(o.order_number)+'</strong></td><td>'+escapeHtml(o.customer_email)+'</td><td>'+money(o.total)+'</td><td><span class="pill '+escapeHtml(o.status)+'">'+escapeHtml(o.status)+'</span></td><td>'+formatDate(o.created_at)+'</td><td>'+
-     (o.status==="pending"&&m?.mode==="invoice"?'<button class="ae-inline-btn" type="button" data-send-invoice="'+escapeHtml(o.id)+'">'+(m.status==="sent"?"Resend Invoice":"Send Invoice")+'</button>':o.status==="paid"?'<span>Paid / Free</span>':'<span>Pending</span>')+'</td></tr>'}).join("")||'<tr><td colspan="6">No orders yet.</td></tr>')+
+     (o.status==="pending"&&m?.mode==="invoice"?'<button class="ae-inline-btn" type="button" data-send-invoice="'+escapeHtml(o.id)+'">'+(m.status==="sent"?"Resend Invoice":"Send Invoice")+'</button>':["paid","completed"].includes(o.status)?'<button class="ae-inline-btn" type="button" data-order-invite="'+escapeHtml(o.id)+'">Send Account Invite</button>':'<span>Pending</span>')+'</td></tr>'}).join("")||'<tr><td colspan="6">No orders yet.</td></tr>')+
    '</tbody></table></div></section>';
   const flow=root.querySelector('#ae-order-flow-explanation'),submit=root.querySelector('#ae-create-order [type="submit"]');
   const customerSelect=root.querySelector('#ae-order-customer');
@@ -250,6 +250,12 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
    notify(values.mode==="free"?"Free access order "+result.orderNumber+" completed.":"Invoice "+result.orderNumber+" sent to "+values.email);
    sessionStorage.removeItem("ae_order_course_context");sessionStorage.removeItem("ae_enrollment_return");
    await ordersPage();
+  });
+  root.querySelectorAll("[data-order-invite]").forEach(btn=>btn.onclick=async()=>{
+   const order=records.find(o=>o.id===btn.dataset.orderInvite);if(!order)return;
+   btn.disabled=true;
+   try{await api("send_invite",{email:order.customer_email,orderId:order.id});notify("Branded account invitation sent to "+order.customer_email);await ordersPage()}
+   catch(e){showError(e)}finally{btn.disabled=false}
   });
   root.querySelectorAll("[data-send-invoice]").forEach(btn=>btn.onclick=async()=>{
    btn.disabled=true;
