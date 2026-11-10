@@ -257,6 +257,9 @@ async function createOrder(input:Record<string,unknown>,staff:{id:string}){
  if(mode==="invoice"&&price<=0)throw Error("Choose Free Access for zero-dollar offerings");
  const matched=await rows("customer_profiles","?select=id,email&email=eq."+encodeURIComponent(address)+"&limit=1");
  const existingId=matched[0]?.id||null;
+ const selectedCustomerId=String(input.customerId||"");
+ if(!existingId||!uuidPattern.test(selectedCustomerId)||existingId!==selectedCustomerId)
+  throw Error("Create and select the customer in Customer CRM before creating the order.");
  const ref="AE-MAN-"+crypto.randomUUID().slice(0,12).toUpperCase(),amount=mode==="free"?0:price;
  const order={order_number:ref,user_id:existingId,customer_email:address,customer_name:first+" "+last,customer_first_name:first,customer_last_name:last,customer_phone:phone||null,status:mode==="free"?"paid":"pending",subtotal:amount,total:amount,currency:"USD",external_payment_id:mode==="free"?"free_"+crypto.randomUUID().replace(/-/g,""):null};
  const saved=await create("orders",order,true),id=saved[0]?.id;
