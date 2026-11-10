@@ -229,6 +229,7 @@ async function sendInvoiceForOrder(orderId:string){
  const data=await rows("orders","?select=*&id=eq."+orderId+"&limit=1"),o=data[0];
  const meta=await rows("crm_order_invoices","?select=*&order_id=eq."+orderId+"&limit=1"),m=meta[0];
  if(!o||!m||m.mode!=="invoice"||o.status!=="pending")throw Error("Only unpaid invoice orders can be sent");
+ if(m.payment_intent_id)throw Error("Payment is already in progress. Verify its status in Stripe before resending.");
  const token=crypto.randomUUID().replace(/-/g,"")+crypto.randomUUID().replace(/-/g,"");
  const link="https://andreerving.com/invoice.html?token="+token;
  await update("crm_order_invoices","?order_id=eq."+orderId,{token_hash:await hashInvoiceToken(token),status:"draft",updated_at:new Date().toISOString()});
@@ -254,7 +255,7 @@ async function voidInvoice(orderId:string){
  const data=await invoiceDetail(orderId),o=data.order,m=data.invoice;
  if(!m||m.mode!=="invoice"||o.status!=="pending")throw Error("Only unpaid invoices can be voided");
  if(m.payment_intent_id)throw Error("This invoice has a payment attempt. Verify or cancel the payment in Stripe before voiding.");
- const updated=await update("orders","?id=eq."+orderId+"&status=eq.pending",{status:"void"});
+ const updated=await update("orders","?id=eq."+orderId+"&status=eq.pending",{status:"cancelled"});
  if(updated.length!==1)throw Error("Invoice was modified. Refresh and retry.");
  await update("crm_order_invoices","?order_id=eq."+orderId,{status:"void",token_hash:await hashInvoiceToken(crypto.randomUUID()),updated_at:new Date().toISOString()});
  return {orderId,status:"void"};
