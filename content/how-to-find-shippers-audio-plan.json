@@ -5,7 +5,7 @@
   "courseStatus": "draft",
   "phase": "curriculum-first-audio-not-generated",
   "lessonAudio": {
-    "scope": "35 written instructional lessons",
+    "scope": "37 written instructional lessons",
     "format": "MP3 or WAV, per-lesson narration",
     "delivery": "Private R2 lesson-media linked in course_lessons.content_html with data-ae-media='audio'",
     "steps": [
@@ -21,7 +21,7 @@
     "policy": "Optional question reading for accessibility after quiz review; do not narrate answer keys before submission."
   },
   "video": {
-    "scope": "5 uploaded MP4 source files",
+    "scope": "5 source MP4 files mapped to relevant lessons; video upload remains pending",
     "policy": "Review and map to lessons only after curriculum approval; no video files uploaded or published yet."
   },
   "modules": [
@@ -33,7 +33,7 @@
     {
       "order": 2,
       "title": "Finding Shippers and Building Target Lists",
-      "audioLessons": 5
+      "audioLessons": 6
     },
     {
       "order": 3,
@@ -53,7 +53,7 @@
     {
       "order": 6,
       "title": "Follow-Up, CRM and Pipeline Management",
-      "audioLessons": 4
+      "audioLessons": 5
     },
     {
       "order": 7,
