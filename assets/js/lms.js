@@ -37,7 +37,7 @@ export function createLMS({db,root,notify,safe,isCurrent}){
   async function refresh(){try{
     const [a,b,c,d,e,pubs]=await Promise.all([
       list("courses"),list("course_modules"),list("course_lessons"),
-      list("course_enrollments","id,user_id,course_id,status,enrolled_at,expires_at","enrolled_at"),
+      list("course_enrollments","id,user_id,course_id,order_id,status,enrolled_at,expires_at","enrolled_at"),
       list("customer_profiles","id,email,full_name","email"),
       list("course_publications","course_id,published_at,revision,has_unpublished_changes","course_id")
     ]);
@@ -85,7 +85,7 @@ export function createLMS({db,root,notify,safe,isCurrent}){
     const displayTabs=[["overview","Overview"],["curriculum","Content"],["documents","Document Library"],["students","Participants"],["settings","Settings"]];
     root.innerHTML='<div class="lms-builder-breadcrumb"><button type="button" id="lms-back">‹ &nbsp; Courses & Programs</button><span> / '+esc(c.title)+'</span></div>'+
       '<div class="lms-builder-top"><div class="lms-builder-identity"><span class="lms-builder-book" aria-hidden="true">▤</span><div><div class="lms-builder-title"><h1>'+esc(c.title)+'</h1><span class="lms-course-kind">Course</span></div><div class="lms-builder-sub">'+esc(c.category||"Learning program")+' <span>·</span> <span class="lms-status-text">'+esc(c.status)+'</span></div></div></div>'+
-      '<div class="lms-builder-actions"><button type="button" class="lms-white-action" id="lms-preview">◉ &nbsp; Preview</button><button type="button" class="lms-white-action" id="lms-invite">♙ &nbsp; Invite Participants</button><div class="lms-add-container"><button type="button" class="lms-gold-action" id="lms-add-menu" aria-haspopup="true" aria-expanded="false">＋ &nbsp; Add <svg class="ae-add-chevron" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button><div class="lms-add-dropdown" id="lms-add-dropdown" hidden><span class="lms-menu-heading">SECTION</span><button type="button" data-add-kind="section">▣ &nbsp; Add section</button><span class="lms-menu-heading">LESSONS</span><button type="button" data-add-kind="text">▤ &nbsp; Article</button><button type="button" data-add-kind="video">▷ &nbsp; Video</button><button type="button" data-add-kind="quiz">☷ &nbsp; Quiz</button><button type="button" data-add-kind="download">↓ &nbsp; Download</button></div></div></div></div>'+
+      '<div class="lms-builder-actions"><button type="button" class="lms-white-action" id="lms-preview">◉ &nbsp; Preview</button><button type="button" class="lms-white-action" id="lms-invite">♙ &nbsp; Create Course Order</button><div class="lms-add-container"><button type="button" class="lms-gold-action" id="lms-add-menu" aria-haspopup="true" aria-expanded="false">＋ &nbsp; Add <svg class="ae-add-chevron" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button><div class="lms-add-dropdown" id="lms-add-dropdown" hidden><span class="lms-menu-heading">SECTION</span><button type="button" data-add-kind="section">▣ &nbsp; Add section</button><span class="lms-menu-heading">LESSONS</span><button type="button" data-add-kind="text">▤ &nbsp; Article</button><button type="button" data-add-kind="video">▷ &nbsp; Video</button><button type="button" data-add-kind="quiz">☷ &nbsp; Quiz</button><button type="button" data-add-kind="download">↓ &nbsp; Download</button></div></div></div></div>'+
       '<nav class="lms-builder-tabs" role="tablist" aria-label="Course management">'+displayTabs.map(([id,label])=>'<button type="button" role="tab" aria-selected="'+(s.tab===id)+'" class="'+(s.tab===id?'active':'')+'" data-tab="'+id+'">'+label+'</button>').join('')+'</nav>'+
       '<div id="lms-tab-body"></div>';
     by("lms-back").onclick=()=>{s.courseId=null;openRoute("courses");render()};
@@ -362,7 +362,10 @@ export function createLMS({db,root,notify,safe,isCurrent}){
       if(!await brandedConfirm(restoring?"Grant access again":"Revoke course access",
         (restoring?"Restore access for ":"Revoke access for ")+(s.customers.find(p=>p.id===en.user_id)?.full_name||"this participant")+"? Their account, purchase history and course progress will remain intact."))return;
       const changes={status:restoring?"active":"cancelled"};
-      if(restoring){const days=Number(current()?.access_days);changes.expires_at=Number.isFinite(days)&&days>0?new Date(Date.now()+days*86400000).toISOString():null}
+      if(restoring){
+        if(!en.order_id){notify("An order is required before access can be restored.",true);openEnrollment(en);return}
+        const days=Number(current()?.access_days);changes.expires_at=Number.isFinite(days)&&days>0?new Date(Date.now()+days*86400000).toISOString():null
+      }
       const result=await db.from("course_enrollments").update(changes).eq("id",en.id).eq("course_id",s.courseId).select("id").single();
       if(result.error)return warn(result.error);
       notify(restoring?"Course access granted again":"Course access revoked; records preserved");
