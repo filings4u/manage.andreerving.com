@@ -1,5 +1,5 @@
 import {createLiveTrainingManagement} from './live-training.js?v=manual-teams-only-20261109';
-import {createLMS} from './lms.js?v=document-library-20261110';
+import {createLMS} from './lms.js?v=document-library-style-20261110';
 import {createVideoLibrary} from './video-library.js?v=multi-course-paged-20261108';
 import {createManagementOperations} from './management-operations.js?v=crm-invoice-first-20261109';
 import {createBlogStudio,cleanBlogHTML} from './blog-studio.js?v=unsaved-20261107';
