@@ -290,7 +290,7 @@ async function customerDetail(input:Record<string,unknown>){
  const identity=person.id,canonical=email(person.email);
  const [orders,enrollments,documents,tickets,extensions,crmDetails]=await Promise.all([
   rows("orders","?select=*&or=(user_id.eq."+identity+",customer_email.eq."+encodeURIComponent(canonical)+")&order=created_at.desc&limit=250"),
-  rows("course_enrollments","?select=id,course_id,status,enrolled_at,expires_at,completed_at&user_id=eq."+identity+"&limit=250"),
+  rows("course_enrollments","?select=id,course_id,order_id,status,enrolled_at,expires_at,completed_at&user_id=eq."+identity+"&limit=250"),
   rows("customer_documents","?select=id,title,document_type,created_at&user_id=eq."+identity+"&limit=250"),
   rows("support_tickets","?select=id,subject,status,created_at&user_id=eq."+identity+"&limit=250"),
   rows("course_access_extensions","?select=course_id,added_days,new_expires_at,created_at&user_id=eq."+identity+"&limit=250"),
@@ -331,7 +331,7 @@ Deno.serve(async(request)=>{
    case "list_orders":result={items:await rows("orders","?select=id,order_number,user_id,customer_email,customer_name,total,currency,status,created_at&order=created_at.desc&limit=500"),invoices:await rows("crm_order_invoices","?select=order_id,mode,status,invoice_sent_at,last_error&limit=500")};break;
    case "list_prices":result={items:await rows("site_prices","?select=price_key,label,amount,currency,section,active&order=label.asc&limit=500")};break;
    case "list_courses":result={items:await rows("courses","?select=id,title,slug,status,access_days&order=title.asc&limit=500")};break;
-   case "list_enrollments":result={items:await rows("course_enrollments","?select=id,user_id,course_id,status,enrolled_at,expires_at,completed_at&order=enrolled_at.desc&limit=1000")};break;
+   case "list_enrollments":result={items:await rows("course_enrollments","?select=id,user_id,course_id,order_id,status,enrolled_at,expires_at,completed_at&order=enrolled_at.desc&limit=1000")};break;
    case "list_extensions":result={items:await rows("course_extension_prices","?select=course_id,amount,enabled,days&limit=500")};break;
    case "create_account":result=await createAccount(input);break;
    case "update_customer_details":result=await saveCustomerDetails(input);break;
