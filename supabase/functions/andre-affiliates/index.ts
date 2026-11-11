@@ -1,6 +1,6 @@
 const B=Deno.env.get("SUPABASE_URL")||"https://gnfyidajbectlppsekzj.supabase.co";
 const S=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";
-const ORIGINS=new Set(["https://andreerving.com","https://www.andreerving.com","https://app.andreerving.com","https://manage.andreerving.com"]);
+const ORIGINS=new Set(["https://andreerving.com","https://www.andreerving.com","https://affiliate.andreerving.com","https://manage.andreerving.com"]);
 const eMail=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const uuid=/^[0-9a-f]{8}-[0-9a-f-]{27,36}$/i;
 function reply(data:unknown,status=200,origin=""){return new Response(JSON.stringify(data),{status,headers:{"Content-Type":"application/json","Cache-Control":"no-store","Vary":"Origin",...(ORIGINS.has(origin)?{"Access-Control-Allow-Origin":origin}:{}),"Access-Control-Allow-Headers":"content-type,authorization,apikey","Access-Control-Allow-Methods":"POST,OPTIONS"}})}
@@ -33,19 +33,24 @@ async function register(data:any,req:Request){
  const limiter=await fetch(B+"/rest/v1/rpc/reserve_auth_email_delivery",{method:"POST",headers:headers(),body:JSON.stringify({p_email_hash:eHash,p_requester_hash:ipHash})});
  if(!limiter.ok)throw Error("Registration verification is unavailable");
  if(await limiter.json()!==true)return {submitted:true};
- const existing=(await db("affiliate_profiles","?select=id&email=eq."+encodeURIComponent(address)+"&limit=1"))[0];
- if(existing)return {submitted:true};
- const generated=await fetch(B+"/auth/v1/admin/generate_link",{method:"POST",headers:headers(),body:JSON.stringify({type:"invite",email:address,redirect_to:"https://andreerving.com/affiliate-portal/"})});
- if(!generated.ok){console.warn("Affiliate registration verification link unavailable",generated.status);return {submitted:true}}
+ // Existing Supabase users may also be students. Do not silently drop their requests.
+ // Try account invitation first; for existing Auth accounts send a password-safe magic link.
+ let invitationType="invite";
+ let generated=await fetch(B+"/auth/v1/admin/generate_link",{method:"POST",headers:headers(),body:JSON.stringify({type:"invite",email:address,redirect_to:"https://affiliate.andreerving.com/"})});
+ if(!generated.ok){
+  invitationType="magiclink";
+  generated=await fetch(B+"/auth/v1/admin/generate_link",{method:"POST",headers:headers(),body:JSON.stringify({type:"magiclink",email:address,redirect_to:"https://affiliate.andreerving.com/"})});
+ }
+ if(!generated.ok){console.error("Affiliate invitation generation failed",generated.status);throw Error("Unable to prepare your affiliate verification email");}
  const info=await generated.json(),token=String(info.properties?.hashed_token||"");
  if(!/^[A-Za-z0-9_-]{12,300}$/.test(token))throw Error("Could not prepare secure email verification");
  const id=String(info.user?.id||"");
- if(uuid.test(id)){
+ if(uuid.test(id)&&invitationType==="invite"){
   // Authentication record only. No affiliate application / referral code is created yet.
   const metadata={full_name:name};
   await fetch(B+"/auth/v1/admin/users/"+id,{method:"PUT",headers:headers(),body:JSON.stringify({user_metadata:metadata})});
  }
- const link="https://andreerving.com/affiliate-portal/activate.html?token_hash="+encodeURIComponent(token)+"&type=invite";
+ const link="https://affiliate.andreerving.com/activate.html?token_hash="+encodeURIComponent(token)+"&type="+invitationType;
  const html='<div style="max-width:580px;margin:auto;padding:32px;font:16px Arial;color:#12304d"><img alt="Andre Erving" width="300" src="https://gnfyidajbectlppsekzj.supabase.co/storage/v1/object/public/Andre%20Erving%20Public/logos/logo.png"><h1>Verify your affiliate email</h1><p>Confirm your email address and create your password before applying to the Andre Erving Affiliate Program.</p><p><a href="'+link+'" style="background:#c99422;color:#10243f;font-weight:800;padding:15px 20px;border-radius:7px;text-decoration:none;display:inline-block">Verify email &amp; activate account</a></p><p>After verification, sign in and submit your affiliate application for management review.</p><p>If you did not request this, ignore the message.</p></div>';
  const mail=await fetch("https://api.resend.com/emails",{method:"POST",headers:{Authorization:"Bearer "+rkey,"Content-Type":"application/json"},body:JSON.stringify({from:"Andre Erving <support@andreerving.com>",to:[address],subject:"Verify your Andre Erving affiliate email",html})});
  if(!mail.ok)throw Error("Unable to send verification email");
@@ -97,8 +102,12 @@ async function apply(data:any,req:Request){
  const u=await me(req);
  const full_name=clean(data.fullName||u.user_metadata?.full_name,150),address=email(u.email),website=clean(data.website,250),promotion_plan=clean(data.promotionPlan,900);
  if(full_name.length<2||!eMail.test(address)||promotion_plan.length<15)throw Error("Enter your name, valid email, and promotion plan (15 characters minimum)");
- const found=(await db("affiliate_profiles","?select=id,status,code&email=eq."+encodeURIComponent(address)+"&limit=1"))[0];
- if(found)return {submitted:true,existing:true,status:found.status};
+ const found=(await db("affiliate_profiles","?select=id,status,code,user_id&email=eq."+encodeURIComponent(address)+"&limit=1"))[0];
+ if(found){
+  if(found.user_id&&found.user_id!==u.id)throw Error("This email is already associated with another affiliate account. Contact support.");
+  if(!found.user_id)await patch("affiliate_profiles","?id=eq."+found.id+"&user_id=is.null",{user_id:u.id,updated_at:new Date().toISOString()});
+  return {submitted:true,existing:true,status:found.status};
+ }
  const st=await settings();const code=crypto.randomUUID().replaceAll("-","").slice(0,12);
  await insert("affiliate_profiles",{user_id:u.id,email:address,full_name,website,promotion_plan,code,status:"pending",commission_rate:st.default_commission_rate});
  const resend=Deno.env.get("RESEND_API_KEY")||"";
@@ -148,9 +157,12 @@ async function dashboard(req:Request){
  if(!verification.verified)return {verificationRequired:true,verification,profile:null,conversions:[],payouts:[],clicks:0};
  const u=await me(req);
  let p=(await db("affiliate_profiles","?select=*&user_id=eq."+u.id+"&limit=1"))[0];
- if(!p&&u.email)p=(await db("affiliate_profiles","?select=*&email=eq."+encodeURIComponent(email(u.email))+"&limit=1"))[0];
+ if(!p&&u.email){
+  const matched=(await db("affiliate_profiles","?select=*&email=eq."+encodeURIComponent(email(u.email))+"&limit=1"))[0];
+  if(matched&&(!matched.user_id||matched.user_id===u.id))p=matched;
+ }
  if(!p)return {profile:null,settings:await settings(),clicks:0,conversions:[]};
- if(!p.user_id&&p.status==="active")await patch("affiliate_profiles","?id=eq."+p.id+"&user_id=is.null",{user_id:u.id});
+ if(!p.user_id){await patch("affiliate_profiles","?id=eq."+p.id+"&user_id=is.null",{user_id:u.id,updated_at:new Date().toISOString()});p.user_id=u.id;}
  const [clicks,conversions,payouts,st]=await Promise.all([
   db("affiliate_clicks","?select=id&affiliate_id=eq."+p.id+"&limit=1000"),
   db("affiliate_conversions","?select=payment_intent_id,gross_amount,commission_amount,status,available_at,created_at&affiliate_id=eq."+p.id+"&order=created_at.desc&limit=100"),
@@ -182,7 +194,7 @@ async function approval(data:any,req:Request){
  if(status==="active"&&old.status!=="active"&&updated.length===1){
   const resend=Deno.env.get("RESEND_API_KEY")||"";
   if(resend){
-   const link="https://andreerving.com/affiliate-portal/";
+   const link="https://affiliate.andreerving.com/";
    const html='<div style="font:16px Arial;color:#112c49;max-width:600px;margin:auto;padding:30px"><img alt="Andre Erving" width="300" src="https://gnfyidajbectlppsekzj.supabase.co/storage/v1/object/public/Andre%20Erving%20Public/logos/logo.png"><h1>Your affiliate application is approved</h1><p>Welcome to the Andre Erving Affiliate Program. Your referral dashboard is now unlocked. Sign in using the affiliate account you already verified.</p><p><a href="'+link+'" style="display:inline-block;background:#1e4a86;color:white;padding:15px 22px;text-decoration:none;border-radius:8px">Open your affiliate dashboard</a></p><p>Questions? support@andreerving.com</p></div>';
    const mail=await fetch("https://api.resend.com/emails",{method:"POST",headers:{"Authorization":"Bearer "+resend,"Content-Type":"application/json"},body:JSON.stringify({from:"Andre Erving <support@andreerving.com>",to:[old.email],subject:"Approved: Your Andre Erving affiliate dashboard is ready",html})});
    if(!mail.ok)console.error("Affiliate approval notification failed",mail.status);
