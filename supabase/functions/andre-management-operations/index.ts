@@ -277,14 +277,16 @@ async function createOrder(input:Record<string,unknown>,staff:{id:string}){
  const price=Number(item.amount);if(!Number.isFinite(price)||price<0)throw Error("Invalid catalog amount");
  if(mode==="invoice"&&price<=0)throw Error("Choose Free Access for zero-dollar offerings");
  const selectedCustomerId=String(input.customerId||"");
- if(!uuidPattern.test(selectedCustomerId))throw Error("Select an existing customer for this order.");
- const customerRows=await rows("customer_profiles","?select=id,email,full_name,phone&id=eq."+selectedCustomerId+"&limit=1");
- const selectedCustomer=customerRows[0];
- if(!selectedCustomer)throw Error("The selected customer account could not be found. Refresh the customer list.");
- const existingId=selectedCustomer.id;
- const customerAddress=email(selectedCustomer.email);
- if(!emailPattern.test(customerAddress))throw Error("The selected customer needs a valid email address in Customer CRM.");
- if(address!==customerAddress)throw Error("The customer email changed. Select the customer again to refresh their details.");
+ if(selectedCustomerId&&!uuidPattern.test(selectedCustomerId))throw Error("Invalid selected customer.");
+ // Existing CRM customer is optional: new buyers can be invoiced without creating an Auth login.
+ // Resolve any matching existing customer by email to avoid duplicate records.
+ const customerRows=await rows("customer_profiles",selectedCustomerId
+  ?"?select=id,email&id=eq."+selectedCustomerId+"&limit=1"
+  :"?select=id,email&email=ilike."+encodeURIComponent(address)+"&limit=1");
+ const selectedCustomer=customerRows[0]||null;
+ if(selectedCustomerId&&!selectedCustomer)throw Error("Selected customer no longer exists. Refresh and try again.");
+ if(selectedCustomer&&email(selectedCustomer.email)!==address)throw Error("Customer email does not match the selected customer.");
+ const existingId=selectedCustomer?.id||null;
  const ref="AE-MAN-"+crypto.randomUUID().slice(0,12).toUpperCase(),amount=mode==="free"?0:price;
  const order={order_number:ref,user_id:existingId,customer_email:address,customer_name:first+" "+last,customer_first_name:first,customer_last_name:last,customer_phone:phone||null,status:mode==="free"?"paid":"pending",subtotal:amount,total:amount,currency:"USD",external_payment_id:mode==="free"?"free_"+crypto.randomUUID().replace(/-/g,""):null};
  const saved=await create("orders",order,true),id=saved[0]?.id;
