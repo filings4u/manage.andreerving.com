@@ -72,12 +72,23 @@ export function createAffiliateManagement({db,root,notify,isCurrent}){
    '<form id="aff-rate" class="ae-aff-rate-form"><label>Commission rate (%)<input type="number" name="rate" min="0" max="50" step="0.1" required value="'+esc(p.commission_rate)+'"></label><button class="btn" type="submit">Save partner rate</button></form><p class="muted">Changing the partner rate affects future conversions only.</p>'+
    '<div class="ae-aff-actions">'+applyActions(p)+' <button class="btn secondary" type="button" data-aff-review="'+esc(p.id)+'">View original application</button></div></section>';
  }
+ function destinationLink(path){
+  const raw=String(path||"/");
+  if(!raw.startsWith("/")||raw.startsWith("//"))return esc(raw);
+  const safePath=raw.split("?")[0].split("#")[0];
+  if(!/^\/[a-zA-Z0-9/_.-]*$/.test(safePath))return esc(raw);
+  const url="https://andreerving.com"+safePath;
+  const label=safePath==="/"
+   ?"Main website · Homepage"
+   :safePath.split("/").filter(Boolean).pop().replace(/\.html?$/i,"").replace(/[-_]/g," ").replace(/\b\w/g,c=>c.toUpperCase());
+  return '<a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer" class="ae-aff-destination"><strong>'+esc(label)+'</strong><small>'+esc(url)+'</small></a>';
+ }
  function clickReports(){
  const report=data.clickReport||[];
  return head('Affiliate link clicks','Track recorded referral visits by affiliate and destination.')+
  '<div class="ae-crm-overview">'+stat('Total clicks',report.reduce((n,c)=>n+Number(c.total||0),0).toLocaleString())+stat('Last 30 days',report.reduce((n,c)=>n+Number(c.recent||0),0).toLocaleString())+stat('Destinations',report.length)+stat('Partners with clicks',new Set(report.map(c=>c.affiliate_id)).size)+'</div>'+
  '<section class="panel ae-mgmt-panel"><h2>Referral click report</h2><p class="muted">Clicks represent tracked visits, not confirmed purchases; repeat visitors may be counted more than once.</p><div class="tablewrap"><table><thead><tr><th>Affiliate</th><th>Destination</th><th>All clicks</th><th>30 days</th><th>Last visit</th></tr></thead><tbody>'+
- (report.map(c=>'<tr><td>'+esc(data.profiles.find(p=>p.id===c.affiliate_id)?.full_name||'Unknown')+'</td><td>'+esc(c.path)+'</td><td>'+Number(c.total||0).toLocaleString()+'</td><td>'+Number(c.recent||0).toLocaleString()+'</td><td>'+date(c.last)+'</td></tr>').join('')||'<tr><td colspan="5">No referral clicks recorded.</td></tr>')+'</tbody></table></div></section>';
+ (report.map(c=>'<tr><td>'+esc(data.profiles.find(p=>p.id===c.affiliate_id)?.full_name||'Unknown')+'</td><td>'+destinationLink(c.path)+'</td><td>'+Number(c.total||0).toLocaleString()+'</td><td>'+Number(c.recent||0).toLocaleString()+'</td><td>'+date(c.last)+'</td></tr>').join('')||'<tr><td colspan="5">No referral clicks recorded.</td></tr>')+'</tbody></table></div></section>';
  }
  function commissions(){
   return head('Affiliate commissions','Review tracked purchases and approve eligible commissions after the holding period.')+
