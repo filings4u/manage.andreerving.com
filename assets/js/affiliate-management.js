@@ -64,13 +64,36 @@ export function createAffiliateManagement({db,root,notify,isCurrent}){
    (rows.map(p=>'<tr><td><strong>'+esc(p.full_name)+'</strong><div class="muted">'+esc(p.email)+'</div></td><td>'+esc(p.code||"—")+'</td><td>'+'<label class="ae-aff-rate-inline">Individual % <input type="number" min="0" max="50" step="0.1" value="'+esc(p.commission_rate)+'" data-aff-rate="'+esc(p.id)+'"></label><button type="button" class="ae-inline-btn" data-aff-save-rate="'+esc(p.id)+'">Save</button></td><td>'+chip(p.status)+'</td><td><button type="button" class="ae-inline-btn" data-aff-partner="'+esc(p.id)+'">Manage partner</button></td></tr>').join("")||'<tr><td colspan="5">No approved partners yet.</td></tr>')+'</tbody></table></div></section>';
  }
  function partner(p){
-  const related=data.conversions.filter(c=>c.affiliate_id===p.id);
-  return head('Manage partner','Review affiliate account details, commission rates and status.')+
-   '<button type="button" class="btn secondary ae-aff-back" data-aff-back="partners">Back to partners</button>'+
-   '<section class="panel ae-mgmt-panel"><div class="ae-aff-panel-head"><div><h2>'+esc(p.full_name)+'</h2><p class="muted">'+esc(p.email)+'</p></div>'+chip(p.status)+'</div>'+
-   '<div class="ae-aff-detail-grid">'+detailField("Business",p.business_name)+detailField("Market",p.country_market)+detailField("Partner type",p.partner_type)+detailField("Referral code",p.code)+detailField("Total attributed sales",related.length)+detailField("Recorded commission",money(related.reduce((n,c)=>n+Number(c.commission_amount||0),0)))+'</div>'+
-   '<form id="aff-rate" class="ae-aff-rate-form"><label>Commission rate (%)<input type="number" name="rate" min="0" max="50" step="0.1" required value="'+esc(p.commission_rate)+'"></label><button class="btn" type="submit">Save partner rate</button></form><p class="muted">Changing the partner rate affects future conversions only.</p>'+
-   '<div class="ae-aff-actions">'+applyActions(p)+' <button class="btn secondary" type="button" data-aff-review="'+esc(p.id)+'">View original application</button></div></section>';
+  const sales=data.conversions.filter(c=>c.affiliate_id===p.id);
+  const links=(data.clickReport||[]).filter(c=>c.affiliate_id===p.id);
+  const payouts=data.payouts.filter(x=>x.affiliate_id===p.id);
+  const totalClicks=links.reduce((n,c)=>n+Number(c.total||0),0);
+  const selectedTypes=["Content creator","Educator or trainer","Business or organization","Consultant or coach","Blogger or publisher","Community owner","Other"];
+  const control=(label,name,value,attrs='')=>'<label class="ae-aff-edit-field"><span>'+esc(label)+'</span><input name="'+name+'" value="'+esc(value||'')+'" '+attrs+'></label>';
+  return head('Manage affiliate partner','Maintain the partner’s contact information, referral performance, commission terms, and access.')+
+  '<div class="ae-aff-partner-toolbar"><button type="button" class="btn secondary" data-aff-back="partners">← Back to partners</button><button type="button" class="btn secondary" data-aff-review="'+esc(p.id)+'">View application</button></div>'+
+  '<section class="panel ae-mgmt-panel ae-aff-partner-header"><div class="ae-aff-panel-head"><div><div class="ae-aff-overline">PARTNER RECORD</div><h2>'+esc(p.full_name)+'</h2><p class="muted">'+esc(p.email)+'</p></div>'+chip(p.status)+'</div>'+
+  '<div class="ae-aff-partner-stats">'+stat('Tracked link clicks',totalClicks.toLocaleString())+stat('Attributed sales',sales.length.toLocaleString())+stat('Recorded commissions',money(sales.reduce((n,c)=>n+Number(c.commission_amount||0),0)))+stat('Payouts',payouts.length.toLocaleString())+'</div></section>'+
+  '<div class="ae-aff-manage-grid"><section class="panel ae-mgmt-panel"><h2>Partner profile</h2><p class="muted">Edit business and contact information without changing the Supabase sign-in email.</p>'+
+  '<form id="aff-partner-profile" class="ae-aff-edit-form"><div class="ae-aff-edit-grid">'+
+  control('Full name','fullName',p.full_name,'required minlength="2" maxlength="150" autocomplete="name"')+
+  control('Business or brand','businessName',p.business_name,'maxlength="180"')+
+  control('Contact phone','phone',p.contact_phone,'type="tel" maxlength="30" autocomplete="tel"')+
+  control('Country or market','market',p.country_market,'required minlength="2" maxlength="120"')+
+  control('Primary website or channel','website',p.primary_channel||p.website,'maxlength="300"')+
+  '<label class="ae-aff-edit-field"><span>Partner type</span><select name="partnerType"><option value="">Select type</option>'+selectedTypes.map(t=>'<option value="'+esc(t)+'" '+(t===p.partner_type?'selected':'')+'>'+esc(t)+'</option>').join('')+'</select></label></div>'+
+  '<label class="ae-aff-edit-field"><span>Internal management notes</span><textarea name="managementNotes" rows="4" maxlength="3000" placeholder="Private notes for affiliate management only">'+esc(p.management_notes||'')+'</textarea></label>'+
+  '<div class="ae-aff-form-footer"><button type="submit" class="btn">Save profile changes</button><span class="muted" id="aff-profile-status" role="status"></span></div></form></section>'+
+  '<div class="ae-aff-manage-side"><section class="panel ae-mgmt-panel"><h2>Commission settings</h2><p class="muted">Individual commission rate for this partner; already-earned commissions are unchanged.</p>'+
+  '<form id="aff-rate" class="ae-aff-commission-form"><label class="ae-aff-edit-field"><span>Commission rate (%)</span><input type="number" name="rate" min="0" max="50" step="0.1" required value="'+esc(p.commission_rate)+'"></label><button type="submit" class="btn">Save commission rate</button></form></section>'+
+  '<section class="panel ae-mgmt-panel"><h2>Account status and access</h2><p class="muted">Approve, suspend or revoke affiliate portal access while keeping their Supabase account intact.</p>'+
+  '<div class="ae-aff-actions">'+applyActions(p)+'</div></section>'+
+  '<section class="panel ae-mgmt-panel"><h2>Payout configuration</h2>'+detailField('Selected method',p.payout_method==='zelle'?'Zelle':p.payout_method==='bank'?'Bank / Stripe Connect':'Not set')+
+  '<p class="muted">Manage payout destination verification and masked details from the Payouts section.</p><button type="button" class="btn secondary" data-aff-jump="payouts">Go to payouts</button></section></div></div>'+
+  '<section class="panel ae-mgmt-panel"><h2>Referral link performance</h2><div class="tablewrap"><table><thead><tr><th>Destination</th><th>Lifetime clicks</th><th>Last 30 days</th><th>Last click</th></tr></thead><tbody>'+
+  (links.map(x=>'<tr><td>'+destinationLink(x.path)+'</td><td>'+Number(x.total||0).toLocaleString()+'</td><td>'+Number(x.recent||0).toLocaleString()+'</td><td>'+date(x.last)+'</td></tr>').join('')||'<tr><td colspan="4">No tracked link clicks yet.</td></tr>')+'</tbody></table></div></section>'+
+  '<section class="panel ae-mgmt-panel"><h2>Attributed sales and commission history</h2><div class="tablewrap"><table><thead><tr><th>Date</th><th>Sale amount</th><th>Commission</th><th>Status</th></tr></thead><tbody>'+
+  (sales.map(x=>'<tr><td>'+date(x.created_at)+'</td><td>'+money(x.gross_amount)+'</td><td>'+money(x.commission_amount)+'</td><td>'+chip(x.status)+'</td></tr>').join('')||'<tr><td colspan="4">No attributed sales yet.</td></tr>')+'</tbody></table></div></section>';
  }
  function destinationLink(path){
   const raw=String(path||"/");
@@ -147,8 +170,20 @@ export function createAffiliateManagement({db,root,notify,isCurrent}){
     catch(err){const notice=root.querySelector("#aff-confirm-error");if(notice)notice.textContent=err.message;b.disabled=false}
    };
   }
+  root.querySelectorAll("[data-aff-jump]").forEach(b=>b.onclick=()=>{state.page=b.dataset.affJump;state.selected=null;state.record=null;render()});
+  const profile=root.querySelector("#aff-partner-profile");
+  if(profile)profile.onsubmit=async event=>{
+   event.preventDefault();if(!profile.reportValidity())return;
+   const button=profile.querySelector('button[type="submit"]'),status=root.querySelector("#aff-profile-status");
+   button.disabled=true;status.textContent="Saving…";
+   try{
+    const output=await call("admin_partner_update",{id:state.selected,...Object.fromEntries(new FormData(profile))});
+    if(!output.updated)throw Error("No changes were saved");
+    notify("Affiliate partner profile saved");await start(false);
+   }catch(err){status.textContent=err.message||"Unable to save profile";button.disabled=false}
+  };
   const rate=root.querySelector("#aff-rate");
-  if(rate)rate.onsubmit=async e=>{e.preventDefault();const b=rate.querySelector('button');b.disabled=true;try{await call("admin_rate",{id:state.selected,rate:rate.elements.rate.value});notify("Partner commission rate saved.");await start(false)}catch(err){notify(err.message,true);b.disabled=false}};
+  if(rate)rate.onsubmit=async e=>{e.preventDefault();const b=rate.querySelector('button');b.disabled=true;try{const out=await call("admin_rate",{id:state.selected,rate:rate.elements.rate.value});if(!out.updated)throw Error("Commission rate was not saved");notify("Partner commission rate saved.");await start(false)}catch(err){notify(err.message,true);b.disabled=false}};
   root.querySelectorAll("[data-aff-save-rate]").forEach(b=>b.onclick=async()=>{const rate=Number(root.querySelector('[data-aff-rate="'+b.dataset.affSaveRate+'"]')?.value);if(!Number.isFinite(rate)||rate<0||rate>50){notify("Enter an individual commission percentage between 0 and 50.",true);return}b.disabled=true;try{const out=await call('admin_rate',{id:b.dataset.affSaveRate,rate});if(!out.updated)throw Error('Rate update did not save');notify("Individual rate saved; past commissions are unchanged.");await start(false)}catch(err){notify(err.message,true);b.disabled=false}});
   root.querySelectorAll("[data-aff-zelle]").forEach(b=>b.onclick=async()=>{const id=b.dataset.affZelle,el=root.querySelector('[id="masked-zelle-'+id+'"]');if(b.getAttribute('aria-pressed')==='true'){el.textContent='••••••';b.textContent='Show ◉';b.setAttribute('aria-pressed','false');return}b.disabled=true;try{const x=await call('affiliate_payout_details',{scope:'management',affiliateId:id,reveal:true});el.textContent=x.zelleContact||'Not configured';b.textContent='Hide ◉';b.setAttribute('aria-pressed','true')}catch(err){notify(err.message,true)}finally{b.disabled=false}});
   root.querySelectorAll("[data-aff-bank]").forEach(b=>b.onclick=async()=>{b.disabled=true;try{const x=await call('affiliate_payout_details',{scope:'management',affiliateId:b.dataset.affBank});root.querySelector('[id="masked-bank-'+b.dataset.affBank+'"]').textContent=' · '+(x.bank?.display||'Unavailable')}catch(err){notify(err.message,true)}finally{b.disabled=false}});
