@@ -2,7 +2,7 @@
 const B=Deno.env.get("SUPABASE_URL")||"https://gnfyidajbectlppsekzj.supabase.co";
 const S=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"";
 const RESEND=Deno.env.get("RESEND_API_KEY")||"";
-const O=new Set(["https://app.andreerving.com","https://manage.andreerving.com","https://andreerving.com","https://www.andreerving.com"]);
+const O=new Set(["https://app.andreerving.com","https://manage.andreerving.com","https://andreerving.com","https://www.andreerving.com","https://affiliate.andreerving.com"]);
 const emailRe=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const brand="https://gnfyidajbectlppsekzj.supabase.co/storage/v1/object/public/Andre%20Erving%20Public/logos/logo.png";
 function response(body:unknown,status:number,origin:string){return new Response(JSON.stringify(body),{status,headers:{"Content-Type":"application/json","Cache-Control":"no-store","Vary":"Origin",...(O.has(origin)?{"Access-Control-Allow-Origin":origin}:{}),"Access-Control-Allow-Headers":"content-type,apikey,authorization","Access-Control-Allow-Methods":"POST,OPTIONS"}})}
@@ -35,7 +35,7 @@ Deno.serve(async request=>{
   const data=await generated.json();
   const token=String(data.properties?.hashed_token||data.hashed_token||"");
   if(!/^[a-zA-Z0-9_-]{12,300}$/.test(token))throw Error("Supabase did not provide a recovery token");
-  const target=new URL(["https://andreerving.com","https://www.andreerving.com"].includes(origin)?"https://andreerving.com/affiliate-portal/reset.html":"https://app.andreerving.com/reset.html");
+  const target=new URL(["https://andreerving.com","https://www.andreerving.com","https://affiliate.andreerving.com"].includes(origin)?"https://affiliate.andreerving.com/reset.html":"https://app.andreerving.com/reset.html");
   target.searchParams.set("token_hash",token);target.searchParams.set("type","recovery");
   const emailBody='<!doctype html><html><body style="margin:0;padding:35px 15px;background:#eef3f9;font-family:Arial,sans-serif;color:#102844"><table role="presentation" style="max-width:580px;width:100%;margin:auto;border-collapse:collapse;background:white;border-radius:12px"><tr><td style="padding:28px 34px;border-bottom:4px solid #d19b2c"><img src="'+brand+'" alt="Andre Erving Growth Strategy Education" width="340" style="max-width:100%;height:auto"></td></tr><tr><td style="padding:30px 34px"><h1 style="font-size:25px;color:#112d4b">Reset your password</h1><p style="font-size:15px;line-height:1.7">We received a request to reset the password for your Andre Erving account.</p><p style="margin:24px 0"><a style="display:inline-block;border-radius:8px;padding:14px 22px;background:#1f4ca5;color:white;text-decoration:none;font-weight:bold" href="'+html(target.toString())+'">Reset your password</a></p><p style="font-size:13px;color:#60748d;line-height:1.7">If you did not request a reset, you can ignore this email. Your password will remain unchanged.</p><p style="font-size:13px;color:#60748d">Need help? Contact support@andreerving.com.</p></td></tr></table></body></html>';
   const mail=await fetch("https://api.resend.com/emails",{method:"POST",headers:{Authorization:"Bearer "+RESEND,"Content-Type":"application/json"},
