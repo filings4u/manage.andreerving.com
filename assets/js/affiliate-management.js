@@ -1,0 +1,37 @@
+const API="https://gnfyidajbectlppsekzj.supabase.co/functions/v1/andre-affiliates";
+const esc=value=>String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+const money=n=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(Number(n)||0);
+const date=d=>d?new Date(d).toLocaleDateString("en-US"):"—";
+export function createAffiliateManagement({db,root,notify,isCurrent}){
+ async function call(action,details={}){
+  const {data:{session}}=await db.auth.getSession();
+  if(!session?.access_token)throw Error("Sign in again");
+  const response=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+session.access_token},body:JSON.stringify({action,...details})});
+  const value=await response.json().catch(()=>({}));if(!response.ok)throw Error(value.error||"Affiliate service unavailable");return value;
+ }
+ async function start(){
+  root.innerHTML='<div class="head"><div><div class="eyebrow">ANDRE ERVING / MANAGEMENT</div><h1>Affiliate Program</h1><p class="muted">Applications, tracked referrals, commissions and payout readiness</p></div></div><section class="panel"><p>Loading affiliate program…</p></section>';
+  try{
+   const data=await call("admin_overview");if(!isCurrent())return;
+   const profiles=data.profiles||[],conversions=data.conversions||[],payouts=data.payouts||[],st=data.settings||{};
+   const earnings=conversions.reduce((v,c)=>v+Number(c.commission_amount||0),0),pending=conversions.filter(c=>c.status==="pending");
+   root.innerHTML='<div class="head"><div><div class="eyebrow">ANDRE ERVING / MANAGEMENT</div><h1>Affiliate Program</h1><p class="muted">Manage applications, referral sales and commission approvals. Payouts remain disabled until Stripe Connect is configured.</p></div><button type="button" class="btn secondary" id="affiliate-reload">Refresh</button></div>'+
+    '<div class="ae-crm-overview">'+[['Partners',profiles.length],['Pending applications',profiles.filter(x=>x.status==="pending").length],['Attributed sales',conversions.length],['Recorded commissions',money(earnings)]].map(([l,v])=>'<section class="ae-crm-stat"><span>'+esc(l)+'</span><strong>'+esc(v)+'</strong></section>').join("")+'</div>'+
+    '<section class="panel ae-mgmt-panel"><h2>Affiliate applications &amp; partners</h2><div class="tablewrap"><table><thead><tr><th>Partner</th><th>Referral code</th><th>Rate</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead><tbody>'+
+    (profiles.map(p=>'<tr><td><strong>'+esc(p.full_name)+'</strong><div class="muted">'+esc(p.email)+'</div><small>'+esc(p.website||"")+'</small><p class="muted">'+esc(p.promotion_plan||"")+'</p></td><td>'+esc(p.code)+'</td><td>'+esc(p.commission_rate)+'%</td><td>'+esc(p.status)+'</td><td>'+date(p.created_at)+'</td><td>'+(['pending','rejected','suspended'].includes(p.status)?'<button class="ae-inline-btn" data-status="active" data-id="'+esc(p.id)+'">Approve</button> ':'')+(p.status!=="rejected"?'<button class="ae-inline-btn" data-status="rejected" data-id="'+esc(p.id)+'">Reject</button> ':'')+(p.status==="active"?'<button class="ae-inline-btn" data-status="suspended" data-id="'+esc(p.id)+'">Suspend</button>':'')+'</td></tr>').join("")||'<tr><td colspan="6">No affiliate applications yet.</td></tr>')+'</tbody></table></div></section>'+
+    '<section class="panel ae-mgmt-panel"><h2>Verified referral commissions</h2><p class="muted">Commissions are created only after Stripe confirms payment. Approve after the holding period and refund review. Paid entries cannot be edited.</p><div class="tablewrap"><table><thead><tr><th>Affiliate</th><th>Date</th><th>Sale</th><th>Commission</th><th>Available</th><th>Status / Actions</th></tr></thead><tbody>'+
+    (conversions.map(c=>'<tr><td>'+esc(profiles.find(p=>p.id===c.affiliate_id)?.full_name||"Unknown")+'</td><td>'+date(c.created_at)+'</td><td>'+money(c.gross_amount)+'</td><td>'+money(c.commission_amount)+'</td><td>'+date(c.available_at)+'</td><td>'+esc(c.status)+(c.status==="pending"?'<div><button class="ae-inline-btn" data-commission="approved" data-payment="'+esc(c.payment_intent_id)+'" '+(Date.parse(c.available_at)>Date.now()?'disabled title="Holding period not complete"':'')+'>Approve</button> <button class="ae-inline-btn" data-commission="rejected" data-payment="'+esc(c.payment_intent_id)+'">Reject</button></div>':'')+'</td></tr>').join("")||'<tr><td colspan="6">No attributed purchases yet.</td></tr>')+'</tbody></table></div></section>'+
+    '<section class="panel ae-mgmt-panel"><h2>Affiliate payout ledger</h2><p class="muted">Stripe Connect onboarding and automatic transfers are not enabled. Do not mark earnings as paid until a verified payout is implemented.</p><div class="tablewrap"><table><thead><tr><th>Partner</th><th>Amount</th><th>Status</th><th>Created</th></tr></thead><tbody>'+(payouts.map(p=>'<tr><td>'+esc(profiles.find(x=>x.id===p.affiliate_id)?.full_name||"Unknown")+'</td><td>'+money(p.amount)+'</td><td>'+esc(p.status)+'</td><td>'+date(p.created_at)+'</td></tr>').join("")||'<tr><td colspan="4">No payouts created.</td></tr>')+'</tbody></table></div></section>'+
+    '<section class="panel ae-mgmt-panel"><h2>Program settings</h2><form id="affiliate-settings" class="ae-mgmt-form"><div class="ae-invoice-fields"><label>Default commission %<input type="number" name="commissionRate" min="0" max="50" step="0.1" value="'+esc(st.default_commission_rate)+'" required></label><label>Attribution window (days)<input type="number" name="attributionDays" min="1" max="90" value="'+esc(st.attribution_days)+'" required></label><label>Commission hold (days)<input type="number" name="holdDays" min="0" max="180" value="'+esc(st.hold_days)+'" required></label><label>Minimum payout ($)<input type="number" name="minPayout" min="0" step="0.01" value="'+esc(st.min_payout)+'" required></label></div><p class="muted">Changes to the default rate affect new affiliates only. Existing affiliate rates and earned commissions remain unchanged.</p><button type="submit" class="btn">Save program settings</button></form></section>';
+   root.querySelector("#affiliate-reload").onclick=start;
+   root.querySelectorAll("[data-status]").forEach(button=>button.onclick=async()=>{
+    button.disabled=true;try{await call("admin_approval",{id:button.dataset.id,status:button.dataset.status});notify("Affiliate status updated.");await start()}catch(e){notify(e.message,true);button.disabled=false}
+   });
+   root.querySelectorAll("[data-commission]").forEach(button=>button.onclick=async()=>{
+    button.disabled=true;try{await call("admin_commission",{paymentIntentId:button.dataset.payment,status:button.dataset.commission});notify("Commission updated.");await start()}catch(e){notify(e.message,true);button.disabled=false}
+   });
+   root.querySelector("#affiliate-settings").onsubmit=async e=>{e.preventDefault();const button=e.target.querySelector('button');button.disabled=true;try{await call("admin_settings",Object.fromEntries(new FormData(e.target)));notify("Affiliate program settings saved.");await start()}catch(err){notify(err.message,true);button.disabled=false}};
+  }catch(e){root.innerHTML='<section class="panel"><h2>Affiliate administration unavailable</h2><p>'+esc(e.message||"Try again")+'</p><button class="btn" id="retry-affiliate">Try again</button></section>';root.querySelector("#retry-affiliate").onclick=start}
+ }
+ return {start};
+}
