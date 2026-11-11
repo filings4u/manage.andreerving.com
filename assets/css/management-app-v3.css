@@ -271,3 +271,10 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-ser
 .ae-aff-rate-inline input:focus-visible{outline:2px solid #cb9a32;outline-offset:2px}
 .ae-aff-workspace [data-aff-save-rate]{margin-top:7px}
 .ae-aff-workspace [data-aff-zelle],.ae-aff-workspace [data-aff-bank]{margin-left:6px;white-space:nowrap}
+
+/* Affiliate click destination: descriptive label and full destination URL */
+.ae-aff-destination{display:inline-flex;flex-direction:column;gap:3px;color:#164b87;text-decoration:none;overflow-wrap:anywhere;max-width:370px}
+.ae-aff-destination strong{font-size:13px;font-weight:750}
+.ae-aff-destination small{font-size:11px;color:#617b96;font-weight:500}
+.ae-aff-destination:hover strong{text-decoration:underline}
+.ae-aff-destination:focus-visible{outline:2px solid #c99730;outline-offset:3px}
