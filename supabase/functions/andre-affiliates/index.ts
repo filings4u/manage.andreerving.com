@@ -11,17 +11,53 @@ async function patch(table:string,filters:string,body:unknown){const r=await fet
 const clean=(v:unknown,n=150)=>String(v||"").trim().slice(0,n);
 async function actor(req:Request){const jwt=(req.headers.get("authorization")||"").replace(/^Bearer\s+/i,"");if(!jwt)return null;const r=await fetch(B+"/auth/v1/user",{headers:{apikey:S,Authorization:"Bearer "+jwt}});if(!r.ok)return null;const user=await r.json();return user?.id&&uuid.test(user.id)?user:null}
 async function admin(req:Request){const u=await actor(req);if(!u)throw Error("Staff sign-in required");const p=(await db("admin_profiles","?select=active,role&id=eq."+u.id+"&limit=1"))[0];if(!p?.active||!["admin","manager"].includes(p.role))throw Error("Affiliate administration is restricted");return u}
-async function me(req:Request){const u=await actor(req);if(!u)throw Error("Sign in to the customer portal");return u}
+async function me(req:Request){
+ const u=await actor(req);if(!u)throw Error("Sign in to the affiliate portal");
+ if(!u.email_confirmed_at)throw Error("Verify your email before applying for the affiliate program");
+ return u;
+}
 async function settings(){return (await db("affiliate_settings","?select=*&id=eq.true&limit=1"))[0]}
 function email(value:unknown){return clean(value,254).toLowerCase()}
+
+async function sha(value:string){const bytes=new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(value)));return [...bytes].map(v=>v.toString(16).padStart(2,"0")).join("")}
+async function register(data:any,req:Request){
+ const name=clean(data.fullName,150),address=email(data.email);
+ if(name.length<2||!eMail.test(address))throw Error("Enter a full name and valid email");
+ const rkey=Deno.env.get("RESEND_API_KEY")||"";
+ if(!rkey)throw Error("Registration emails are temporarily unavailable");
+ // Reserve the same rate-limit budget as branded account recovery (IP and email hashes).
+ const ip=clean(req.headers.get("cf-connecting-ip")||req.headers.get("x-forwarded-for")?.split(",")[0]||"unknown",150);
+ const [eHash,ipHash]=await Promise.all([sha(address),sha(ip)]);
+ const limiter=await fetch(B+"/rest/v1/rpc/reserve_auth_email_delivery",{method:"POST",headers:headers(),body:JSON.stringify({p_email_hash:eHash,p_requester_hash:ipHash})});
+ if(!limiter.ok)throw Error("Registration verification is unavailable");
+ if(await limiter.json()!==true)return {submitted:true};
+ const existing=(await db("affiliate_profiles","?select=id&email=eq."+encodeURIComponent(address)+"&limit=1"))[0];
+ if(existing)return {submitted:true};
+ const generated=await fetch(B+"/auth/v1/admin/generate_link",{method:"POST",headers:headers(),body:JSON.stringify({type:"invite",email:address,redirect_to:"https://andreerving.com/affiliate-portal/"})});
+ if(!generated.ok){console.warn("Affiliate registration verification link unavailable",generated.status);return {submitted:true}}
+ const info=await generated.json(),token=String(info.properties?.hashed_token||"");
+ if(!/^[A-Za-z0-9_-]{12,300}$/.test(token))throw Error("Could not prepare secure email verification");
+ const id=String(info.user?.id||"");
+ if(uuid.test(id)){
+  // Authentication record only. No affiliate application / referral code is created yet.
+  const metadata={full_name:name};
+  await fetch(B+"/auth/v1/admin/users/"+id,{method:"PUT",headers:headers(),body:JSON.stringify({user_metadata:metadata})});
+ }
+ const link="https://andreerving.com/affiliate-portal/activate.html?token_hash="+encodeURIComponent(token)+"&type=invite";
+ const html='<div style="max-width:580px;margin:auto;padding:32px;font:16px Arial;color:#12304d"><img alt="Andre Erving" width="300" src="https://gnfyidajbectlppsekzj.supabase.co/storage/v1/object/public/Andre%20Erving%20Public/logos/logo.png"><h1>Verify your affiliate email</h1><p>Confirm your email address and create your password before applying to the Andre Erving Affiliate Program.</p><p><a href="'+link+'" style="background:#c99422;color:#10243f;font-weight:800;padding:15px 20px;border-radius:7px;text-decoration:none;display:inline-block">Verify email &amp; activate account</a></p><p>After verification, sign in and submit your affiliate application for management review.</p><p>If you did not request this, ignore the message.</p></div>';
+ const mail=await fetch("https://api.resend.com/emails",{method:"POST",headers:{Authorization:"Bearer "+rkey,"Content-Type":"application/json"},body:JSON.stringify({from:"Andre Erving <support@andreerving.com>",to:[address],subject:"Verify your Andre Erving affiliate email",html})});
+ if(!mail.ok)throw Error("Unable to send verification email");
+ return {submitted:true};
+}
+
 async function apply(data:any,req:Request){
- const u=await actor(req);
- const full_name=clean(data.fullName||u?.user_metadata?.full_name,150),address=email(u?.email||data.email),website=clean(data.website,250),promotion_plan=clean(data.promotionPlan,900);
+ const u=await me(req);
+ const full_name=clean(data.fullName||u.user_metadata?.full_name,150),address=email(u.email),website=clean(data.website,250),promotion_plan=clean(data.promotionPlan,900);
  if(full_name.length<2||!eMail.test(address)||promotion_plan.length<15)throw Error("Enter your name, valid email, and promotion plan (15 characters minimum)");
  const found=(await db("affiliate_profiles","?select=id,status,code&email=eq."+encodeURIComponent(address)+"&limit=1"))[0];
  if(found)return {submitted:true,existing:true,status:found.status};
  const st=await settings();const code=crypto.randomUUID().replaceAll("-","").slice(0,12);
- await insert("affiliate_profiles",{user_id:u?.id||null,email:address,full_name,website,promotion_plan,code,status:"pending",commission_rate:st.default_commission_rate});
+ await insert("affiliate_profiles",{user_id:u.id,email:address,full_name,website,promotion_plan,code,status:"pending",commission_rate:st.default_commission_rate});
  const resend=Deno.env.get("RESEND_API_KEY")||"";
  if(resend){
   const cleanHtml=(v:string)=>v.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]||c));
@@ -146,6 +182,7 @@ Deno.serve(async req=>{
  if(!S)return reply({error:"Affiliate service unavailable"},503,origin);
  try{
   const input=await req.json(),action=String(input.action||"");
+  if(action==="register")return reply(await register(input,req),200,origin);
   if(action==="apply")return reply(await apply(input,req),200,origin);
   if(action==="track")return reply(await track(input),200,origin);
   if(action==="dashboard")return reply(await dashboard(req),200,origin);
