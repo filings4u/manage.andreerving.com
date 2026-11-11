@@ -200,7 +200,72 @@ async function dashboard(req:Request){
   db("affiliate_conversions","?select=payment_intent_id,gross_amount,commission_amount,status,available_at,created_at&affiliate_id=eq."+p.id+"&order=created_at.desc&limit=100"),
   db("affiliate_payouts","?select=amount,status,created_at,paid_at&affiliate_id=eq."+p.id+"&order=created_at.desc&limit=50"),
   settings()]);
- return {profile:{name:p.full_name,email:p.email,code:p.status==="active"?p.code:null,status:p.status,commissionRate:p.commission_rate},settings:{attributionDays:st.attribution_days,holdDays:st.hold_days,minPayout:st.min_payout},clicks:clicks.length,conversions,payouts};
+ return {profile:{name:p.full_name,displayName:p.profile_display_name||p.full_name,businessName:p.business_name||"",phone:p.contact_phone||"",bio:p.profile_bio||"",website:p.primary_channel||p.website||"",market:p.country_market||"",partnerType:p.partner_type||"",code:p.status==="active"?p.code:null,status:p.status,commissionRate:p.commission_rate},payoutSetup:{method:p.payout_method||"unconfigured",zelleContact:p.zelle_contact||"",zelleContactType:p.zelle_contact_type||"",zelleAccepted:!!p.zelle_terms_accepted_at,bankOnboardingAvailable:!!Deno.env.get("STRIPE_SECRET_KEY"),stripeConnected:!!p.stripe_account_id},settings:{attributionDays:st.attribution_days,holdDays:st.hold_days,minPayout:st.min_payout},clicks:clicks.length,conversions,payouts};
+}
+async function catalog(req:Request){
+ await me(req);
+ const courses=await db("courses","?select=title,slug,purchase_url,status&status=eq.published&order=sort_order.asc&limit=100");
+ const urls:Record<string,string>={"trucking-pro":"https://andreerving.com/trucking-pro.html","freight-broker-training":"https://andreerving.com/freight-broker-training.html","dispatcher-training":"https://andreerving.com/dispatcher-training.html","time-management":"https://andreerving.com/time-management.html"};
+ const items=courses.map((c:any)=>{
+  const slug=String(c.slug||"");
+  let url=urls[slug]||"https://andreerving.com/courses.html";
+  if(!urls[slug]&&c.purchase_url){try{const u=new URL(c.purchase_url);if(["andreerving.com","www.andreerving.com"].includes(u.hostname)&&u.protocol==="https:")url=u.href}catch{}}
+  return {title:clean(c.title,150),slug,url};
+ });
+ return {courses:items};
+}
+async function saveAffiliateProfile(data:any,req:Request){
+ const u=await me(req),p=(await db("affiliate_profiles","?select=id,status&user_id=eq."+u.id+"&limit=1"))[0];
+ if(!p||p.status!=="active")throw Error("Affiliate account not active");
+ const displayName=clean(data.displayName,150),businessName=clean(data.businessName,180),phone=clean(data.phone,30),bio=clean(data.bio,1200),website=clean(data.website,300),market=clean(data.market,120);
+ if(displayName.length<2)throw Error("Enter your display name");
+ if(phone&&(!/^[+()0-9.\s-]+$/.test(phone)||phone.replace(/\D/g,"").length<7))throw Error("Enter a valid phone number");
+ const updated=await patch("affiliate_profiles","?id=eq."+p.id,{profile_display_name:displayName,business_name:businessName||null,contact_phone:phone||null,profile_bio:bio||null,primary_channel:website||null,country_market:market||null,updated_at:new Date().toISOString()});
+ return {updated:updated.length===1};
+}
+async function paymentSetup(data:any,req:Request){
+ const u=await me(req),p=(await db("affiliate_profiles","?select=id,status&user_id=eq."+u.id+"&limit=1"))[0];
+ if(!p||p.status!=="active")throw Error("Affiliate account not active");
+ const method=clean(data.method,24);
+ if(method==="zelle"){
+  const contact=clean(data.contact,254),type=clean(data.contactType,12);
+  if(!["email","phone"].includes(type)||!data.accepted)throw Error("Select a Zelle contact type and accept the payout terms");
+  if(type==="email"&&!eMail.test(contact))throw Error("Enter a valid Zelle enrollment email");
+  if(type==="phone"&&(!/^[+()0-9.\s-]+$/.test(contact)||contact.replace(/\D/g,"").length<10||contact.replace(/\D/g,"").length>15))throw Error("Enter a valid Zelle enrollment phone");
+  const result=await patch("affiliate_profiles","?id=eq."+p.id,{payout_method:"zelle",zelle_contact:contact,zelle_contact_type:type,zelle_terms_accepted_at:new Date().toISOString(),payout_updated_at:new Date().toISOString(),updated_at:new Date().toISOString()});
+  return {saved:result.length===1,message:"Zelle payout preference saved for manual review. No payment has been scheduled."};
+ }
+ if(method==="bank"){
+  const secret=Deno.env.get("STRIPE_SECRET_KEY")||"";
+  if(!secret)return {configured:false,message:"Secure bank onboarding is not enabled yet. Bank account details are never collected directly in this portal."};
+  const existing=(await db("affiliate_profiles","?select=stripe_account_id&user_id=eq."+u.id+"&limit=1"))[0]?.stripe_account_id;
+  let stripeAccount=existing;
+  const stripeHeaders={Authorization:"Bearer "+secret,"Content-Type":"application/x-www-form-urlencoded"};
+  if(!stripeAccount){
+   const params=new URLSearchParams({type:"express",country:"US",email:String(u.email||"")});
+   params.set("capabilities[transfers][requested]","true");
+   params.set("metadata[affiliate_id]",p.id);
+   const created=await fetch("https://api.stripe.com/v1/accounts",{method:"POST",headers:{...stripeHeaders,"Idempotency-Key":"affiliate-connect-"+p.id},body:params});
+   const accountData=await created.json();
+   if(!created.ok||!accountData.id)throw Error("Secure bank onboarding could not be started. Please contact support.");
+   stripeAccount=accountData.id;
+   await patch("affiliate_profiles","?id=eq."+p.id,{stripe_account_id:stripeAccount,payout_method:"bank",payout_updated_at:new Date().toISOString(),updated_at:new Date().toISOString()});
+  }
+  const urls=new URLSearchParams({account:stripeAccount,type:"account_onboarding",refresh_url:"https://affiliate.andreerving.com/?connect=retry#/payment-setup",return_url:"https://affiliate.andreerving.com/?connect=return#/payment-setup"});
+  const link=await fetch("https://api.stripe.com/v1/account_links",{method:"POST",headers:stripeHeaders,body:urls});
+  const detail=await link.json();
+  if(!link.ok||!detail.url)throw Error("Stripe onboarding link unavailable. Please try again or contact support.");
+  return {configured:true,url:detail.url,message:"Continue to Stripe to securely add your bank account. Your bank details are not stored by Andre Erving."};
+ }
+ throw Error("Choose a payout method");
+}
+async function emailChangeRequest(data:any,req:Request){
+ const u=await me(req),subject="Affiliate account email change request",note=clean(data.reason,1200);
+ if(note.length<10)throw Error("Describe your email-change request (at least 10 characters)");
+ const ticket=await insert("support_tickets",{user_id:u.id,subject,category:"general",status:"open",priority:"normal"});
+ if(!ticket?.[0]?.id)throw Error("Support request could not be created");
+ await insert("support_messages",{ticket_id:ticket[0].id,sender_id:u.id,message:note});
+ return {submitted:true,notice:"Support request submitted. For security, your account email remains unchanged until verified by support."};
 }
 async function overview(req:Request){
  await admin(req);
@@ -282,6 +347,10 @@ Deno.serve(async req=>{
   if(action==="apply")return reply(await apply(input,req),200,origin);
   if(action==="track")return reply(await track(input),200,origin);
   if(action==="dashboard")return reply(await dashboard(req),200,origin);
+  if(action==="affiliate_catalog")return reply(await catalog(req),200,origin);
+  if(action==="affiliate_profile_update")return reply(await saveAffiliateProfile(input,req),200,origin);
+  if(action==="affiliate_payment_setup")return reply(await paymentSetup(input,req),200,origin);
+  if(action==="affiliate_email_support")return reply(await emailChangeRequest(input,req),200,origin);
   if(action==="admin_overview")return reply(await overview(req),200,origin);
   if(action==="admin_approval")return reply(await approval(input,req),200,origin);
   if(action==="admin_commission")return reply(await commissionAction(input,req),200,origin);
