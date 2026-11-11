@@ -2,7 +2,7 @@ const API="https://gnfyidajbectlppsekzj.supabase.co/functions/v1/andre-affiliate
 const esc=value=>String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
 const money=n=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(Number(n)||0);
 const date=d=>d?new Date(d).toLocaleDateString("en-US"):"—";
-const options=[["applications","Applications"],["partners","Partners"],["commissions","Commissions"],["payouts","Payouts"],["settings","Settings"]];
+const options=[["applications","Applications"],["partners","Partners"],["clicks","Link clicks"],["commissions","Commissions"],["payouts","Payouts"],["settings","Settings"]];
 const detailField=(label,value)=>'<div class="ae-aff-field"><span>'+esc(label)+'</span><strong>'+esc(value||"—")+'</strong></div>';
 const listValue=v=>Array.isArray(v)?v.join(", "):v;
 export function createAffiliateManagement({db,root,notify,isCurrent}){
@@ -61,7 +61,7 @@ export function createAffiliateManagement({db,root,notify,isCurrent}){
   return head('Affiliate partners','Manage approved and suspended partners, their referral accounts, and commission rates.')+
    '<div class="ae-crm-overview">'+stat('Active partners',rows.filter(p=>p.status==="active").length)+stat('Suspended',rows.filter(p=>p.status==="suspended").length)+stat('Total referrals',data.conversions.length)+stat('Recorded commissions',money(data.conversions.reduce((n,c)=>n+Number(c.commission_amount||0),0)))+'</div>'+
    '<section class="panel ae-mgmt-panel"><h2>Partner accounts</h2><div class="tablewrap"><table><thead><tr><th>Partner</th><th>Referral code</th><th>Commission rate</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+
-   (rows.map(p=>'<tr><td><strong>'+esc(p.full_name)+'</strong><div class="muted">'+esc(p.email)+'</div></td><td>'+esc(p.code||"—")+'</td><td>'+esc(p.commission_rate)+'%</td><td>'+chip(p.status)+'</td><td><button type="button" class="ae-inline-btn" data-aff-partner="'+esc(p.id)+'">Manage partner</button></td></tr>').join("")||'<tr><td colspan="5">No approved partners yet.</td></tr>')+'</tbody></table></div></section>';
+   (rows.map(p=>'<tr><td><strong>'+esc(p.full_name)+'</strong><div class="muted">'+esc(p.email)+'</div></td><td>'+esc(p.code||"—")+'</td><td>'+'<label class="ae-aff-rate-inline">Individual % <input type="number" min="0" max="50" step="0.1" value="'+esc(p.commission_rate)+'" data-aff-rate="'+esc(p.id)+'"></label><button type="button" class="ae-inline-btn" data-aff-save-rate="'+esc(p.id)+'">Save</button></td><td>'+chip(p.status)+'</td><td><button type="button" class="ae-inline-btn" data-aff-partner="'+esc(p.id)+'">Manage partner</button></td></tr>').join("")||'<tr><td colspan="5">No approved partners yet.</td></tr>')+'</tbody></table></div></section>';
  }
  function partner(p){
   const related=data.conversions.filter(c=>c.affiliate_id===p.id);
@@ -71,6 +71,13 @@ export function createAffiliateManagement({db,root,notify,isCurrent}){
    '<div class="ae-aff-detail-grid">'+detailField("Business",p.business_name)+detailField("Market",p.country_market)+detailField("Partner type",p.partner_type)+detailField("Referral code",p.code)+detailField("Total attributed sales",related.length)+detailField("Recorded commission",money(related.reduce((n,c)=>n+Number(c.commission_amount||0),0)))+'</div>'+
    '<form id="aff-rate" class="ae-aff-rate-form"><label>Commission rate (%)<input type="number" name="rate" min="0" max="50" step="0.1" required value="'+esc(p.commission_rate)+'"></label><button class="btn" type="submit">Save partner rate</button></form><p class="muted">Changing the partner rate affects future conversions only.</p>'+
    '<div class="ae-aff-actions">'+applyActions(p)+' <button class="btn secondary" type="button" data-aff-review="'+esc(p.id)+'">View original application</button></div></section>';
+ }
+ function clickReports(){
+ const report=data.clickReport||[];
+ return head('Affiliate link clicks','Track recorded referral visits by affiliate and destination.')+
+ '<div class="ae-crm-overview">'+stat('Total clicks',report.reduce((n,c)=>n+Number(c.total||0),0).toLocaleString())+stat('Last 30 days',report.reduce((n,c)=>n+Number(c.recent||0),0).toLocaleString())+stat('Destinations',report.length)+stat('Partners with clicks',new Set(report.map(c=>c.affiliate_id)).size)+'</div>'+
+ '<section class="panel ae-mgmt-panel"><h2>Referral click report</h2><p class="muted">Clicks represent tracked visits, not confirmed purchases; repeat visitors may be counted more than once.</p><div class="tablewrap"><table><thead><tr><th>Affiliate</th><th>Destination</th><th>All clicks</th><th>30 days</th><th>Last visit</th></tr></thead><tbody>'+
+ (report.map(c=>'<tr><td>'+esc(data.profiles.find(p=>p.id===c.affiliate_id)?.full_name||'Unknown')+'</td><td>'+esc(c.path)+'</td><td>'+Number(c.total||0).toLocaleString()+'</td><td>'+Number(c.recent||0).toLocaleString()+'</td><td>'+date(c.last)+'</td></tr>').join('')||'<tr><td colspan="5">No referral clicks recorded.</td></tr>')+'</tbody></table></div></section>';
  }
  function commissions(){
   return head('Affiliate commissions','Review tracked purchases and approve eligible commissions after the holding period.')+
@@ -82,7 +89,7 @@ export function createAffiliateManagement({db,root,notify,isCurrent}){
   return head('Affiliate payouts','Review payout preferences, recorded payouts and eligibility.')+
    '<section class="panel ae-mgmt-panel"><h2>Partner payout setup</h2><p class="muted">Zelle destinations must be verified before a manual transfer. A Stripe account identifier does not prove onboarding is complete. No payment is automatically issued.</p><div class="tablewrap"><table><thead><tr><th>Partner</th><th>Method</th><th>Destination / provider status</th><th>Terms</th><th>Updated</th></tr></thead><tbody>'+
    (methods.map(p=>'<tr><td><strong>'+esc(p.full_name)+'</strong></td><td>'+esc(p.payout_method||"Not configured")+'</td><td>'+
-    (p.payout_method==="zelle"?esc(p.zelle_contact_type||"")+': '+esc(p.zelle_contact||"Missing contact"):(p.payout_method==="bank"?(p.stripe_account_id?'Stripe account created; onboarding must be verified':'Bank setup incomplete'):'—'))+'</td>'+
+    (p.payout_method==="zelle"?esc(p.zelle_contact_type||"")+': '+'<span id="masked-zelle-'+esc(p.id)+'">••••••</span> <button type="button" class="ae-inline-btn" data-aff-zelle="'+esc(p.id)+'" aria-label="Show Zelle payout destination">Show ◉</button>':(p.payout_method==="bank"?(p.stripe_account_id?'Stripe account created <button type="button" class="ae-inline-btn" data-aff-bank="'+esc(p.id)+'">View masked bank</button> <span id="masked-bank-'+esc(p.id)+'"></span>':'Bank setup incomplete'):'—'))+'</td>'+
     '<td>'+esc(p.payout_method==="zelle"?(p.zelle_terms_accepted_at?"Accepted":"Not accepted"):"—")+'</td><td>'+date(p.payout_updated_at)+'</td></tr>').join("")||'<tr><td colspan="5">No approved partners yet.</td></tr>')+'</tbody></table></div></section>'+
    '<section class="panel ae-mgmt-panel"><h2>Payout ledger</h2><p class="muted">No manual paid-state changes are offered without a verified transfer.</p><div class="tablewrap"><table><thead><tr><th>Partner</th><th>Amount</th><th>Status</th><th>Created</th><th>Paid</th></tr></thead><tbody>'+
    (data.payouts.map(p=>'<tr><td>'+esc(data.profiles.find(x=>x.id===p.affiliate_id)?.full_name||"Unknown")+'</td><td>'+money(p.amount)+'</td><td>'+chip(p.status)+'</td><td>'+date(p.created_at)+'</td><td>'+date(p.paid_at)+'</td></tr>').join("")||'<tr><td colspan="5">No payouts recorded yet.</td></tr>')+'</tbody></table></div></section>';
@@ -105,6 +112,7 @@ export function createAffiliateManagement({db,root,notify,isCurrent}){
    const p=data.profiles.find(x=>x.id===state.selected);
    body=p?(state.record==="partner"?partner(p):review(p)):(state.selected=null,applications());
   }else if(state.page==="partners")body=partners();
+  else if(state.page==="clicks")body=clickReports();
   else if(state.page==="commissions")body=commissions();
   else if(state.page==="payouts")body=payouts();
   else if(state.page==="settings")body=settings();
@@ -130,6 +138,9 @@ export function createAffiliateManagement({db,root,notify,isCurrent}){
   }
   const rate=root.querySelector("#aff-rate");
   if(rate)rate.onsubmit=async e=>{e.preventDefault();const b=rate.querySelector('button');b.disabled=true;try{await call("admin_rate",{id:state.selected,rate:rate.elements.rate.value});notify("Partner commission rate saved.");await start(false)}catch(err){notify(err.message,true);b.disabled=false}};
+  root.querySelectorAll("[data-aff-save-rate]").forEach(b=>b.onclick=async()=>{const rate=Number(root.querySelector('[data-aff-rate="'+b.dataset.affSaveRate+'"]')?.value);if(!Number.isFinite(rate)||rate<0||rate>50){notify("Enter an individual commission percentage between 0 and 50.",true);return}b.disabled=true;try{const out=await call('admin_rate',{id:b.dataset.affSaveRate,rate});if(!out.updated)throw Error('Rate update did not save');notify("Individual rate saved; past commissions are unchanged.");await start(false)}catch(err){notify(err.message,true);b.disabled=false}});
+  root.querySelectorAll("[data-aff-zelle]").forEach(b=>b.onclick=async()=>{const id=b.dataset.affZelle,el=root.querySelector('[id="masked-zelle-'+id+'"]');if(b.getAttribute('aria-pressed')==='true'){el.textContent='••••••';b.textContent='Show ◉';b.setAttribute('aria-pressed','false');return}b.disabled=true;try{const x=await call('affiliate_payout_details',{scope:'management',affiliateId:id,reveal:true});el.textContent=x.zelleContact||'Not configured';b.textContent='Hide ◉';b.setAttribute('aria-pressed','true')}catch(err){notify(err.message,true)}finally{b.disabled=false}});
+  root.querySelectorAll("[data-aff-bank]").forEach(b=>b.onclick=async()=>{b.disabled=true;try{const x=await call('affiliate_payout_details',{scope:'management',affiliateId:b.dataset.affBank});root.querySelector('[id="masked-bank-'+b.dataset.affBank+'"]').textContent=' · '+(x.bank?.display||'Unavailable')}catch(err){notify(err.message,true)}finally{b.disabled=false}});
   root.querySelectorAll("[data-aff-commission]").forEach(b=>b.onclick=async()=>{b.disabled=true;try{await call("admin_commission",{paymentIntentId:b.dataset.payment,status:b.dataset.affCommission});notify("Commission updated.");await start(false)}catch(err){notify(err.message,true);b.disabled=false}});
   const config=root.querySelector("#affiliate-settings");
   if(config)config.onsubmit=async e=>{e.preventDefault();const b=config.querySelector('button');b.disabled=true;try{await call("admin_settings",Object.fromEntries(new FormData(config)));notify("Affiliate program settings saved.");await start(false)}catch(err){notify(err.message,true);b.disabled=false}};
@@ -140,7 +151,7 @@ export function createAffiliateManagement({db,root,notify,isCurrent}){
   try{
    const result=await call("admin_overview");
    if(!isCurrent())return;
-   data={profiles:result.profiles||[],conversions:result.conversions||[],payouts:result.payouts||[],settings:result.settings||{}};
+   data={profiles:result.profiles||[],conversions:result.conversions||[],payouts:result.payouts||[],settings:result.settings||{},clickReport:result.clickReport||[]};
    render();
   }catch(err){
    root.innerHTML='<section class="panel"><h2>Affiliate management unavailable</h2><p>'+esc(err.message)+'</p><button type="button" class="btn" id="affiliate-retry">Try again</button></section>';
