@@ -296,7 +296,7 @@ async function emailChangeRequest(data:any,req:Request){
 async function overview(req:Request){
  await admin(req);
  const [profiles,conversions,payouts,st,clickReport]=await Promise.all([
-  db("affiliate_profiles","?select=id,full_name,email,code,status,commission_rate,website,promotion_plan,business_name,country_market,primary_channel,partner_type,promotion_channels,additional_profiles,audience_description,audience_size,terms_accepted_at,affiliate_access_revoked_at,payout_method,zelle_contact_type,zelle_terms_accepted_at,stripe_account_id,payout_updated_at,created_at,approved_at&order=created_at.desc&limit=500"),
+  db("affiliate_profiles","?select=id,full_name,email,code,status,commission_rate,website,promotion_plan,business_name,country_market,primary_channel,partner_type,promotion_channels,additional_profiles,audience_description,audience_size,terms_accepted_at,affiliate_access_revoked_at,payout_method,zelle_contact_type,zelle_terms_accepted_at,stripe_account_id,payout_updated_at,contact_phone,profile_display_name,profile_bio,management_notes,created_at,approved_at&order=created_at.desc&limit=500"),
   db("affiliate_conversions","?select=payment_intent_id,affiliate_id,gross_amount,commission_amount,status,available_at,created_at&order=created_at.desc&limit=500"),
   db("affiliate_payouts","?select=id,affiliate_id,amount,status,notes,stripe_transfer_id,created_at,paid_at&order=created_at.desc&limit=250"),
   settings(),db("rpc/affiliate_click_reporting","?select=affiliate_id,landing_path,total_clicks,clicks_30d,last_click")]);
@@ -345,6 +345,20 @@ async function commissionAction(data:any,req:Request){
  const result=await patch("affiliate_conversions","?payment_intent_id=eq."+encodeURIComponent(id)+"&status=eq."+c.status,{status,updated_at:new Date().toISOString()});
  return {updated:result.length===1};
 }
+async function updatePartnerManagement(data:any,req:Request){
+ await admin(req);
+ const id=clean(data.id,50),name=clean(data.fullName,150),business=clean(data.businessName,180);
+ const phone=clean(data.phone,30),market=clean(data.market,120),website=clean(data.website,300);
+ const partnerType=clean(data.partnerType,70),notes=clean(data.managementNotes,3000);
+ const types=["Content creator","Educator or trainer","Business or organization","Consultant or coach","Blogger or publisher","Community owner","Other"];
+ if(!uuid.test(id)||name.length<2||market.length<2)throw Error("Enter a valid partner name and market");
+ if(partnerType&&!types.includes(partnerType))throw Error("Invalid partner type");
+ if(phone&&(!/^[+()0-9.\s-]+$/.test(phone)||phone.replace(/\D/g,"").length<7||phone.replace(/\\D/g,"").length>15))throw Error("Enter a valid phone number");
+ const existing=(await db("affiliate_profiles","?select=id,status&id=eq."+id+"&limit=1"))[0];
+ if(!existing)throw Error("Affiliate partner not found");
+ const updated=await patch("affiliate_profiles","?id=eq."+id,{full_name:name,business_name:business||null,contact_phone:phone||null,country_market:market,primary_channel:website||null,partner_type:partnerType||null,management_notes:notes||null,updated_at:new Date().toISOString()});
+ return {updated:updated.length===1};
+}
 async function setPartnerRate(data:any,req:Request){
  await admin(req);
  const id=clean(data.id,50),rate=Number(data.rate);
@@ -383,6 +397,7 @@ Deno.serve(async req=>{
   if(action==="admin_commission")return reply(await commissionAction(input,req),200,origin);
   if(action==="admin_settings")return reply(await updateSettings(input,req),200,origin);
   if(action==="admin_rate")return reply(await setPartnerRate(input,req),200,origin);
+  if(action==="admin_partner_update")return reply(await updatePartnerManagement(input,req),200,origin);
   return reply({error:"Unknown action"},400,origin);
  }catch(err){console.error("Affiliate operation",String(err));const msg=String(err instanceof Error?err.message:err);return reply({error:msg},/AFFILIATE_ACCESS_REVOKED|sign-in|restricted|not found|verification|required|verify your email/i.test(msg)?403:400,origin)}
 });
