@@ -138,6 +138,7 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
    '<button class="btn" id="crm-order">+ Create Order</button><button class="btn secondary" id="crm-invoice">+ Create Invoice</button><button class="btn secondary" id="crm-free">+ Free Order</button><button class="btn secondary" id="crm-account-invite">Send Account Invite</button></div>'+
    '<div class="ae-crm-overview">'+
    [['Customer email',p.email],['Phone',p.phone||"Not provided"],['Purchases',orders.length],['Courses',items.length]].map(x=>'<section class="ae-crm-stat"><span>'+escapeHtml(x[0])+'</span><strong>'+escapeHtml(x[1])+'</strong></section>').join("")+'</div>'+
+   '<section class="panel ae-mgmt-panel"><div class="ae-mgmt-panel-heading"><div><h2>Account invitation &amp; email delivery</h2><p class="muted">Resend delivery events and invitation history for this customer.</p></div><button class="btn secondary" id="crm-refresh-invite" type="button">Refresh delivery status</button></div><div id="crm-invite-delivery" role="status" aria-live="polite"><p class="muted">Checking Resend…</p></div></section>'+
    '<section class="panel ae-mgmt-panel"><h2>Courses and access</h2><div class="tablewrap"><table><thead><tr><th>Course</th><th>Status</th><th>Enrolled</th><th>Expires</th><th>Manage</th></tr></thead><tbody>'+
    items.map(e=>'<tr><td>'+escapeHtml(courses.get(e.course_id)?.title||e.course_id)+'</td><td>'+escapeHtml(e.status)+'</td><td>'+formatDate(e.enrolled_at)+'</td><td>'+formatDate(e.expires_at)+'</td><td><button class="ae-inline-btn" data-access="'+escapeHtml(e.id)+'">Change access</button></td></tr>').join("")+
    '</tbody></table></div></section>'+
@@ -158,7 +159,30 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
   root.querySelector("#crm-order").onclick=async()=>{await navigateTo("orders");await orderCreator(uid,p.email)};
   root.querySelector("#crm-invoice").onclick=async()=>{await navigateTo("orders");await invoiceEditor(uid)};
   root.querySelector("#crm-free").onclick=async()=>{await navigateTo("orders");await orderCreator(uid,p.email,true)};
-  root.querySelector("#crm-account-invite").onclick=async()=>{try{await api("send_invite",{email:p.email});notify("Branded account invitation sent.")}catch(e){showError(e)}};
+  async function refreshInviteDelivery(){
+   const target=root.querySelector("#crm-invite-delivery");
+   if(!target)return;
+   target.innerHTML='<p class="muted">Checking Resend delivery history…</p>';
+   try{
+    const result=await api("invitation_delivery",{userId:uid});
+    if(!root.contains(target))return;
+    const messages=result.messages||[],history=result.history||[];
+    const last=messages[0];
+    target.innerHTML=(last?'<p><strong>Latest Resend event: '+escapeHtml(last.status)+'</strong> · '+escapeHtml(last.subject)+' · '+formatDate(last.sentAt)+'</p>':'<p class="muted">'+escapeHtml(result.providerMessage||"Resend status unknown")+'</p>')+
+     '<div class="tablewrap"><table><thead><tr><th>Date</th><th>Source</th><th>Status</th></tr></thead><tbody>'+
+     (messages.map(m=>'<tr><td>'+formatDate(m.sentAt)+'</td><td>'+escapeHtml(m.subject)+'</td><td>'+escapeHtml(m.status)+'</td></tr>').join("")+
+      history.map(h=>'<tr><td>'+formatDate(h.at)+'</td><td>'+escapeHtml(h.source)+'</td><td>'+escapeHtml(h.status)+(h.error?' — '+escapeHtml(h.error):'')+'</td></tr>').join("")||'<tr><td colspan="3">No invitation records found.</td></tr>')+
+     '</tbody></table></div><p class="muted">A sent record does not confirm inbox delivery. Provider events are shown separately when available.</p>';
+   }catch(e){target.textContent="Unable to retrieve invitation status: "+String(e?.message||e)}
+  }
+  root.querySelector("#crm-refresh-invite").onclick=refreshInviteDelivery;
+  refreshInviteDelivery();
+  root.querySelector("#crm-account-invite").textContent="Resend Account Invitation";
+  root.querySelector("#crm-account-invite").onclick=async()=>{
+   const btn=root.querySelector("#crm-account-invite");btn.disabled=true;
+   try{await api("send_invite",{email:p.email});notify("Branded invitation submitted to Resend.");await refreshInviteDelivery()}
+   catch(e){showError(e)}finally{if(root.contains(btn))btn.disabled=false}
+  };
   root.querySelectorAll("[data-profile-invoice]").forEach(btn=>btn.onclick=async()=>{await navigateTo("orders");await invoiceViewer(btn.dataset.profileInvoice)});
   root.querySelectorAll("[data-access]").forEach(b=>b.onclick=()=>changeAccess(b.dataset.access,uid,items,courses));
  }
