@@ -236,12 +236,12 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
   const initialKey=initialCourse?("offering."+initialCourse.slug):"";
   const orderPriceOptions=initialKey?prices.filter(p=>p.price_key===initialKey):prices;
   root.innerHTML=head("Orders & invoices","Create orders using customer details. Free access is provisioned immediately; paid access begins only after verified checkout payment.")+
-   '<div class="ae-mgmt-two"><section class="panel ae-mgmt-panel"><h2>Create an order</h2><p class="muted">Select a customer already created in Customer CRM, then create a paid invoice or a recorded free-access order.</p>'+
+   '<div class="ae-mgmt-two"><section class="panel ae-mgmt-panel"><h2>Create an order</h2><p class="muted">Select an existing customer or enter new customer details to create a paid invoice or complimentary order.</p>'+
    '<form id="ae-create-order" class="ae-mgmt-form">'+
-   '<label>Existing customer<select name="customerId" id="ae-order-customer" required>'+optionList(people,"Choose existing customer",p=>p.id,p=>(p.full_name||p.email)+" — "+p.email)+'</select></label>'+
+   '<label>Existing customer (optional)<select name="customerId" id="ae-order-customer">'+optionList(people,"New customer — enter details below",p=>p.id,p=>(p.full_name||p.email)+" — "+p.email)+'</select></label>'+
    '<label>First name<input required name="firstName" maxlength="80" value="'+escapeHtml(first)+'"></label>'+
    '<label>Last name<input required name="lastName" maxlength="80" value="'+escapeHtml(last)+'"></label>'+
-   '<label>Customer email<input required readonly type="email" name="email" maxlength="254" value="'+escapeHtml(existing?.email||prefillEmail)+'"></label>'+
+   '<label>Customer email<input required type="email" name="email" maxlength="254" value="'+escapeHtml(existing?.email||prefillEmail)+'"></label>'+
    '<label>Phone (optional)<input type="tel" name="phone" maxlength="32" value="'+escapeHtml(existing?.phone||"")+'"></label>'+
    '<label>Product or service<select name="priceKey" required>'+optionList(orderPriceOptions,"Choose a product or service",p=>p.price_key,p=>p.label+" — "+money(p.amount))+'</select></label>'+
    '<label>Order type<select name="mode" required><option value="invoice">Accept Payment — Send Invoice</option><option value="free">Free Access — $0.00</option></select></label>'+
@@ -254,6 +254,7 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
   const flow=root.querySelector('#ae-order-flow-explanation'),submit=root.querySelector('#ae-create-order [type="submit"]');
   const customerSelect=root.querySelector('#ae-order-customer');
   if(existing)customerSelect.value=existing.id;
+  root.querySelector('#ae-create-order [name="email"]').readOnly=Boolean(existing);
   customerSelect.onchange=()=>{
    const person=people.find(p=>p.id===customerSelect.value);
    const parts=String(person?.full_name||"").trim().split(/\s+/);
@@ -261,6 +262,7 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
    fields.querySelector('[name="firstName"]').value=parts.shift()||"";
    fields.querySelector('[name="lastName"]').value=parts.join(" ");
    fields.querySelector('[name="email"]').value=person?.email||"";
+   fields.querySelector('[name="email"]').readOnly=Boolean(person);
    fields.querySelector('[name="phone"]').value=person?.phone||"";
   };
   root.querySelector('#ae-order-create-customer').onclick=async()=>{await navigateTo('customer_profiles');customerForm()};
@@ -273,7 +275,10 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
   };
   if(free)root.querySelector('#ae-create-order [name="mode"]').onchange({target:root.querySelector('#ae-create-order [name="mode"]')});
   onSubmit("#ae-create-order",async fd=>{
-   const values=Object.fromEntries(fd);const customer=people.find(p=>p.id===values.customerId);if(!customer)throw Error("Select an existing customer before creating an order.");values.email=customer.email;if(initialCourse)values.courseId=initialCourse.id;
+   const values=Object.fromEntries(fd);const customer=people.find(p=>p.id===values.customerId);
+   if(customer)values.email=customer.email;
+   else delete values.customerId;
+   if(initialCourse)values.courseId=initialCourse.id;
    const result=await api("create_order",values);
    notify(values.mode==="free"?"Free access order "+result.orderNumber+" completed.":"Invoice "+result.orderNumber+" sent to "+values.email);
    sessionStorage.removeItem("ae_order_course_context");sessionStorage.removeItem("ae_enrollment_return");
@@ -349,11 +354,11 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
   const requiredKey=course?"offering."+course.slug:"";
   const prices=requiredKey?allPrices.filter(p=>p.price_key===requiredKey):allPrices;
   const person=people.find(p=>p.id===prefillUser);
-  root.innerHTML=head(free?"Create free-access order":"Create invoice","Create a customer-linked order with a catalog line item. No course access is granted until a paid invoice is verified or a $0 order is completed.")+
+  root.innerHTML=head(free?"Create free-access order":"Create invoice","Create an order or invoice for an existing or new customer. Course access begins after verified payment or completion of a $0 order.")+
    '<div class="ae-mgmt-header-actions"><button type="button" class="btn secondary" id="ae-invoice-back">← Back to customer orders</button></div>'+
    '<form id="ae-invoice-create" class="ae-invoice-workspace"><section class="panel ae-mgmt-panel"><div class="ae-mgmt-panel-heading"><div><span class="ae-mini-eyebrow">INVOICE DETAILS</span><h2>Bill to</h2></div><span class="pill pending">New</span></div>'+
-   '<div class="ae-invoice-fields"><label>Existing customer<select name="customerId" required>'+optionList(people,"Choose a customer",p=>p.id,p=>(p.full_name||p.email)+" — "+p.email)+'</select></label>'+
-   '<label>Customer email<input name="email" type="email" readonly required></label><label>First name<input name="firstName" required maxlength="80"></label><label>Last name<input name="lastName" required maxlength="80"></label><label>Phone<input name="phone" maxlength="32"></label></div></section>'+
+   '<div class="ae-invoice-fields"><label>Existing customer (optional)<select name="customerId">'+optionList(people,"New customer — enter details below",p=>p.id,p=>(p.full_name||p.email)+" — "+p.email)+'</select></label>'+
+   '<label>Customer email<input name="email" type="email" maxlength="254" required></label><label>First name<input name="firstName" required maxlength="80"></label><label>Last name<input name="lastName" required maxlength="80"></label><label>Phone<input name="phone" maxlength="32"></label></div></section>'+
    '<section class="panel ae-mgmt-panel"><div class="ae-mgmt-panel-heading"><div><span class="ae-mini-eyebrow">LINE ITEM</span><h2>Product or course</h2><p class="muted">Pricing is verified against the active product catalog when saved.</p></div></div>'+
    '<div class="ae-invoice-fields"><label class="ae-invoice-wide">Description / catalog item<select name="priceKey" required>'+optionList(prices,"Choose a product or course",p=>p.price_key,p=>p.label+" — "+money(p.amount))+'</select></label>'+
    '<label>Order type<select name="mode"><option value="invoice">Invoice — payment required</option><option value="free">Complimentary — $0.00</option></select></label></div>'+
@@ -362,7 +367,7 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
    '<div class="ae-mgmt-actions"><button type="submit" class="btn secondary" name="submitMode" value="draft" id="ae-save-draft">Save draft</button><button type="submit" class="btn" name="submitMode" value="send" id="ae-save-send">Create &amp; Send Invoice</button></div></section></form>';
   const form=root.querySelector("#ae-invoice-create"),customer=form.querySelector('[name="customerId"]'),selection=form.querySelector('[name="priceKey"]'),mode=form.querySelector('[name="mode"]');
   function fillCustomer(){
-   const p=people.find(x=>x.id===customer.value),names=String(p?.full_name||"").trim().split(/\s+/);form.querySelector('[name="email"]').value=p?.email||"";form.querySelector('[name="firstName"]').value=names.shift()||"";form.querySelector('[name="lastName"]').value=names.join(" ")||"";form.querySelector('[name="phone"]').value=p?.phone||"";
+   const p=people.find(x=>x.id===customer.value),names=String(p?.full_name||"").trim().split(/\s+/);form.querySelector('[name="email"]').value=p?.email||"";form.querySelector('[name="email"]').readOnly=Boolean(p);form.querySelector('[name="firstName"]').value=names.shift()||"";form.querySelector('[name="lastName"]').value=names.join(" ")||"";form.querySelector('[name="phone"]').value=p?.phone||"";
   }
   function updateTotal(){
    const p=prices.find(x=>x.price_key===selection.value);root.querySelector("#ae-invoice-total").textContent=mode.value==="free"?"$0.00":money(p?.amount||0);
@@ -376,8 +381,10 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
   let submitMode="send";
   form.querySelectorAll('[name="submitMode"]').forEach(btn=>btn.onclick=()=>{submitMode=btn.value});
   onSubmit("#ae-invoice-create",async fd=>{
-   const p=people.find(x=>x.id===String(fd.get("customerId")));if(!p)throw Error("Select an existing customer");
-   const payload=Object.fromEntries(fd);payload.email=p.email;
+   const p=people.find(x=>x.id===String(fd.get("customerId")));
+   const payload=Object.fromEntries(fd);
+   if(p)payload.email=p.email;
+   else delete payload.customerId;
    if(course)payload.courseId=course.id;
    payload.saveDraft=submitMode==="draft"&&payload.mode!=="free";
    const result=await api("create_order",payload);
