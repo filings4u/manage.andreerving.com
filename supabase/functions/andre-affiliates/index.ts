@@ -14,6 +14,8 @@ async function admin(req:Request){const u=await actor(req);if(!u)throw Error("St
 async function me(req:Request){
  const u=await actor(req);if(!u)throw Error("Sign in to the affiliate portal");
  if(!u.email_confirmed_at)throw Error("Verify your email before applying for the affiliate program");
+ const check=(await db("affiliate_email_verifications","?select=verified_at,email&user_id=eq."+u.id+"&limit=1"))[0];
+ if(!check?.verified_at||email(check.email)!==email(u.email))throw Error("Second email verification required");
  return u;
 }
 async function settings(){return (await db("affiliate_settings","?select=*&id=eq.true&limit=1"))[0]}
@@ -48,6 +50,47 @@ async function register(data:any,req:Request){
  const mail=await fetch("https://api.resend.com/emails",{method:"POST",headers:{Authorization:"Bearer "+rkey,"Content-Type":"application/json"},body:JSON.stringify({from:"Andre Erving <support@andreerving.com>",to:[address],subject:"Verify your Andre Erving affiliate email",html})});
  if(!mail.ok)throw Error("Unable to send verification email");
  return {submitted:true};
+}
+
+
+async function verificationStatus(req:Request){
+ const user=await actor(req);
+ if(!user)throw Error("Sign in to verify your affiliate email");
+ const record=(await db("affiliate_email_verifications","?select=verified_at,email,sent_at&user_id=eq."+user.id+"&limit=1"))[0];
+ return {verified:!!user.email_confirmed_at&&!!record?.verified_at&&email(record.email)===email(user.email),email:email(user.email),primaryVerified:!!user.email_confirmed_at};
+}
+async function sendSecondCode(req:Request){
+ const user=await actor(req);
+ if(!user?.email_confirmed_at)throw Error("Finish account activation before requesting the second code");
+ const address=email(user.email),id=String(user.id),now=Date.now();
+ if(!eMail.test(address))throw Error("A verified email is required");
+ const old=(await db("affiliate_email_verifications","?select=verified_at,email,sent_at&user_id=eq."+id+"&limit=1"))[0];
+ if(old?.verified_at&&email(old.email)===address)return {verified:true};
+ if(old?.sent_at&&now-Date.parse(old.sent_at)<60000) return {sent:true,waitSeconds:Math.ceil((60000-(now-Date.parse(old.sent_at)))/1000)};
+ const resend=Deno.env.get("RESEND_API_KEY")||"";
+ if(!resend)throw Error("Second verification email delivery is unavailable");
+ const code=String(crypto.getRandomValues(new Uint32Array(1))[0]%1000000).padStart(6,"0");
+ const code_hash=await sha(id+":"+address+":"+code);
+ const data={user_id:id,email:address,code_hash,code_expires_at:new Date(now+10*60000).toISOString(),sent_at:new Date(now).toISOString(),attempts:0,verified_at:null};
+ const saved=await fetch(B+"/rest/v1/affiliate_email_verifications?on_conflict=user_id",{method:"POST",headers:{...headers(),Prefer:"resolution=merge-duplicates,return=representation"},body:JSON.stringify(data)});
+ if(!saved.ok)throw Error("Unable to save second verification challenge");
+ const html='<div style="font:16px Arial,sans-serif;max-width:580px;margin:auto;padding:32px;color:#102844"><img alt="Andre Erving" width="300" src="https://gnfyidajbectlppsekzj.supabase.co/storage/v1/object/public/Andre%20Erving%20Public/logos/logo.png"><h1>One more email check</h1><p>Your six-digit affiliate verification code is:</p><p style="font-size:34px;font-weight:800;letter-spacing:7px;color:#163f72">'+code+'</p><p>This code expires in 10 minutes. Enter it in your affiliate portal to finish verification.</p><p>If you did not request this code, you can ignore this message.</p></div>';
+ const sent=await fetch("https://api.resend.com/emails",{method:"POST",headers:{"Authorization":"Bearer "+resend,"Content-Type":"application/json"},body:JSON.stringify({from:"Andre Erving <support@andreerving.com>",to:[address],subject:"Your Andre Erving affiliate verification code",html})});
+ if(!sent.ok)throw Error("Unable to send second verification email");
+ return {sent:true};
+}
+async function confirmSecondCode(data:any,req:Request){
+ const user=await actor(req);if(!user?.email_confirmed_at)throw Error("Finish account activation first");
+ const code=clean(data.code,12);if(!/^\d{6}$/.test(code))throw Error("Enter the six-digit code");
+ const row=(await db("affiliate_email_verifications","?select=code_hash,code_expires_at,attempts,verified_at,email&user_id=eq."+user.id+"&limit=1"))[0];
+ if(row?.verified_at&&email(row.email)===email(user.email))return {verified:true};
+ if(!row||email(row.email)!==email(user.email)||Date.parse(row.code_expires_at||"")<=Date.now()||Number(row.attempts)>=5)throw Error("Code expired or too many attempts. Request a new code.");
+ const updated=await patch("affiliate_email_verifications","?user_id=eq."+user.id+"&verified_at=is.null",{attempts:Number(row.attempts)+1});
+ if(!updated.length)throw Error("Verification challenge no longer available");
+ const digest=await sha(user.id+":"+email(user.email)+":"+code);
+ if(digest!==row.code_hash)throw Error("Incorrect verification code");
+ const saved=await patch("affiliate_email_verifications","?user_id=eq."+user.id+"&code_hash=eq."+row.code_hash,{verified_at:new Date().toISOString(),code_hash:null,code_expires_at:null});
+ return {verified:saved.length===1};
 }
 
 async function apply(data:any,req:Request){
@@ -183,6 +226,9 @@ Deno.serve(async req=>{
  try{
   const input=await req.json(),action=String(input.action||"");
   if(action==="register")return reply(await register(input,req),200,origin);
+  if(action==="verification_status")return reply(await verificationStatus(req),200,origin);
+  if(action==="send_second_code")return reply(await sendSecondCode(req),200,origin);
+  if(action==="verify_second_code")return reply(await confirmSecondCode(input,req),200,origin);
   if(action==="apply")return reply(await apply(input,req),200,origin);
   if(action==="track")return reply(await track(input),200,origin);
   if(action==="dashboard")return reply(await dashboard(req),200,origin);
