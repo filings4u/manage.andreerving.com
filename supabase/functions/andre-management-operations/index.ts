@@ -305,6 +305,46 @@ async function createOrder(input:Record<string,unknown>,staff:{id:string}){
  const sent=await sendInvoiceForOrder(id);
  return {orderId:id,orderNumber:ref,status:"pending",mode,total:amount,invoiceUrl:sent.invoiceUrl};
 }
+// Staff-only Resend delivery lookup. Never expose API credentials to the browser.
+async function invitationDelivery(input:Record<string,unknown>){
+ const uid=String(input.userId||"");
+ if(!uuidPattern.test(uid))throw Error("Valid customer required");
+ const matches=await rows("customer_profiles","?select=id,email&id=eq."+uid+"&limit=1");
+ if(!matches.length)throw Error("Customer not found");
+ const address=email(matches[0].email);
+ const [purchases,manual]=await Promise.all([
+  rows("purchase_invite_deliveries","?select=status,sent_at,last_error,updated_at&customer_email=eq."+encodeURIComponent(address)+"&order=updated_at.desc&limit=10"),
+  rows("management_invitation_log","?select=status,sent_at,error_message,created_at&customer_email=eq."+encodeURIComponent(address)+"&order=created_at.desc&limit=10")
+ ]);
+ const history=[...purchases.map((x:any)=>({source:"Purchase invitation",status:x.status,at:x.sent_at||x.updated_at,error:x.last_error||null})),
+  ...manual.map((x:any)=>({source:"Manual invitation",status:x.status,at:x.sent_at||x.created_at,error:x.error_message||null}))].sort((a,b)=>Date.parse(b.at||"")-Date.parse(a.at||"")).slice(0,12);
+ const key=Deno.env.get("RESEND_API_KEY")||"";
+ let providerStatus="unavailable",providerMessage="Resend delivery lookup is not configured",messages:any[]=[];
+ if(key){
+  try{
+   let cursor="";
+   for(let page=0;page<5;page++){
+    const url="https://api.resend.com/emails?limit=100"+(cursor?"&after="+encodeURIComponent(cursor):"");
+    const response=await fetch(url,{headers:{Authorization:"Bearer "+key}});
+    if(!response.ok)throw Error("Resend status request failed ("+response.status+")");
+    const payload=await response.json();
+    const list=Array.isArray(payload.data)?payload.data:[];
+    for(const mail of list){
+     const recipients=Array.isArray(mail.to)?mail.to:[mail.to];
+     if(!recipients.some((v:unknown)=>email(v)===address))continue;
+     if(!/andre erving/i.test(String(mail.subject||""))||!/invitation|account|purchase/i.test(String(mail.subject||"")))continue;
+     messages.push({id:String(mail.id||""),subject:String(mail.subject||""),status:String(mail.last_event||"sent"),sentAt:mail.created_at||null});
+    }
+    if(!payload.has_more||!list.length)break;
+    cursor=String(list[list.length-1]?.id||"");
+    if(!cursor)break;
+   }
+   providerStatus=messages.length?"found":"not_found";
+   providerMessage=messages.length?"Resend delivery events":"No matching invitation within the latest 500 sent messages";
+  }catch(e){providerStatus="unavailable";providerMessage=String(e)}
+ }
+ return {history,providerStatus,providerMessage,messages:messages.slice(0,10)};
+}
 async function customerDetail(input:Record<string,unknown>){
  const uid=String(input.userId||"");
  const address=email(input.email);
@@ -369,6 +409,7 @@ Deno.serve(async(request)=>{
    case "enroll":result=await enroll(input);break;
    case "change_enrollment":result=await modifyEnrollment(input);break;
    case "customer_detail":result=await customerDetail(input);break;
+   case "invitation_delivery":result=await invitationDelivery(input);break;
    case "extension_price":result=await setExtensionPrice(input);break;
    default:return reply({error:"Unknown management action"},400,origin);
   }
