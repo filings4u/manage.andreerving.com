@@ -232,6 +232,16 @@ async function approval(data:any,req:Request){
    if(!mail.ok)console.error("Affiliate approval notification failed",mail.status);
   }
  }
+ if(status==="rejected"&&old.status!=="rejected"&&updated.length===1){
+  const resend=Deno.env.get("RESEND_API_KEY")||"";
+  if(resend){
+   try{
+    const html=affiliateEmail("Update on your affiliate application","Application decision",'<p>Hello '+escapeEmail(old.full_name)+',</p><p>Thank you for your interest in the Andre Erving Affiliate Partner Program. After review, we are unable to approve your application at this time.</p><p>Your affiliate portal access has been disabled. Your existing Andre Erving account remains available for any other services you use.</p><p>If you have questions, please contact support@andreerving.com.</p>');
+    const sent=await fetch("https://api.resend.com/emails",{method:"POST",headers:{"Authorization":"Bearer "+resend,"Content-Type":"application/json"},body:JSON.stringify({from:"Andre Erving <support@andreerving.com>",to:[old.email],subject:"Update on your Andre Erving affiliate application",html})});
+    if(!sent.ok)console.error("Affiliate rejection email could not be sent",sent.status);
+   }catch(err){console.error("Affiliate rejection email unavailable",String(err))}
+  }
+ }
  return {updated:updated.length===1};
 }
 async function commissionAction(data:any,req:Request){
