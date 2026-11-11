@@ -95,13 +95,18 @@ async function approval(data:any,req:Request){
  if(status==="active"&&old.status!=="active"){
   const resend=Deno.env.get("RESEND_API_KEY")||"";
   if(resend){
-   const generate=await fetch(B+"/auth/v1/admin/generate_link",{method:"POST",headers:headers(),body:JSON.stringify({type:old.user_id?"magiclink":"invite",email:old.email,redirect_to:"https://andreerving.com/affiliate-portal/"})});
+   let linkType=old.user_id?"magiclink":"invite";
+   let generate=await fetch(B+"/auth/v1/admin/generate_link",{method:"POST",headers:headers(),body:JSON.stringify({type:linkType,email:old.email,redirect_to:"https://andreerving.com/affiliate-portal/"})});
+   if(!generate.ok&&linkType==="invite"){
+    linkType="magiclink";
+    generate=await fetch(B+"/auth/v1/admin/generate_link",{method:"POST",headers:headers(),body:JSON.stringify({type:linkType,email:old.email,redirect_to:"https://andreerving.com/affiliate-portal/"})});
+   }
    if(generate.ok){
     const body=await generate.json(),userId=String(body.user?.id||"");
     if(uuid.test(userId)){await patch("affiliate_profiles","?id=eq."+id,{user_id:userId});const found=await db("customer_profiles","?select=id&id=eq."+userId+"&limit=1");if(!found.length)await insert("customer_profiles",{id:userId,email:old.email,full_name:old.full_name})}
     const token=String(body.properties?.hashed_token||"");
     if(/^[A-Za-z0-9_-]{12,300}$/.test(token)){
-     const link="https://andreerving.com/affiliate-portal/activate.html?token_hash="+encodeURIComponent(token)+"&type="+(old.user_id?"magiclink":"invite");
+     const link="https://andreerving.com/affiliate-portal/activate.html?token_hash="+encodeURIComponent(token)+"&type="+linkType;
      const mail=await fetch("https://api.resend.com/emails",{method:"POST",headers:{"Authorization":"Bearer "+resend,"Content-Type":"application/json"},body:JSON.stringify({from:"Andre Erving <support@andreerving.com>",to:[old.email],subject:"Your Andre Erving affiliate application is approved",html:'<div style="font:16px Arial;color:#112c49;max-width:600px;margin:auto;padding:30px"><img alt="Andre Erving" width="300" src="https://gnfyidajbectlppsekzj.supabase.co/storage/v1/object/public/Andre%20Erving%20Public/logos/logo.png"><h1>Welcome to the affiliate program</h1><p>Your affiliate application has been approved. Activate your login using the button below, then visit <a href="https://andreerving.com/affiliate-portal/">the dedicated Affiliate Partner Portal</a> to get your unique links and monitor referrals. No course purchase is required.</p><p><a style="display:inline-block;background:#1e4a86;color:white;padding:15px 22px;text-decoration:none;border-radius:8px" href="'+link+'">Activate your affiliate account</a></p><p>Need assistance? support@andreerving.com</p></div>'})});
      if(!mail.ok)console.error("Affiliate approval invite was not delivered",mail.status);
     }
