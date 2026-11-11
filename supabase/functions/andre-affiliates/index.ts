@@ -22,6 +22,15 @@ async function apply(data:any,req:Request){
  if(found)return {submitted:true,existing:true,status:found.status};
  const st=await settings();const code=crypto.randomUUID().replaceAll("-","").slice(0,12);
  await insert("affiliate_profiles",{user_id:u?.id||null,email:address,full_name,website,promotion_plan,code,status:"pending",commission_rate:st.default_commission_rate});
+ const resend=Deno.env.get("RESEND_API_KEY")||"";
+ if(resend){
+  const cleanHtml=(v:string)=>v.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]||c));
+  try{
+   const emailHtml='<div style="font:16px Arial,sans-serif;color:#112c49;max-width:590px;margin:auto;padding:30px"><img alt="Andre Erving" width="300" src="https://gnfyidajbectlppsekzj.supabase.co/storage/v1/object/public/Andre%20Erving%20Public/logos/logo.png"><h1>We received your application</h1><p>Hello '+cleanHtml(full_name)+',</p><p>Thank you for applying to the Andre Erving Affiliate Program. We will review your application before activating a referral link.</p><p>Approved partners receive instructions for signing in to their affiliate dashboard.</p><p>Questions? support@andreerving.com</p></div>';
+   const mail=await fetch("https://api.resend.com/emails",{method:"POST",headers:{Authorization:"Bearer "+resend,"Content-Type":"application/json"},body:JSON.stringify({from:"Andre Erving <support@andreerving.com>",to:[address],subject:"Andre Erving Affiliate Application Received",html:emailHtml})});
+   if(!mail.ok)console.warn("Affiliate application receipt could not be sent",mail.status);
+  }catch(e){console.warn("Affiliate application receipt unavailable",String(e))}
+ }
  return {submitted:true,status:"pending"};
 }
 async function track(data:any){
@@ -111,6 +120,13 @@ async function commissionAction(data:any,req:Request){
  const result=await patch("affiliate_conversions","?payment_intent_id=eq."+encodeURIComponent(id)+"&status=eq."+c.status,{status,updated_at:new Date().toISOString()});
  return {updated:result.length===1};
 }
+async function setPartnerRate(data:any,req:Request){
+ await admin(req);
+ const id=clean(data.id,50),rate=Number(data.rate);
+ if(!uuid.test(id)||!Number.isFinite(rate)||rate<0||rate>50)throw Error("Invalid commission rate");
+ const r=await patch("affiliate_profiles","?id=eq."+id,{commission_rate:rate,updated_at:new Date().toISOString()});
+ return {updated:r.length===1};
+}
 async function updateSettings(data:any,req:Request){
  await admin(req);
  const rate=Number(data.commissionRate),days=Number(data.attributionDays),hold=Number(data.holdDays),minimum=Number(data.minPayout);
@@ -132,6 +148,7 @@ Deno.serve(async req=>{
   if(action==="admin_approval")return reply(await approval(input,req),200,origin);
   if(action==="admin_commission")return reply(await commissionAction(input,req),200,origin);
   if(action==="admin_settings")return reply(await updateSettings(input,req),200,origin);
+  if(action==="admin_rate")return reply(await setPartnerRate(input,req),200,origin);
   return reply({error:"Unknown action"},400,origin);
  }catch(err){console.error("Affiliate operation",String(err));const msg=String(err instanceof Error?err.message:err);return reply({error:msg},/sign-in|restricted|not found/i.test(msg)?403:400,origin)}
 });
