@@ -196,11 +196,11 @@ async function dashboard(req:Request){
  if(!p)return {profile:null,settings:await settings(),clicks:0,conversions:[]};
  if(!p.user_id){await patch("affiliate_profiles","?id=eq."+p.id+"&user_id=is.null",{user_id:u.id,updated_at:new Date().toISOString()});p.user_id=u.id;}
  const [clicks,conversions,payouts,st]=await Promise.all([
-  db("affiliate_clicks","?select=id&affiliate_id=eq."+p.id+"&limit=1000"),
+  db("rpc/affiliate_click_reporting","?select=affiliate_id,landing_path,total_clicks,clicks_30d,last_click&affiliate_id=eq."+p.id),
   db("affiliate_conversions","?select=payment_intent_id,gross_amount,commission_amount,status,available_at,created_at&affiliate_id=eq."+p.id+"&order=created_at.desc&limit=100"),
   db("affiliate_payouts","?select=amount,status,created_at,paid_at&affiliate_id=eq."+p.id+"&order=created_at.desc&limit=50"),
   settings()]);
- return {profile:{name:p.full_name,displayName:p.profile_display_name||p.full_name,businessName:p.business_name||"",phone:p.contact_phone||"",bio:p.profile_bio||"",website:p.primary_channel||p.website||"",market:p.country_market||"",partnerType:p.partner_type||"",code:p.status==="active"?p.code:null,status:p.status,commissionRate:p.commission_rate},payoutSetup:{method:p.payout_method||"unconfigured",zelleContact:p.zelle_contact||"",zelleContactType:p.zelle_contact_type||"",zelleAccepted:!!p.zelle_terms_accepted_at,bankOnboardingAvailable:!!Deno.env.get("STRIPE_SECRET_KEY"),stripeConnected:!!p.stripe_account_id},settings:{attributionDays:st.attribution_days,holdDays:st.hold_days,minPayout:st.min_payout},clicks:clicks.length,conversions,payouts};
+ return {profile:{name:p.full_name,displayName:p.profile_display_name||p.full_name,businessName:p.business_name||"",phone:p.contact_phone||"",bio:p.profile_bio||"",website:p.primary_channel||p.website||"",market:p.country_market||"",partnerType:p.partner_type||"",code:p.status==="active"?p.code:null,status:p.status,commissionRate:p.commission_rate},payoutSetup:{method:p.payout_method||"unconfigured",zelleContactMasked:maskPayoutContact(p.zelle_contact||"",p.zelle_contact_type||""),zelleContactType:p.zelle_contact_type||"",zelleAccepted:!!p.zelle_terms_accepted_at,bankOnboardingAvailable:!!Deno.env.get("STRIPE_SECRET_KEY"),stripeConnected:!!p.stripe_account_id},settings:{attributionDays:st.attribution_days,holdDays:st.hold_days,minPayout:st.min_payout},clicks:clicks.reduce((sum:number,c:any)=>sum+Number(c.total_clicks||0),0),clicks30d:clicks.reduce((sum:number,c:any)=>sum+Number(c.clicks_30d||0),0),clickReport:clicks.map((c:any)=>({path:c.landing_path,total:Number(c.total_clicks||0),recent:Number(c.clicks_30d||0),last:c.last_click})),conversions,payouts};
 }
 async function catalog(req:Request){
  await me(req);
@@ -222,6 +222,32 @@ async function saveAffiliateProfile(data:any,req:Request){
  if(phone&&(!/^[+()0-9.\s-]+$/.test(phone)||phone.replace(/\D/g,"").length<7))throw Error("Enter a valid phone number");
  const updated=await patch("affiliate_profiles","?id=eq."+p.id,{profile_display_name:displayName,business_name:businessName||null,contact_phone:phone||null,profile_bio:bio||null,primary_channel:website||null,country_market:market||null,updated_at:new Date().toISOString()});
  return {updated:updated.length===1};
+}
+function maskPayoutContact(value:string,type:string){
+ if(!value)return "";
+ if(type==="email"){const parts=value.split("@");return (parts[0]?.slice(0,1)||"*")+"••••@"+(parts[1]||"");}
+ const digits=value.replace(/\D/g,"");return "•••• •••• "+digits.slice(-4);
+}
+async function bankMaskedDetails(stripeId:string){
+ const secret=Deno.env.get("STRIPE_SECRET_KEY")||"";
+ if(!secret||!/^acct_[A-Za-z0-9]+$/.test(stripeId))return {status:"not_connected",display:"No bank account connected"};
+ const r=await fetch("https://api.stripe.com/v1/accounts/"+encodeURIComponent(stripeId)+"?expand[]=external_accounts",{headers:{Authorization:"Bearer "+secret}});
+ if(!r.ok)return {status:"unavailable",display:"Bank details unavailable"};
+ const info=await r.json();
+ const bank=(info.external_accounts?.data||[]).find((x:any)=>x.object==="bank_account");
+ return {status:info.payouts_enabled?"enabled":info.details_submitted?"review":"onboarding",display:bank?String(bank.bank_name||"Bank")+" •••• "+String(bank.last4||""): "Bank information is held securely by Stripe",last4:bank?.last4||null};
+}
+async function payoutDetails(data:any,req:Request){
+ const scope=clean(data.scope,12),reveal=data.reveal===true;
+ const u=scope==="management"?await admin(req):await me(req);
+ let p:any;
+ if(scope==="management"){const id=clean(data.affiliateId,50);if(!uuid.test(id))throw Error("Invalid affiliate id");p=(await db("affiliate_profiles","?select=id,payout_method,zelle_contact,zelle_contact_type,stripe_account_id&id=eq."+id+"&limit=1"))[0]}
+ else p=(await db("affiliate_profiles","?select=id,payout_method,zelle_contact,zelle_contact_type,stripe_account_id&user_id=eq."+u.id+"&limit=1"))[0];
+ if(!p)throw Error("Affiliate payout preference not found");
+ const masked=maskPayoutContact(String(p.zelle_contact||""),String(p.zelle_contact_type||""));
+ const bank=p.stripe_account_id?await bankMaskedDetails(p.stripe_account_id):{status:"not_connected",display:"Not connected",last4:null};
+ if(reveal)await insert("affiliate_payout_contact_access_log",{affiliate_id:p.id,viewed_by:u.id,view_scope:scope==="management"?"management":"partner"});
+ return {method:p.payout_method||"unconfigured",zelleContact:reveal?String(p.zelle_contact||""):masked,zelleContactType:p.zelle_contact_type||"",bank,fullyVisible:reveal&&p.payout_method==="zelle"};
 }
 async function paymentSetup(data:any,req:Request){
  const u=await me(req),p=(await db("affiliate_profiles","?select=id,status&user_id=eq."+u.id+"&limit=1"))[0];
@@ -269,12 +295,12 @@ async function emailChangeRequest(data:any,req:Request){
 }
 async function overview(req:Request){
  await admin(req);
- const [profiles,conversions,payouts,st]=await Promise.all([
-  db("affiliate_profiles","?select=id,full_name,email,code,status,commission_rate,website,promotion_plan,business_name,country_market,primary_channel,partner_type,promotion_channels,additional_profiles,audience_description,audience_size,terms_accepted_at,affiliate_access_revoked_at,payout_method,zelle_contact,zelle_contact_type,zelle_terms_accepted_at,stripe_account_id,payout_updated_at,created_at,approved_at&order=created_at.desc&limit=500"),
+ const [profiles,conversions,payouts,st,clickReport]=await Promise.all([
+  db("affiliate_profiles","?select=id,full_name,email,code,status,commission_rate,website,promotion_plan,business_name,country_market,primary_channel,partner_type,promotion_channels,additional_profiles,audience_description,audience_size,terms_accepted_at,affiliate_access_revoked_at,payout_method,zelle_contact_type,zelle_terms_accepted_at,stripe_account_id,payout_updated_at,created_at,approved_at&order=created_at.desc&limit=500"),
   db("affiliate_conversions","?select=payment_intent_id,affiliate_id,gross_amount,commission_amount,status,available_at,created_at&order=created_at.desc&limit=500"),
   db("affiliate_payouts","?select=id,affiliate_id,amount,status,notes,stripe_transfer_id,created_at,paid_at&order=created_at.desc&limit=250"),
-  settings()]);
- return {profiles,conversions,payouts,settings:st};
+  settings(),db("rpc/affiliate_click_reporting","?select=affiliate_id,landing_path,total_clicks,clicks_30d,last_click")]);
+ return {profiles,conversions,payouts,settings:st,clickReport:clickReport.map((x:any)=>({affiliate_id:x.affiliate_id,path:x.landing_path,total:Number(x.total_clicks||0),recent:Number(x.clicks_30d||0),last:x.last_click}))};
 }
 async function approval(data:any,req:Request){
  await admin(req);
@@ -350,6 +376,7 @@ Deno.serve(async req=>{
   if(action==="affiliate_catalog")return reply(await catalog(req),200,origin);
   if(action==="affiliate_profile_update")return reply(await saveAffiliateProfile(input,req),200,origin);
   if(action==="affiliate_payment_setup")return reply(await paymentSetup(input,req),200,origin);
+  if(action==="affiliate_payout_details")return reply(await payoutDetails(input,req),200,origin);
   if(action==="affiliate_email_support")return reply(await emailChangeRequest(input,req),200,origin);
   if(action==="admin_overview")return reply(await overview(req),200,origin);
   if(action==="admin_approval")return reply(await approval(input,req),200,origin);
