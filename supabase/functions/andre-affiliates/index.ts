@@ -142,6 +142,10 @@ async function recordConversion(data:any){
  return {recorded:true};
 }
 async function dashboard(req:Request){
+ // For older open portal tabs, report the verification requirement as a normal
+ // application state instead of a generic HTTP 400. Never return private affiliate data.
+ const verification=await verificationStatus(req);
+ if(!verification.verified)return {verificationRequired:true,verification,profile:null,conversions:[],payouts:[],clicks:0};
  const u=await me(req);
  let p=(await db("affiliate_profiles","?select=*&user_id=eq."+u.id+"&limit=1"))[0];
  if(!p&&u.email)p=(await db("affiliate_profiles","?select=*&email=eq."+encodeURIComponent(email(u.email))+"&limit=1"))[0];
@@ -230,5 +234,5 @@ Deno.serve(async req=>{
   if(action==="admin_settings")return reply(await updateSettings(input,req),200,origin);
   if(action==="admin_rate")return reply(await setPartnerRate(input,req),200,origin);
   return reply({error:"Unknown action"},400,origin);
- }catch(err){console.error("Affiliate operation",String(err));const msg=String(err instanceof Error?err.message:err);return reply({error:msg},/sign-in|restricted|not found/i.test(msg)?403:400,origin)}
+ }catch(err){console.error("Affiliate operation",String(err));const msg=String(err instanceof Error?err.message:err);return reply({error:msg},/sign-in|restricted|not found|verification|required|verify your email/i.test(msg)?403:400,origin)}
 });
