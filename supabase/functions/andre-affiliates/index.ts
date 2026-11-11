@@ -11,8 +11,15 @@ async function patch(table:string,filters:string,body:unknown){const r=await fet
 const clean=(v:unknown,n=150)=>String(v||"").trim().slice(0,n);
 async function actor(req:Request){const jwt=(req.headers.get("authorization")||"").replace(/^Bearer\s+/i,"");if(!jwt)return null;const r=await fetch(B+"/auth/v1/user",{headers:{apikey:S,Authorization:"Bearer "+jwt}});if(!r.ok)return null;const user=await r.json();return user?.id&&uuid.test(user.id)?user:null}
 async function admin(req:Request){const u=await actor(req);if(!u)throw Error("Staff sign-in required");const p=(await db("admin_profiles","?select=active,role&id=eq."+u.id+"&limit=1"))[0];if(!p?.active||!["admin","manager"].includes(p.role))throw Error("Affiliate administration is restricted");return u}
+async function ensureAffiliateAccess(user:any){
+ const rows=await db("affiliate_profiles","?select=status,affiliate_access_revoked_at&user_id=eq."+user.id+"&limit=1");
+ let p=rows[0];
+ if(!p&&user.email)p=(await db("affiliate_profiles","?select=status,affiliate_access_revoked_at,user_id&email=eq."+encodeURIComponent(email(user.email))+"&limit=1"))[0];
+ if(p?.status==="rejected"||p?.affiliate_access_revoked_at)throw Error("AFFILIATE_ACCESS_REVOKED");
+}
 async function me(req:Request){
  const u=await actor(req);if(!u)throw Error("Sign in to the affiliate portal");
+ await ensureAffiliateAccess(u);
  if(!u.email_confirmed_at)throw Error("Verify your email before applying for the affiliate program");
  const check=(await db("affiliate_email_verifications","?select=verified_at,email&user_id=eq."+u.id+"&limit=1"))[0];
  if(!check?.verified_at||email(check.email)!==email(u.email))throw Error("Second email verification required");
@@ -61,12 +68,14 @@ async function register(data:any,req:Request){
 async function verificationStatus(req:Request){
  const user=await actor(req);
  if(!user)throw Error("Sign in to verify your affiliate email");
+ await ensureAffiliateAccess(user);
  const record=(await db("affiliate_email_verifications","?select=verified_at,email,sent_at&user_id=eq."+user.id+"&limit=1"))[0];
  return {verified:!!user.email_confirmed_at&&!!record?.verified_at&&email(record.email)===email(user.email),email:email(user.email),primaryVerified:!!user.email_confirmed_at};
 }
 async function sendSecondCode(req:Request){
  const user=await actor(req);
  if(!user?.email_confirmed_at)throw Error("Finish account activation before requesting the second code");
+ await ensureAffiliateAccess(user);
  const address=email(user.email),id=String(user.id),now=Date.now();
  if(!eMail.test(address))throw Error("A verified email is required");
  const old=(await db("affiliate_email_verifications","?select=verified_at,email,sent_at&user_id=eq."+id+"&limit=1"))[0];
@@ -86,6 +95,7 @@ async function sendSecondCode(req:Request){
 }
 async function confirmSecondCode(data:any,req:Request){
  const user=await actor(req);if(!user?.email_confirmed_at)throw Error("Finish account activation first");
+ await ensureAffiliateAccess(user);
  const code=clean(data.code,12);if(!/^\d{6}$/.test(code))throw Error("Enter the six-digit code");
  const row=(await db("affiliate_email_verifications","?select=code_hash,code_expires_at,attempts,verified_at,email&user_id=eq."+user.id+"&limit=1"))[0];
  if(row?.verified_at&&email(row.email)===email(user.email))return {verified:true};
@@ -100,27 +110,41 @@ async function confirmSecondCode(data:any,req:Request){
 
 async function apply(data:any,req:Request){
  const u=await me(req);
- const full_name=clean(data.fullName||u.user_metadata?.full_name,150),address=email(u.email),website=clean(data.website,250),promotion_plan=clean(data.promotionPlan,900);
- if(full_name.length<2||!eMail.test(address)||promotion_plan.length<15)throw Error("Enter your name, valid email, and promotion plan (15 characters minimum)");
- const found=(await db("affiliate_profiles","?select=id,status,code,user_id&email=eq."+encodeURIComponent(address)+"&limit=1"))[0];
+ const full_name=clean(data.fullName||u.user_metadata?.full_name,150),address=email(u.email);
+ const business_name=clean(data.businessName,180),country_market=clean(data.countryMarket,120);
+ const primary_channel=clean(data.primaryChannel,300),partner_type=clean(data.partnerType,70);
+ const additional_profiles=clean(data.additionalProfiles,2500),audience_description=clean(data.audienceDescription,1800);
+ const audience_size=clean(data.audienceSize,40);
+ const types=["Content creator","Educator or trainer","Business or organization","Consultant or coach","Blogger or publisher","Community owner","Other"];
+ const channelOptions=["Social media","Email newsletter","Website or blog","YouTube or video","Podcast","Online community","Direct referrals","Other"];
+ const audiences=["Under 1,000","1,000–5,000","5,001–25,000","25,001–100,000","Over 100,000"];
+ const channels=Array.isArray(data.promotionChannels)?[...new Set(data.promotionChannels.map((v:unknown)=>clean(v,70)))]:[];
+ if(full_name.length<2||!eMail.test(address)||country_market.length<2||primary_channel.length<3||!types.includes(partner_type)||!channels.length||channels.some((v:string)=>!channelOptions.includes(v))||audience_description.length<10||!audiences.includes(audience_size)||data.agreedToTerms!==true)
+  throw Error("Complete all required application fields, select a promotion channel, and agree to the terms.");
+ const found=(await db("affiliate_profiles","?select=id,status,user_id,affiliate_access_revoked_at&email=eq."+encodeURIComponent(address)+"&limit=1"))[0];
  if(found){
+  if(found.status==="rejected"||found.affiliate_access_revoked_at)throw Error("AFFILIATE_ACCESS_REVOKED");
   if(found.user_id&&found.user_id!==u.id)throw Error("This email is already associated with another affiliate account. Contact support.");
   if(!found.user_id)await patch("affiliate_profiles","?id=eq."+found.id+"&user_id=is.null",{user_id:u.id,updated_at:new Date().toISOString()});
   return {submitted:true,existing:true,status:found.status};
  }
  const st=await settings();const code=crypto.randomUUID().replaceAll("-","").slice(0,12);
- await insert("affiliate_profiles",{user_id:u.id,email:address,full_name,website,promotion_plan,code,status:"pending",commission_rate:st.default_commission_rate});
+ const record={user_id:u.id,email:address,full_name,business_name:business_name||null,country_market,primary_channel,partner_type,
+  promotion_channels:channels,additional_profiles:additional_profiles||null,audience_description,audience_size,
+  terms_accepted_at:new Date().toISOString(),website:primary_channel,promotion_plan:channels.join(", "),code,status:"pending",commission_rate:st.default_commission_rate};
+ await insert("affiliate_profiles",record);
  const resend=Deno.env.get("RESEND_API_KEY")||"";
  if(resend){
   const cleanHtml=(v:string)=>v.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]||c));
   try{
-   const emailHtml='<div style="font:16px Arial,sans-serif;color:#112c49;max-width:590px;margin:auto;padding:30px"><img alt="Andre Erving" width="300" src="https://gnfyidajbectlppsekzj.supabase.co/storage/v1/object/public/Andre%20Erving%20Public/logos/logo.png"><h1>We received your application</h1><p>Hello '+cleanHtml(full_name)+',</p><p>Thank you for applying to the Andre Erving Affiliate Program. We will review your application before activating a referral link.</p><p>Approved partners receive instructions for signing in to their affiliate dashboard.</p><p>Questions? support@andreerving.com</p></div>';
+   const emailHtml='<div style="font:16px Arial,sans-serif;color:#112c49;max-width:590px;margin:auto;padding:30px"><img alt="Andre Erving" width="300" src="https://gnfyidajbectlppsekzj.supabase.co/storage/v1/object/public/Andre%20Erving%20Public/logos/logo.png"><h1>We received your application</h1><p>Hello '+cleanHtml(full_name)+',</p><p>Thank you for applying to the Andre Erving Affiliate Partner Program.</p><p>Applications are manually reviewed based on audience fit, promotional methods, and compliance with program requirements. Submitting an application does not guarantee approval. If approved, you will receive additional instructions for accessing your affiliate links and tracking referrals.</p><p>Questions? support@andreerving.com</p></div>';
    const mail=await fetch("https://api.resend.com/emails",{method:"POST",headers:{Authorization:"Bearer "+resend,"Content-Type":"application/json"},body:JSON.stringify({from:"Andre Erving <support@andreerving.com>",to:[address],subject:"Andre Erving Affiliate Application Received",html:emailHtml})});
    if(!mail.ok)console.warn("Affiliate application receipt could not be sent",mail.status);
   }catch(e){console.warn("Affiliate application receipt unavailable",String(e))}
  }
  return {submitted:true,status:"pending"};
 }
+
 async function track(data:any){
  const code=clean(data.code,18).toLowerCase();
  if(!/^[a-z0-9]{8,18}$/.test(code))throw Error("Invalid referral code");
@@ -173,7 +197,7 @@ async function dashboard(req:Request){
 async function overview(req:Request){
  await admin(req);
  const [profiles,conversions,payouts,st]=await Promise.all([
-  db("affiliate_profiles","?select=id,full_name,email,code,status,commission_rate,website,promotion_plan,created_at,approved_at&order=created_at.desc&limit=500"),
+  db("affiliate_profiles","?select=id,full_name,email,code,status,commission_rate,website,promotion_plan,business_name,country_market,primary_channel,partner_type,promotion_channels,additional_profiles,audience_description,audience_size,terms_accepted_at,affiliate_access_revoked_at,created_at,approved_at&order=created_at.desc&limit=500"),
   db("affiliate_conversions","?select=payment_intent_id,affiliate_id,gross_amount,commission_amount,status,available_at,created_at&order=created_at.desc&limit=500"),
   db("affiliate_payouts","?select=id,affiliate_id,amount,status,notes,stripe_transfer_id,created_at,paid_at&order=created_at.desc&limit=250"),
   settings()]);
@@ -190,7 +214,7 @@ async function approval(data:any,req:Request){
   const verified=(await db("affiliate_email_verifications","?select=email,verified_at&user_id=eq."+old.user_id+"&limit=1"))[0];
   if(!verified?.verified_at||email(verified.email)!==email(old.email))throw Error("Affiliate has not completed both email verification steps");
  }
- const updated=await patch("affiliate_profiles","?id=eq."+id,{status,approved_at:status==="active"?new Date().toISOString():null,updated_at:new Date().toISOString()});
+ const updated=await patch("affiliate_profiles","?id=eq."+id,{status,approved_at:status==="active"?new Date().toISOString():null,affiliate_access_revoked_at:status==="rejected"?new Date().toISOString():status==="active"?null:undefined,updated_at:new Date().toISOString()});
  if(status==="active"&&old.status!=="active"&&updated.length===1){
   const resend=Deno.env.get("RESEND_API_KEY")||"";
   if(resend){
@@ -246,5 +270,5 @@ Deno.serve(async req=>{
   if(action==="admin_settings")return reply(await updateSettings(input,req),200,origin);
   if(action==="admin_rate")return reply(await setPartnerRate(input,req),200,origin);
   return reply({error:"Unknown action"},400,origin);
- }catch(err){console.error("Affiliate operation",String(err));const msg=String(err instanceof Error?err.message:err);return reply({error:msg},/sign-in|restricted|not found|verification|required|verify your email/i.test(msg)?403:400,origin)}
+ }catch(err){console.error("Affiliate operation",String(err));const msg=String(err instanceof Error?err.message:err);return reply({error:msg},/AFFILIATE_ACCESS_REVOKED|sign-in|restricted|not found|verification|required|verify your email/i.test(msg)?403:400,origin)}
 });
