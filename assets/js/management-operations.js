@@ -59,7 +59,7 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
    });
   }
   draw();root.querySelector("#crm-search").oninput=e=>draw(e.target.value);
-  root.querySelector("#crm-start-order").onclick=async()=>{await navigateTo("orders");await ordersPage()};
+  root.querySelector("#crm-start-order").onclick=async()=>{await navigateTo("orders");await orderCreator()};
   root.querySelector('[data-return-enrollment]')?.addEventListener("click",()=>returnToEnrollment());
   if(backEnrollment?.courseId&&!root.querySelector(".ae-crm-return-note")){
     const note=document.createElement("p");note.className="ae-crm-return-note";note.textContent="Create a paid or free order to provision course access through the standard workflow.";
