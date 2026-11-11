@@ -229,3 +229,38 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-ser
 .ae-invoice-view-meta p{margin:6px 0 0;font-size:13px;color:#5c718a}
 @media(max-width:980px){.ae-invoice-workspace{grid-template-columns:1fr}.ae-invoice-workspace>.panel:nth-child(2),.ae-invoice-workspace>.panel:nth-child(3){grid-column:1}}
 @media(max-width:600px){.ae-invoice-fields,.ae-invoice-view-meta{grid-template-columns:1fr}.ae-invoice-workspace{gap:12px}.ae-invoice-top-actions button{flex:1}}
+
+/* Dedicated affiliate management workspace */
+.ae-aff-workspace{min-width:0}
+.ae-aff-nav{display:flex;align-items:center;flex-wrap:wrap;gap:9px;padding:0 0 23px;margin:0 0 24px;border-bottom:1px solid #d9e3ef}
+.ae-aff-nav button{border:1px solid #d5e1ef;background:#fff;color:#28435f;border-radius:9px;padding:11px 17px;font-size:13px;font-weight:750;cursor:pointer}
+.ae-aff-nav button.active{background:#15365e;color:#fff;border-color:#15365e}
+.ae-aff-nav button>span{display:inline-block;padding:1px 7px;margin-left:5px;background:#e8ad33;color:#102d4b;border-radius:12px}
+.ae-aff-nav button:focus-visible,.ae-aff-workspace button:focus-visible{outline:3px solid #dbb45c;outline-offset:2px}
+.ae-aff-head{margin-bottom:26px}
+.ae-aff-toolbar{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.ae-aff-toolbar label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:700;color:#294560;min-width:210px}
+.ae-aff-toolbar input,.ae-aff-toolbar select{background:#fff;border:1px solid #cad7e6;border-radius:8px;padding:11px;color:#153553;min-height:42px}
+.ae-aff-toolbar input{width:min(360px,100%);box-sizing:border-box}
+.ae-aff-panel-head{display:flex;justify-content:space-between;gap:16px;align-items:start;flex-wrap:wrap;margin-bottom:20px}
+.ae-aff-panel-head h2{margin:0}
+.ae-aff-panel-head p{margin:6px 0 0}
+.ae-aff-back{margin-bottom:20px}
+.ae-aff-chip{display:inline-block;font-size:11px;font-weight:750;text-transform:capitalize;padding:5px 9px;border-radius:8px;background:#eef3f8;color:#3d5772}
+.ae-aff-active{background:#e3f4e9;color:#1a673c}
+.ae-aff-pending{background:#fff2d7;color:#876015}
+.ae-aff-rejected{background:#fce7e7;color:#9f2f35}
+.ae-aff-suspended{background:#eff0f4;color:#53617a}
+.ae-aff-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:20px 0}
+.ae-aff-field{border:1px solid #e0e8f2;border-radius:9px;padding:15px;background:#f8fafd;min-width:0;overflow-wrap:anywhere}
+.ae-aff-field span{display:block;color:#6b8098;font-size:12px;margin-bottom:7px}
+.ae-aff-field strong{display:block;color:#173653;font-size:14px;line-height:1.6;white-space:pre-wrap}
+.ae-aff-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:22px}
+.ae-aff-caution{margin-top:18px}
+.ae-aff-rate-form{display:flex;align-items:end;gap:14px;margin:22px 0;flex-wrap:wrap}
+.ae-aff-rate-form label{display:flex;flex-direction:column;gap:7px;color:#294560;font-size:12px;font-weight:700}
+.ae-aff-rate-form input{border:1px solid #cbd8e6;border-radius:8px;padding:11px;min-height:42px;width:130px}
+.ae-aff-confirm{position:fixed;inset:0;background:#071629b8;display:grid;place-items:center;padding:20px;z-index:99999}
+.ae-aff-confirm>.panel{width:min(520px,100%);box-sizing:border-box;padding:28px}
+.ae-aff-confirm p{line-height:1.7}
+@media(max-width:700px){.ae-aff-detail-grid{grid-template-columns:1fr}.ae-aff-head{align-items:flex-start}.ae-aff-toolbar label{width:100%;min-width:0}.ae-aff-toolbar input{width:100%}.ae-aff-nav button{flex:1 1 auto}.ae-aff-confirm>.panel{padding:20px}}
