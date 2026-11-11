@@ -270,7 +270,7 @@ async function emailChangeRequest(data:any,req:Request){
 async function overview(req:Request){
  await admin(req);
  const [profiles,conversions,payouts,st]=await Promise.all([
-  db("affiliate_profiles","?select=id,full_name,email,code,status,commission_rate,website,promotion_plan,business_name,country_market,primary_channel,partner_type,promotion_channels,additional_profiles,audience_description,audience_size,terms_accepted_at,affiliate_access_revoked_at,created_at,approved_at&order=created_at.desc&limit=500"),
+  db("affiliate_profiles","?select=id,full_name,email,code,status,commission_rate,website,promotion_plan,business_name,country_market,primary_channel,partner_type,promotion_channels,additional_profiles,audience_description,audience_size,terms_accepted_at,affiliate_access_revoked_at,payout_method,zelle_contact,zelle_contact_type,zelle_terms_accepted_at,stripe_account_id,payout_updated_at,created_at,approved_at&order=created_at.desc&limit=500"),
   db("affiliate_conversions","?select=payment_intent_id,affiliate_id,gross_amount,commission_amount,status,available_at,created_at&order=created_at.desc&limit=500"),
   db("affiliate_payouts","?select=id,affiliate_id,amount,status,notes,stripe_transfer_id,created_at,paid_at&order=created_at.desc&limit=250"),
   settings()]);
