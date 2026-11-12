@@ -127,19 +127,120 @@ export function createEmailMarketing({db,root,notify,isCurrent}){
   const cf=root.querySelector("#em-contact-form");if(cf)cf.onsubmit=async e=>{e.preventDefault();const v=Object.fromEntries(new FormData(cf));const button=cf.querySelector('[type="submit"]');button.disabled=true;try{await api("save_contact",{...v,consent:cf.elements.consent.checked});await fetchData();page="contacts";draw();notice("Contact saved")}catch(err){notice(err.message,true);button.disabled=false}};
   const editorElement=root.querySelector("#em-body"),source=root.querySelector("#em-source"),form=root.querySelector("#em-campaign-form");
   if(editorElement&&form){
+   const logo="https://gnfyidajbectlppsekzj.supabase.co/storage/v1/object/public/Andre%20Erving%20Public/logos/logo2.png";
+   let selected=null,device="desktop";
+   const block=(inside,css="padding:22px 24px;")=>'<section class="em-email-block" style="'+css+'">'+inside+'</section>';
+   const templates={
+    announcement:()=>block('<p style="color:#b17b1b;font-size:12px;font-weight:bold">ANNOUNCEMENT</p><h1 style="font-size:32px;color:#123252;margin:6px 0">Something new is coming</h1><p style="font-size:16px;color:#506982;line-height:1.7">Hello {{first_name}}, we have exciting news to share with you.</p>')+block('<p style="line-height:1.7;color:#506982">Explain the update, what it means, and how your readers can benefit.</p>')+block('<p><a href="https://andreerving.com/" style="background:#cf992b;color:#102b48;padding:14px 24px;border-radius:7px;text-decoration:none;font-weight:bold;display:inline-block">Discover more →</a></p>'),
+    course:()=>block('<p style="color:#a97721;font-size:12px;font-weight:bold">LEARNING OPPORTUNITY</p><h1 style="font-size:30px;color:#123252">Build your next skill</h1><p style="color:#506982;line-height:1.7">Hello {{first_name}}, explore practical training designed to help you grow.</p>')+block('<h2 style="color:#123252">What you will learn</h2><ul style="color:#506982;line-height:1.9"><li>First learning outcome</li><li>Second learning outcome</li><li>Third learning outcome</li></ul>')+block('<p><a href="https://andreerving.com/courses.html" style="background:#cf992b;color:#102b48;padding:14px 24px;border-radius:7px;text-decoration:none;font-weight:bold;display:inline-block">Explore courses →</a></p>'),
+    newsletter:()=>block('<p style="color:#a97721;font-size:12px;font-weight:bold">THE ANDRE ERVING NEWSLETTER</p><h1 style="font-size:31px;color:#123252">This month’s insights</h1><p style="color:#506982;line-height:1.7">Hello {{first_name}}, here are the latest ideas and resources to help you move forward.</p>')+block('<h2 style="color:#123252">Featured story</h2><p style="color:#506982;line-height:1.7">Introduce your featured article or announcement here.</p>')+block('<h2 style="color:#123252">Worth exploring</h2><ul><li>Resource or tip one</li><li>Resource or tip two</li></ul>'),
+    invitation:()=>block('<p style="color:#a97721;font-size:12px;font-weight:bold">YOU’RE INVITED</p><h1 style="font-size:31px;color:#123252">Join us for an upcoming event</h1><p style="color:#506982;line-height:1.7">Hello {{first_name}}, we would love to have you join us.</p>')+block('<h2 style="color:#123252">Event details</h2><p style="line-height:1.8;color:#506982">Date: Add event date<br>Time: Add event time<br>Location: Add event details</p>')+block('<p><a href="https://andreerving.com/" style="background:#cf992b;color:#102b48;padding:14px 24px;border-radius:7px;text-decoration:none;font-weight:bold;display:inline-block">Reserve your place →</a></p>'),
+    blank:()=>block('<h1 style="font-size:30px;color:#123252">Your headline</h1><p style="line-height:1.7;color:#506982">Write your email here.</p>')
+   };
+   const newBlock={
+    heading:()=>block('<h2 style="font-size:26px;color:#123252;margin:0">Add your heading</h2>'),
+    paragraph:()=>block('<p style="font-size:16px;line-height:1.7;color:#506982;margin:0">Write your message here.</p>'),
+    image:()=>block('<img src="https://gnfyidajbectlppsekzj.supabase.co/storage/v1/object/public/Andre%20Erving%20Public/logos/logo.png" alt="Image — replace its URL" style="display:block;max-width:100%;height:auto;margin:auto">'),
+    button:()=>block('<p style="text-align:center"><a href="https://andreerving.com/" style="display:inline-block;background:#cf992b;padding:15px 25px;border-radius:8px;color:#112b49;font-weight:bold;text-decoration:none">Add button text →</a></p>'),
+    columns:()=>block('<table role="presentation" width="100%" style="border-collapse:collapse"><tr><td width="50%" valign="top" style="padding:12px;background:#f4f7fb"><h3 style="color:#123252">Column one</h3><p style="color:#506982">Add text here.</p></td><td width="50%" valign="top" style="padding:12px;background:#edf3fa"><h3 style="color:#123252">Column two</h3><p style="color:#506982">Add text here.</p></td></tr></table>'),
+    divider:()=>block('<hr style="border:0;border-top:1px solid #dce5ee;margin:8px 0">',"padding:6px 24px;"),
+    spacer:()=>block('<div style="height:30px" aria-hidden="true"></div>',"padding:0 24px;"),
+    list:()=>block('<ul style="font-size:16px;line-height:1.9;color:#506982"><li>First point</li><li>Second point</li><li>Third point</li></ul>')
+   };
    const getHTML=()=>mode==="html"?source.value:editorElement.innerHTML;
-   const refreshPreview=()=>{const iframe=root.querySelector("#em-iframe");if(iframe)iframe.srcdoc='<style>body{font:15px/1.65 Arial,sans-serif;padding:20px;color:#153451}img{max-width:100%;height:auto}a{color:#184d83}</style>'+getHTML()};
-   refreshPreview();editorElement.addEventListener("input",refreshPreview);source.addEventListener("input",refreshPreview);
-   root.querySelector("#em-html-mode").onclick=()=>{if(mode==="visual")source.value=editorElement.innerHTML;mode="html";editorElement.hidden=true;source.hidden=false;refreshPreview()};
-   root.querySelector("#em-visual").onclick=()=>{if(mode==="html")editorElement.innerHTML=source.value;mode="visual";editorElement.hidden=false;source.hidden=true;refreshPreview()};
-   root.querySelectorAll("[data-em-format]").forEach(b=>b.onclick=()=>{editorElement.focus();document.execCommand(b.dataset.emFormat,false,b.dataset.emFormat==="formatBlock"?"h2":undefined);refreshPreview()});
-   root.querySelector("#em-link").onclick=()=>{const url=root.querySelector("#em-link-value");url?.closest(".em-inline-input")?.remove();const box=document.createElement("div");box.className="em-inline-input";box.innerHTML='<label>Link URL <input id="em-link-value" type="url" placeholder="https://..."></label><button type="button" id="em-link-insert">Insert link</button>';editorElement.before(box);box.querySelector("#em-link-insert").onclick=()=>{const href=box.querySelector("input").value;if(/^https:\/\//i.test(href)){editorElement.focus();document.execCommand("createLink",false,href);refreshPreview()}else notice("Use an https:// link",true);box.remove()}};
-   root.querySelector("#em-image").onclick=()=>{const box=document.createElement("div");box.className="em-inline-input";box.innerHTML='<label>Hosted image URL <input type="url" placeholder="https://..."></label><button type="button">Insert image</button>';editorElement.before(box);box.querySelector("button").onclick=()=>{const url=box.querySelector("input").value;if(/^https:\/\//i.test(url)){editorElement.focus();document.execCommand("insertImage",false,url);refreshPreview()}else notice("Use an https:// image URL",true);box.remove()}};
-   root.querySelector("#em-divider").onclick=()=>{editorElement.focus();document.execCommand("insertHorizontalRule");refreshPreview()};
-   root.querySelector("#em-personalize").onclick=()=>{editorElement.focus();document.execCommand("insertText",false,"{{first_name}}");refreshPreview()};
-   root.querySelector("#em-preview").onclick=()=>{refreshPreview();root.querySelector("#em-iframe")?.scrollIntoView({behavior:"smooth",block:"center"})};
-   form.onsubmit=async e=>{e.preventDefault();const b=form.querySelector('[type="submit"]');b.disabled=true;try{const d=Object.fromEntries(new FormData(form));const saved=await api("save_campaign",{...d,id:activeCampaign?.id,html:getHTML()});activeCampaign=saved;await fetchData();notice("Draft saved. Use View to review the entire campaign before sending.");draw();notice("Draft saved")}catch(err){notice(err.message,true)}finally{b.disabled=false}};
-   root.querySelector("#em-send").onclick=()=>{const current=activeCampaign;if(!current?.id){notice("Save draft first",true);return}const dialog=document.createElement("div");dialog.className="em-modal";dialog.innerHTML='<section role="dialog" aria-modal="true" aria-label="Send campaign"><h2>Send this campaign?</h2><p>This will send to active contacts with recorded consent only. Each email includes an unsubscribe link. Confirm the draft is final before sending.</p><div class="em-actions"><button type="button" id="em-confirm-send" class="em-primary">Send up to 25 recipients</button><button type="button" id="em-cancel-send" class="em-secondary">Cancel</button></div><p id="em-modal-status" role="status"></p></section>';root.append(dialog);dialog.querySelector("#em-cancel-send").onclick=()=>dialog.remove();dialog.querySelector("#em-confirm-send").onclick=async e=>{e.target.disabled=true;try{const res=await api("send_campaign",{id:current.id});await fetchData();page="delivery";activeCampaign=data.campaigns.find(c=>c.id===current.id);dialog.remove();draw();notice("Sent: "+res.sent+". Failed: "+res.failed+". Remaining eligible: "+res.remaining)}catch(err){dialog.querySelector("#em-modal-status").textContent=err.message;e.target.disabled=false}}};
+   const brandedPreview=body=>{
+    const content=String(body).replace(/\{\{\s*first_name\s*\}\}/gi,"Alex");
+    return '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;background:#eef3f9;font-family:Arial,sans-serif;color:#123252"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef3f9"><tr><td align="center" style="padding:20px 8px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:640px;background:white;border-collapse:collapse"><tr><td style="background:#10243f;border-bottom:5px solid #d09b2d;padding:26px"><img src="'+logo+'" alt="Andre Erving" width="250" style="max-width:100%;height:auto"></td></tr><tr><td style="padding:12px 12px 20px;font-size:15px;line-height:1.6">'+content+'</td></tr><tr><td style="background:#f5f8fc;border-top:1px solid #dce7f1;padding:22px;font-size:12px;line-height:1.7;color:#58718b">Andre Erving · Growth, Strategy &amp; Education<br>Marketing communication · <u>Unsubscribe</u><br>support@andreerving.com</td></tr></table></td></tr></table></body></html>';
+   };
+   const refreshPreview=()=>{const frame=root.querySelector("#em-iframe");if(frame)frame.srcdoc=brandedPreview(getHTML())};
+   const setSelected=node=>{
+    if(selected)selected.classList.remove("em-block-selected");
+    selected=node?.closest?.(".em-email-block")||null;
+    if(selected)selected.classList.add("em-block-selected");
+    const controls=root.querySelector("#em-block-controls");controls.hidden=!selected||mode==="html";
+   };
+   const addBlock=(html)=>{
+    if(mode==="html"){source.value+="\n"+html;refreshPreview();return}
+    editorElement.insertAdjacentHTML("beforeend",html);
+    setSelected(editorElement.lastElementChild);
+    editorElement.lastElementChild?.scrollIntoView({block:"nearest",behavior:"smooth"});
+    refreshPreview();
+   };
+   const updateTheme=()=>{
+    const bg=root.querySelector("#em-theme-background").value,fg=root.querySelector("#em-theme-text").value,accent=root.querySelector("#em-theme-accent").value;
+    editorElement.style.background=bg;editorElement.style.color=fg;
+    root.querySelector(".em-design-surface").style.background=bg;
+    editorElement.querySelectorAll("a").forEach(a=>{if(a.getAttribute("style")?.includes("background"))a.style.backgroundColor=accent});
+    refreshPreview()
+   };
+   editorElement.addEventListener("click",event=>setSelected(event.target));
+   editorElement.addEventListener("input",refreshPreview);
+   source.addEventListener("input",refreshPreview);
+   root.querySelectorAll("[data-em-template]").forEach(b=>b.onclick=()=>{
+    const next=templates[b.dataset.emTemplate]?.();if(next===undefined)return;
+    if(editorElement.textContent.trim().length>10){
+     const dialog=document.createElement("div");dialog.className="em-modal";
+     dialog.innerHTML='<section role="dialog" aria-modal="true" aria-label="Replace email design"><h2>Use this template?</h2><p>Applying a template will replace the current email body. Save your existing draft if you need to keep it.</p><div class="em-actions"><button type="button" class="em-primary" id="em-apply-template">Apply template</button><button type="button" class="em-secondary" id="em-cancel-template">Cancel</button></div></section>';
+     root.append(dialog);
+     dialog.querySelector("#em-cancel-template").onclick=()=>dialog.remove();
+     dialog.querySelector("#em-apply-template").onclick=()=>{editorElement.innerHTML=next;source.value=next;setSelected(null);refreshPreview();dialog.remove()};
+    }else{editorElement.innerHTML=next;source.value=next;setSelected(null);refreshPreview()}
+   });
+   root.querySelectorAll("[data-em-block]").forEach(b=>b.onclick=()=>addBlock(newBlock[b.dataset.emBlock]?.()||""));
+   root.querySelectorAll("[data-em-move]").forEach(b=>b.onclick=()=>{
+    if(!selected)return;
+    const target=b.dataset.emMove==="up"?selected.previousElementSibling:selected.nextElementSibling;
+    if(!target)return;
+    if(b.dataset.emMove==="up")target.before(selected);else target.after(selected);
+    refreshPreview();
+   });
+   root.querySelector("#em-remove-block").onclick=()=>{selected?.remove();setSelected(null);refreshPreview()};
+   root.querySelector("#em-html-mode").onclick=()=>{if(mode!=="html"){source.value=editorElement.innerHTML;mode="html";editorElement.closest(".em-design-surface").hidden=true;source.hidden=false;setSelected(null);refreshPreview()}};
+   root.querySelector("#em-visual").onclick=()=>{if(mode==="html"){editorElement.innerHTML=source.value;mode="visual";editorElement.closest(".em-design-surface").hidden=false;source.hidden=true;refreshPreview()}};
+   root.querySelectorAll("[data-em-format]").forEach(b=>b.onclick=()=>{if(mode==="html"){notice("Switch to Design mode to format selected text.",true);return}editorElement.focus();document.execCommand(b.dataset.emFormat,false,b.dataset.emFormat==="formatBlock"?"h2":undefined);refreshPreview()});
+   const addURL=(kind)=>{
+    const existing=root.querySelector(".em-inline-input");existing?.remove();
+    const box=document.createElement("div");box.className="em-inline-input";
+    box.innerHTML='<label>'+ (kind==="image"?"Image URL":"Link URL") +'<input type="url" placeholder="https://..." required></label><button type="button">Insert</button><button type="button" data-cancel="1">Cancel</button>';
+    root.querySelector(".em-toolbar").after(box);
+    box.querySelector("[data-cancel]").onclick=()=>box.remove();
+    box.querySelector("button:not([data-cancel])").onclick=()=>{
+     const url=box.querySelector("input").value.trim();
+     if(!/^https:\/\/[^\s<>"]+$/i.test(url)){notice("Enter a valid https:// URL",true);return}
+     if(kind==="image")addBlock(block('<img alt="Campaign image" src="'+esc(url)+'" style="display:block;max-width:100%;height:auto;margin:auto">'));
+     else if(selected){selected.insertAdjacentHTML("beforeend",'<p><a href="'+esc(url)+'">'+esc(url)+'</a></p>');refreshPreview()}
+     else addBlock(block('<p><a href="'+esc(url)+'">'+esc(url)+'</a></p>'));
+     box.remove()
+    }
+   };
+   root.querySelector("#em-link").onclick=()=>addURL("link");
+   root.querySelector("#em-image").onclick=()=>addURL("image");
+   root.querySelector("#em-personalize").onclick=()=>{if(mode==="html"){source.value+='{{first_name}}';refreshPreview()}else if(selected){selected.insertAdjacentText("beforeend"," {{first_name}}");refreshPreview()}else addBlock(block('<p>Hello {{first_name}},</p>'))};
+   ["em-theme-background","em-theme-text","em-theme-accent"].forEach(id=>root.querySelector("#"+id).oninput=updateTheme);
+   root.querySelectorAll("[data-em-device]").forEach(b=>b.onclick=()=>{
+    device=b.dataset.emDevice;
+    root.querySelectorAll("[data-em-device]").forEach(x=>x.classList.toggle("current",x===b));
+    root.querySelector(".em-preview-viewport").classList.toggle("em-mobile",device==="mobile");
+   });
+   root.querySelector("#em-preview").onclick=()=>{refreshPreview();root.querySelector(".em-builder-preview").scrollIntoView({behavior:"smooth",block:"start"})};
+   refreshPreview();
+   form.onsubmit=async event=>{
+    event.preventDefault();const button=form.querySelector('[type="submit"]');button.disabled=true;
+    try{const values=Object.fromEntries(new FormData(form));const saved=await api("save_campaign",{...values,id:activeCampaign?.id,html:getHTML()});activeCampaign=saved;await fetchData();draw();notice("Campaign draft saved. Review it before sending.")}
+    catch(err){notice(err.message,true);button.disabled=false}
+   };
+   root.querySelector("#em-send").onclick=()=>{
+    if(!activeCampaign?.id){notice("Save the campaign draft first.",true);return}
+    if(getHTML()!==activeCampaign.body_html){notice("You have unsaved changes. Save draft before sending.",true);return}
+    const dialog=document.createElement("div");dialog.className="em-modal";
+    dialog.innerHTML='<section role="dialog" aria-modal="true" aria-label="Confirm campaign send"><h2>Review your campaign before sending</h2><p><strong>Subject:</strong> '+esc(activeCampaign.subject)+'</p><p><strong>Sender:</strong> '+esc(activeCampaign.sender_name)+' &lt;support@andreerving.com&gt;</p><p><strong>Eligible audience:</strong> '+data.contacts.filter(c=>c.status==="active"&&c.consent_at&&!c.unsubscribed_at&&!c.suppression_reason).length+' contacts</p><p>Campaign sending is limited to 25 recipients per batch. Each recipient gets a branded unsubscribe link. This action sends real emails.</p><div class="em-actions"><button id="em-confirm-send" class="em-primary" type="button">Confirm send</button><button id="em-cancel-send" class="em-secondary" type="button">Cancel</button></div><p id="em-modal-status" role="status"></p></section>';
+    root.append(dialog);dialog.querySelector("#em-cancel-send").onclick=()=>dialog.remove();
+    dialog.querySelector("#em-confirm-send").onclick=async event=>{
+     event.currentTarget.disabled=true;
+     try{const sent=await api("send_campaign",{id:activeCampaign.id});await fetchData();page="delivery";activeCampaign=data.campaigns.find(c=>c.id===activeCampaign.id);dialog.remove();draw();notice("Sent: "+sent.sent+". Failed: "+sent.failed+". Remaining eligible: "+sent.remaining)}
+     catch(err){dialog.querySelector("#em-modal-status").textContent=err.message;event.currentTarget.disabled=false}
+    };
+   };
   }
   const view=root.querySelector("#em-view-frame");if(view&&activeCampaign)view.srcdoc='<style>body{font:15px/1.65 Arial,sans-serif;padding:25px;color:#123153}img{max-width:100%}</style>'+activeCampaign.body_html;
   const deliveryFilter=root.querySelector("#em-delivery-filter");if(deliveryFilter)deliveryFilter.onchange=()=>{activeCampaign=data.campaigns.find(c=>c.id===deliveryFilter.value)||null;draw()};
