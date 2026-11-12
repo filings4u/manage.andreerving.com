@@ -8,7 +8,7 @@ async function readVideoDuration(file){
     video.onerror=()=>finish(0);video.src=url;
   });
 }
-import {createLessonStudio} from './lms-lesson-studio.js?v=unsaved-20261107';
+import {createLessonStudio} from './lms-lesson-studio.js?v=lesson-save-fast-20261112';
 
 /* Andre Erving LMS studio. Auth and authorization are supplied by the management app;
    Supabase RLS is the server-side enforcement for every operation. */
