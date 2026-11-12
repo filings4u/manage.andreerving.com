@@ -30,12 +30,14 @@ async function listStudent(userId:string){
  return {certificates:certs,eligibleCourses:enrollments.filter((e:any)=>enabled.some((c:any)=>c.id===e.course_id)&&!existing.has(e.course_id)).map((e:any)=>({courseId:e.course_id,title:enabled.find((c:any)=>c.id===e.course_id)?.title}))};
 }
 async function listAdmin(){
- const [templates,certificates,courses]=await Promise.all([
+ const [templates,certificates,courses,enrollments,customers]=await Promise.all([
   db("course_certificate_templates","?select=*&order=updated_at.desc&limit=500"),
   db("course_certificates","?select=*&order=issued_at.desc&limit=1000"),
-  db("courses","?select=id,title,status,certificate_enabled&order=title.asc&limit=500")
+  db("courses","?select=id,title,status,certificate_enabled&order=title.asc&limit=500"),
+  db("course_enrollments","?select=user_id,course_id,status,completed_at&order=enrolled_at.desc&limit=2000"),
+  db("customer_profiles","?select=id,full_name,email&order=full_name.asc&limit=2000")
  ]);
- return {templates,certificates,courses};
+ return {templates,certificates,courses,enrollments,customers};
 }
 async function saveTemplate(d:any,u:any){
  const courseId=val(d.courseId,45);if(!UUID.test(courseId))throw Error("Choose a course");
