@@ -45,13 +45,13 @@ export function createEmailMarketing({db,root,notify,isCurrent}){
   return head("Email marketing contacts","A separate marketing list, independent of Customer CRM.",'<button class="em-primary" data-em-add>Add contact</button>')+stats()+
   '<section class="em-card em-contact-list"><div class="em-card-heading"><h2>All contacts</h2><input type="search" id="em-search" placeholder="Search name, email or phone" value="'+esc(filter)+'" aria-label="Search contacts"></div>'+
   '<div class="em-bulk-toolbar" aria-live="polite"><div class="em-bulk-selection"><strong id="em-selected-count">'+selectedCount+' selected</strong><span>'+visible.length+' matching contacts</span></div><div class="em-bulk-buttons">'+
-  '<button type="button" class="em-secondary" id="em-bulk-active" '+(!selectedCount?'disabled':'')+'>Activate</button>'+
+  '<button type="button" class="em-secondary" id="em-bulk-consent" '+(!selectedCount?'disabled':'')+'>Record verified consent</button><button type="button" class="em-secondary" id="em-bulk-active" '+(!selectedCount?'disabled':'')+'>Activate</button>'+
   '<button type="button" class="em-secondary" id="em-bulk-inactive" '+(!selectedCount?'disabled':'')+'>Deactivate</button>'+
   '<button type="button" class="em-secondary em-bulk-delete" id="em-bulk-delete" '+(!selectedCount?'disabled':'')+'>Delete selected</button>'+
   '<button type="button" class="em-secondary" id="em-select-matching" '+(!visible.length?'disabled':'')+'>Select all '+visible.length+' matching</button>'+
   '<button type="button" class="em-secondary" id="em-clear-selection" '+(!selectedCount?'disabled':'')+'>Clear selection</button></div></div>'+
-  '<div class="em-table"><table><thead><tr><th class="em-select-col"><input type="checkbox" id="em-select-all" aria-label="Select all contacts on this page" '+(allChecked?'checked':'')+' '+(partial?'data-partial="true"':'')+' '+(!visible.length?'disabled':'')+'></th><th>First name</th><th>Last name</th><th>Email</th><th>Phone</th><th>Active / Non active</th><th>Actions</th></tr></thead><tbody>'+
-  (pageRows.map(c=>'<tr class="'+(selectedContacts.has(c.id)?'em-row-selected':'')+'"><td class="em-select-col"><input type="checkbox" data-em-select="'+c.id+'" aria-label="Select '+esc(c.email)+'" '+(selectedContacts.has(c.id)?'checked':'')+'></td><td>'+esc(c.first_name)+'</td><td>'+esc(c.last_name)+'</td><td>'+esc(c.email)+'</td><td>'+esc(c.phone||"—")+'</td><td><span class="em-chip '+(c.status==="active"?"em-active":"")+'">'+esc(statuses[c.status]||c.status)+(c.unsubscribed_at?' · Unsubscribed':c.suppression_reason?' · Suppressed':'')+'</span></td><td><div class="em-actions"><button data-em-contact="'+c.id+'">View</button><button data-em-status="'+c.id+'" data-status="'+(c.status==="active"?"inactive":"active")+'" '+(c.unsubscribed_at||c.suppression_reason?'disabled title="This contact is suppressed"':'')+'>'+(c.status==="active"?"Deactivate":"Activate")+'</button></div></td></tr>').join("")||'<tr><td colspan="7">No contacts found.</td></tr>')+
+  '<div class="em-table"><table><thead><tr><th class="em-select-col"><input type="checkbox" id="em-select-all" aria-label="Select all contacts on this page" '+(allChecked?'checked':'')+' '+(partial?'data-partial="true"':'')+' '+(!visible.length?'disabled':'')+'></th><th>First name</th><th>Last name</th><th>Email</th><th>Phone</th><th>Status</th><th>Email permission</th><th>Actions</th></tr></thead><tbody>'+
+  (pageRows.map(c=>'<tr class="'+(selectedContacts.has(c.id)?'em-row-selected':'')+'"><td class="em-select-col"><input type="checkbox" data-em-select="'+c.id+'" aria-label="Select '+esc(c.email)+'" '+(selectedContacts.has(c.id)?'checked':'')+'></td><td>'+esc(c.first_name)+'</td><td>'+esc(c.last_name)+'</td><td>'+esc(c.email)+'</td><td>'+esc(c.phone||"—")+'</td><td><span class="em-chip '+(c.status==="active"?"em-active":"")+'">'+esc(statuses[c.status]||c.status)+(c.unsubscribed_at?' · Unsubscribed':c.suppression_reason?' · Suppressed':'')+'</span></td><td><span class="em-chip '+(c.consent_at&&!c.unsubscribed_at&&!c.suppression_reason?'em-active':'')+'">'+(c.unsubscribed_at?'Unsubscribed':c.suppression_reason?'Suppressed':c.consent_at?'Opted in':'Not verified')+'</span></td><td><div class="em-actions"><button data-em-contact="'+c.id+'">View</button><button data-em-status="'+c.id+'" data-status="'+(c.status==="active"?"inactive":"active")+'" '+(c.unsubscribed_at||c.suppression_reason?'disabled title="This contact is suppressed"':'')+'>'+(c.status==="active"?"Deactivate":"Activate")+'</button></div></td></tr>').join("")||'<tr><td colspan="8">No contacts found.</td></tr>')+
   '</tbody></table></div>'+
   '<div class="em-contact-pagination"><span>Showing '+(visible.length?contactsPage*pageSize+1:0)+'–'+Math.min(visible.length,(contactsPage+1)*pageSize)+' of '+visible.length+' matching contacts</span>'+
   '<div class="em-actions"><button type="button" id="em-page-prev" class="em-secondary" '+(!contactsPage?'disabled':'')+'>Previous</button><span>Page '+(contactsPage+1)+' of '+pageCount+'</span><button type="button" id="em-page-next" class="em-secondary" '+(contactsPage>=pageCount-1?'disabled':'')+'>Next</button></div></div></section>';
@@ -161,7 +161,7 @@ export function createEmailMarketing({db,root,notify,isCurrent}){
         rendered.indeterminate=checked>0&&checked<boxes.length;
       }
       const count=root.querySelector("#em-selected-count");if(count)count.textContent=selectedContacts.size+" selected";
-      for(const id of ["em-bulk-active","em-bulk-inactive","em-bulk-delete","em-clear-selection"]){
+      for(const id of ["em-bulk-consent","em-bulk-active","em-bulk-inactive","em-bulk-delete","em-clear-selection"]){
         const button=root.querySelector("#"+id);if(button)button.disabled=!selectedContacts.size;
       }
     };
@@ -217,6 +217,36 @@ export function createEmailMarketing({db,root,notify,isCurrent}){
         }
       };
     }
+    root.querySelector("#em-bulk-consent")?.addEventListener("click",()=>{
+      const ids=[...selectedContacts];
+      if(!ids.length)return;
+      const modal=document.createElement("div");
+      modal.className="em-modal em-bulk-confirm";
+      modal.innerHTML='<section role="dialog" aria-modal="true" aria-labelledby="em-consent-title"><h2 id="em-consent-title">Record verified marketing consent</h2>'+
+        '<p>This will make eligible Active contacts sendable only if they have already expressly opted in. Do not use this action for purchased, scraped, or unverified lists.</p>'+
+        '<p><strong>'+ids.length+' selected contacts</strong></p>'+
+        '<label>Where and when did these contacts opt in?<textarea id="em-bulk-consent-source" rows="3" maxlength="200" placeholder="For example: Newsletter signup form, opt-in date and original source" required></textarea></label>'+
+        '<label class="em-consent-confirm"><input type="checkbox" id="em-bulk-consent-confirm"> I confirm that these contacts expressly agreed to receive Andre Erving marketing emails and I can substantiate that permission.</label>'+
+        '<div class="em-actions"><button type="button" class="em-primary" id="em-bulk-consent-save">Record verified consent</button><button type="button" class="em-secondary" id="em-bulk-consent-cancel">Cancel</button></div><p id="em-bulk-consent-error" role="alert"></p></section>';
+      root.append(modal);
+      modal.querySelector("#em-bulk-consent-cancel").onclick=()=>modal.remove();
+      modal.querySelector("#em-bulk-consent-save").onclick=async event=>{
+        const button=event.currentTarget;
+        const source=modal.querySelector("#em-bulk-consent-source").value.trim();
+        const confirmed=modal.querySelector("#em-bulk-consent-confirm").checked;
+        const error=modal.querySelector("#em-bulk-consent-error");
+        if(source.length<10||!confirmed){error.textContent="Provide a verifiable opt-in source (at least 10 characters) and confirm consent.";return}
+        button.disabled=true;
+        try{
+          const result=await api("bulk_consent",{ids,source,confirmed});
+          modal.remove();
+          await fetchData();
+          selectedContacts.clear();
+          draw();
+          notice((result.changed||0)+" contacts now have verified permission. "+(result.skipped||0)+" unchanged or protected.");
+        }catch(e){error.textContent=e.message||"Could not update permissions";button.disabled=false}
+      };
+    });
     for(const [id,operation] of [["em-bulk-active","active"],["em-bulk-inactive","inactive"],["em-bulk-delete","delete"]]){
       const button=root.querySelector("#"+id);
       if(button)button.onclick=()=>void executeBulk(operation);
