@@ -13,7 +13,7 @@ export function createCertificateManagement({db,root,notify,isCurrent,confirmAct
  const courseName=id=>payload.courses.find(c=>c.id===id)?.title||"Course";
  const customerName=id=>payload.customers.find(c=>c.id===id)?.full_name||"Student";
  const caption=(title,sub)=>'<div class="ae-cert-mgmt-head"><div><span class="ae-mini-eyebrow">ANDRE ERVING / CERTIFICATE MANAGEMENT</span><h1>'+esc(title)+'</h1><p>'+esc(sub)+'</p></div><button type="button" class="ae-cert-button" id="ae-cert-refresh">Refresh</button></div>';
- const tabs=()=>'<nav class="ae-cert-tabs">'+[["templates","Course templates"],["issue","Issue certificate"],["issued","Issued certificates"]].map(([key,title])=>'<button type="button" class="ae-cert-button '+(page===key?"active":"")+'" data-cert-tab="'+key+'">'+title+'</button>').join("")+'</nav>';
+ const tabs=()=>'<nav class="ae-cert-tabs">'+[["templates","Course templates"],["issue","Automatic issuance"],["issued","Issued certificates"]].map(([key,title])=>'<button type="button" class="ae-cert-button '+(page===key?"active":"")+'" data-cert-tab="'+key+'">'+title+'</button>').join("")+'</nav>';
  const template=()=>payload.templates.find(t=>t.course_id===selectedCourse)||defaults;
  function templates(){
   const item=template(),c=payload.courses.find(x=>x.id===selectedCourse);
