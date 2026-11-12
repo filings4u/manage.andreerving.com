@@ -1,0 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
+.ae-certificate{width:100%;max-width:1120px;aspect-ratio:1120/792;background:#fff;color:#19375a;margin:0 auto;box-sizing:border-box;overflow:hidden;container-type:inline-size;font-family:Georgia,'Times New Roman',serif;box-shadow:0 12px 36px #0b25401c}
+.ae-certificate *{box-sizing:border-box}
+.ae-certificate-border{width:100%;height:100%;padding:2.2%;border:13px solid #102844;outline:5px solid var(--certificate-accent);outline-offset:-20px}
+.ae-certificate-inner{height:100%;border:2px solid #dfd1ad;display:flex;flex-direction:column;align-items:center;text-align:center;padding:2.8% 4.5% 1.3%;background:radial-gradient(ellipse at center,#fff 56%,#fcf9f1 100%);position:relative}
+.ae-certificate-brand{width:100%;display:flex;align-items:center;justify-content:space-between;gap:20px;font-family:Arial,sans-serif}
+.ae-certificate-brand img{width:25%;max-width:230px;height:auto;display:block;background:#10243f;padding:9px 13px;border-radius:5px}
+.ae-certificate-brand span{font-size:1.15cqw;letter-spacing:.17em;color:#a77828;font-weight:700}
+.ae-certificate-emblem{color:var(--certificate-accent);font-size:3.6cqw;line-height:1.2;margin:1.0% 0 .3%}
+.ae-certificate-eyebrow{font-family:Arial,sans-serif;color:#a17936;font-size:1.0cqw;font-weight:800;letter-spacing:.22em}
+.ae-certificate h1{font-size:4.4cqw;line-height:1.12;margin:1.3% 0 1.1%;color:#132f50;letter-spacing:.04em;font-weight:700}
+.ae-certificate-subtitle{font-size:1.55cqw;color:#67778a;margin:1.3% 0 .5%}
+.ae-certificate-student{font-family:'Great Vibes','Brush Script MT','Segoe Script',cursive;font-size:5.8cqw;line-height:1.2;color:#14395e;max-width:95%;word-break:break-word;padding:1% 0 .5%}
+.ae-certificate-rule{height:2px;width:39%;background:var(--certificate-accent);opacity:.7}
+.ae-certificate-description{font-size:1.4cqw;color:#61748a;line-height:1.5;max-width:92%;margin:2.2% 0 1%}
+.ae-certificate h2{font-size:2.85cqw;color:#153353;margin:.7% 0 1%;max-width:95%;line-height:1.25}
+.ae-certificate-bottom{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:3%;width:100%;align-items:end;margin-top:auto}
+.ae-certificate-detail{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0}
+.ae-certificate-detail>span{font-family:Arial,sans-serif;font-size:1.3cqw;font-weight:700;overflow-wrap:anywhere}
+.ae-certificate-bottom small{font-family:Arial,sans-serif;font-size:1cqw;color:#6d7f94;letter-spacing:.08em}
+.ae-certificate-signature{display:flex;flex-direction:column;align-items:center;gap:4px}
+.ae-certificate-signature strong{font-family:'Great Vibes','Brush Script MT','Segoe Script',cursive;color:#153859;font-size:4cqw;line-height:1.2;font-weight:400}
+.ae-certificate-signature>span{width:75%;border-bottom:1px solid #8a8e93}
+.ae-certificate footer{border-top:1px solid #d9d9d9;width:100%;display:flex;justify-content:space-between;gap:12px;color:#8190a0;font: .95cqw Arial,sans-serif;letter-spacing:.06em;margin-top:2.7%;padding-top:1.2%}
+.ae-cert-controls{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
+.ae-cert-button{border:1px solid #c7d8e9;background:white;border-radius:9px;color:#163d65;font-weight:750;padding:12px 16px;cursor:pointer;font-size:13px}
+.ae-cert-button.primary{background:#d49b28;border-color:#d49b28;color:#152d47}
+.ae-cert-button:disabled{opacity:.55;cursor:not-allowed}
+.ae-cert-button:focus-visible{outline:3px solid #c99425;outline-offset:2px}
+@media(max-width:650px){.ae-certificate-border{border-width:7px;outline-width:3px;outline-offset:-11px}.ae-certificate-brand img{padding:4px 5px}.ae-certificate-inner{border-width:1px}}
+@media print{@page{size:A4 landscape;margin:0}body>*:not(.ae-certificate-print){display:none!important}.ae-certificate{box-shadow:none;width:297mm;height:210mm;max-width:none}.ae-certificate-print{display:block!important}}
