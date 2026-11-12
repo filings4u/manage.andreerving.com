@@ -1,4 +1,4 @@
-import {createEmailMarketing} from './email-marketing.js?v=email-workspace-20261111';
+import {createEmailMarketing} from './email-marketing.js?v=email-editor-tdz-fix-20261111';
 import {createAffiliateManagement} from './affiliate-management.js?v=partner-management-record-20261111';
 import {createLiveTrainingManagement} from './live-training.js?v=manual-teams-only-20261109';
 import {createLMS} from './lms.js?v=order-required-20261110';
