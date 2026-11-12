@@ -8,7 +8,16 @@ function sanitize(v:any){return String(v??"").slice(0,100000).replace(/<script\b
 async function sql(path:string,query="",method="GET",data?:any){const r=await fetch(B+"/rest/v1/"+path+query,{method,headers:{apikey:S,Authorization:"Bearer "+S,"content-type":"application/json",...(method==="GET"?{}:{Prefer:"return=representation"})},...(data===undefined?{}:{body:JSON.stringify(data)})});if(!r.ok){console.error("Marketing DB",path,r.status,await r.text());throw Error("Marketing database request failed")}return r.status===204?[]:r.json()}
 async function admin(req:Request){const jwt=(req.headers.get("authorization")||"").replace(/^Bearer\s+/i,"");if(!jwt)throw Error("Staff sign-in required");const auth=await fetch(B+"/auth/v1/user",{headers:{apikey:S,Authorization:"Bearer "+jwt}});if(!auth.ok)throw Error("Staff sign-in required");const u=await auth.json();const p=(await sql("admin_profiles","?select=role,active&id=eq."+u.id+"&limit=1"))[0];if(!p?.active||!["admin","manager"].includes(p.role))throw Error("Restricted to email marketing managers");return u}
 async function unsubscribe(token:any){const t=val(token,60);if(!uuid.test(t))throw Error("Invalid unsubscribe link");const c=(await sql("marketing_contacts","?select=id,unsubscribed_at&unsubscribe_token=eq."+t+"&limit=1"))[0];if(c&&!c.unsubscribed_at)await sql("marketing_contacts","?id=eq."+c.id,"PATCH",{status:"inactive",unsubscribed_at:new Date().toISOString(),suppression_reason:"unsubscribe",updated_at:new Date().toISOString()});return {unsubscribed:true}}
-async function overview(){const [contacts,campaigns,deliveries]=await Promise.all([sql("marketing_contacts","?select=*&order=created_at.desc&limit=4000"),sql("marketing_campaigns","?select=*&order=updated_at.desc&limit=500"),sql("marketing_deliveries","?select=*&order=created_at.desc&limit=5000")]);return {contacts,campaigns,deliveries}}
+async function marketingContacts(){
+ const contacts:any[]=[];
+ for(let offset=0;offset<10000;offset+=1000){
+  const batch=await sql("marketing_contacts","?select=*&order=created_at.desc,id.desc&limit=1000&offset="+offset);
+  contacts.push(...batch);
+  if(batch.length<1000)break;
+ }
+ return contacts;
+}
+async function overview(){const [contacts,campaigns,deliveries]=await Promise.all([marketingContacts(),sql("marketing_campaigns","?select=*&order=updated_at.desc&limit=500"),sql("marketing_deliveries","?select=*&order=created_at.desc&limit=5000")]);return {contacts,campaigns,deliveries}}
 function normalized(d:any){const e=email(d.email);if(!validEmail.test(e))throw Error("Enter a valid email");return{email:e,first_name:val(d.firstName,100),last_name:val(d.lastName,100),phone:val(d.phone,40)||null}}
 async function upsertContact(d:any){const c=normalized(d);const old=(await sql("marketing_contacts","?select=*&email=eq."+encodeURIComponent(c.email)+"&limit=1"))[0];if(old&&(old.unsubscribed_at||old.suppression_reason))throw Error("Suppressed or unsubscribed contacts cannot be reactivated by an admin import");const status=d.status==="active"?"active":"inactive";const consent=!!d.consent&&!!val(d.consentSource,200);if(status==="active"&&!consent&&!old?.consent_at)throw Error("Active status requires confirmed opt-in permission and its source");const values={...c,status,consent_at:consent?new Date().toISOString():old?.consent_at||null,consent_source:consent?val(d.consentSource,200):old?.consent_source||null,updated_at:new Date().toISOString()};return (await sql("marketing_contacts",old?"?id=eq."+old.id:"",old?"PATCH":"POST",values))[0]}
 async function importContacts(d:any){
@@ -29,7 +38,7 @@ async function importContacts(d:any){
 }
 async function bulkManageContacts(d:any){
  const ids=Array.isArray(d.ids)?[...new Set(d.ids.map((v:any)=>val(v,45)))]:[];
- if(!ids.length||ids.length>4000||ids.some((id:string)=>!uuid.test(id)))throw Error("Choose 1–4,000 valid contacts");
+ if(!ids.length||ids.length>10000||ids.some((id:string)=>!uuid.test(id)))throw Error("Choose 1–10,000 valid contacts");
  if(!["active","inactive","delete"].includes(d.operation))throw Error("Invalid bulk action");
  return await sql("rpc/bulk_manage_marketing_contacts","","POST",{p_ids:ids,p_action:d.operation});
 }
