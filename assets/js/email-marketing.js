@@ -82,13 +82,13 @@ export function createEmailMarketing({db,root,notify,isCurrent}){
  }
  function importScreen(){
   return head("Import email contacts","Paste a list or upload a CSV file. Imports are separate from Customer CRM.")+
-  '<section class="em-card em-import"><div class="em-card-heading"><h2>Paste or upload contacts</h2><p>CSV column names: first_name, last_name, email, phone, status. Also accepts first name and last name.</p></div>'+
+  '<section class="em-card em-import"><div class="em-card-heading"><h2>Paste or upload contacts</h2><p>CSV columns: first_name, last_name, email, phone. Uploaded contacts default to Active; marketing delivery still requires consent.</p></div>'+
   '<label class="em-file-label">Upload CSV file<input id="em-csv" type="file" accept=".csv,text/csv"></label>'+
-  '<label>Paste emails or CSV data<textarea id="em-paste" rows="9" placeholder="first_name,last_name,email,phone,status&#10;Alex,Smith,alex@example.com,,inactive&#10;or one email address per line"></textarea></label>'+
+  '<label>Paste emails or CSV data<textarea id="em-paste" rows="9" placeholder="first_name,last_name,email,phone&#10;Alex,Smith,alex@example.com,&#10;or one email address per line"></textarea></label>'+
   '<div class="em-actions"><button id="em-parse" class="em-secondary">Review import</button><span id="em-import-count"></span></div>'+
-  '<label class="em-check"><input type="checkbox" id="em-consent"><span>I have documented express permission to market to contacts marked Active in this import.</span></label>'+
-  '<label>Permission source<input id="em-consent-source" placeholder="Signup form, date, import source"></label>'+
-  '<p class="em-warning">Imported addresses without verifiable consent remain Non active. Unsubscribed or suppressed addresses will not be reactivated.</p>'+
+  '<label class="em-check"><input type="checkbox" id="em-consent"><span>I confirm I have documented marketing consent for these contacts. Only check this if they explicitly opted in.</span></label>'+
+  '<div class="em-import-consent-heading"><h3>Subscription &amp; consent</h3><p>Active is the contact record status. Email campaigns require separately recorded marketing permission.</p></div><label>Permission source<input id="em-consent-source" placeholder="Signup form, date, import source"></label>'+
+  '<p class="em-warning">Imported contacts default to Active, but are not sendable without documented consent. Unsubscribed or suppressed addresses will not be reactivated.</p>'+
   '<div id="em-import-review"></div><button id="em-import-submit" class="em-primary" disabled>Import reviewed contacts</button></section>';
  }
  function delivery(){
@@ -276,9 +276,9 @@ export function createEmailMarketing({db,root,notify,isCurrent}){
    try{const lines=parseCSV(paste.value);if(!lines.length)throw Error("Paste email addresses or upload a CSV first");
     const headers=lines[0].map(x=>x.toLowerCase().trim().replace(/\s+/g,"_"));const hasHeader=headers.includes("email")||headers.includes("email_address");
     const records=hasHeader?lines.slice(1).map(row=>Object.fromEntries(headers.map((h,i)=>[h,row[i]||""]))):lines.map(row=>({email:row[0]||""}));
-    importRows=records.filter(r=>r.email||r.email_address).map(r=>({firstName:r.first_name||r.firstname||"",lastName:r.last_name||r.lastname||"",email:r.email||r.email_address,phone:r.phone||"",status:String(r.status||"inactive").toLowerCase()==="active"?"active":"inactive"}));
+    importRows=records.filter(r=>r.email||r.email_address).map(r=>({firstName:r.first_name||r.firstname||"",lastName:r.last_name||r.lastname||"",email:r.email||r.email_address,phone:r.phone||"",status:"active"}));
     if(importRows.length>10000)throw Error("Import a maximum of 10,000 contacts per batch");
-    root.querySelector("#em-import-review").innerHTML='<h3>Review '+importRows.length+' contacts</h3><p>'+importRows.filter(r=>r.status==="active").length+' marked Active (requires recorded consent). The rest will remain Non active.</p><div class="em-import-preview">'+importRows.slice(0,15).map(r=>'<p>'+esc(r.firstName+' '+r.lastName+' · '+r.email+' · '+r.status)+'</p>').join("")+'</div>';
+    root.querySelector("#em-import-review").innerHTML='<h3>Review '+importRows.length+' contacts</h3><p>'+importRows.length+' will be marked Active. Marketing email eligibility still requires recorded consent; unsubscribed and suppressed contacts stay excluded.</p><div class="em-import-preview">'+importRows.slice(0,15).map(r=>'<p>'+esc(r.firstName+' '+r.lastName+' · '+r.email+' · '+r.status)+'</p>').join("")+'</div>';
     root.querySelector("#em-import-count").textContent=importRows.length+" rows parsed";root.querySelector("#em-import-submit").disabled=!importRows.length;
    }catch(err){notice(err.message,true)}};
   const submit=root.querySelector("#em-import-submit");if(submit)submit.onclick=async()=>{submit.disabled=true;try{const r=await api("import_contacts",{rows:importRows,consent:root.querySelector("#em-consent").checked,consentSource:root.querySelector("#em-consent-source").value});await fetchData();page="contacts";draw();notice("Imported "+r.created+" new, updated "+r.updated+", skipped "+r.skipped+(r.errors?.length?". "+r.errors.join("; "):""))}catch(err){notice(err.message,true);submit.disabled=false}};
