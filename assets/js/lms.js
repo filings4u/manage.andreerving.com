@@ -943,9 +943,15 @@ export function createLMS({db,root,notify,safe,isCurrent}){
         const q=lesson?db.from("course_lessons").update(data).eq("id",lesson.id):db.from("course_lessons").insert(data);
         const result=await q.select("id").single();
         if(result.error)throw result.error;
+        const saved={...data,id:result.data.id,updated_at:new Date().toISOString()};
+        const existingIndex=s.lessons.findIndex(item=>item.id===saved.id);
+        if(existingIndex>=0)s.lessons[existingIndex]={...s.lessons[existingIndex],...saved};
+        else s.lessons.push(saved);
+        const publication=s.publications.find(item=>item.course_id===course.id);
+        if(publication)publication.has_unpublished_changes=true;
         window.AEUnsaved?.clean();s.editor=null;s.tab="curriculum";openRoute("course/"+course.id+"/curriculum");
         notify(lesson?"Lesson updated":"Lesson created");
-        await refresh();
+        render();
       }
     });
     const select=root.querySelector("#ae-module");if(select)select.value=parentModule;
