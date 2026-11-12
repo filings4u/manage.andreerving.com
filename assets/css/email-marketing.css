@@ -177,3 +177,21 @@
 .em-saved-view-wrap iframe{display:block;width:min(100%,850px);height:85vh;min-height:700px;border:1px solid #dce5ef;border-radius:6px;box-shadow:0 6px 25px #163a5815;background:#fff}
 @media(max-width:1050px){.em-builder-workspace{grid-template-columns:225px minmax(0,1fr)!important}.em-builder-stage{padding:16px}}
 @media(max-width:780px){.em-builder-workspace{grid-template-columns:1fr!important}.em-builder-tools{padding:20px}.em-tool-group{padding:13px 0}.em-viewer-toolbar{padding:12px}.em-viewer-toolbar .em-actions{width:100%}.em-viewer-scroll{padding:12px}.em-builder-content{padding:8px 12px}}
+
+/* Contact selection and bulk actions */
+.em-contact-list .em-bulk-toolbar{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap;padding:15px 17px;margin:0 0 12px;border:1px solid #dce6f0;border-radius:9px;background:#f7fafe}
+.em-bulk-selection{display:flex;align-items:center;gap:11px;flex-wrap:wrap;font-size:12px;color:#70849c}
+.em-bulk-selection strong{font-size:13px;color:#143b63}
+.em-bulk-buttons{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.em-bulk-buttons button{min-height:35px;font-size:11px;padding:7px 11px;margin:0}
+.em-bulk-buttons button:disabled{opacity:.45;cursor:not-allowed}
+.em-bulk-buttons .em-bulk-delete:not(:disabled){border-color:#dbaba9;color:#9e3633;background:#fff}
+.em-bulk-buttons .em-bulk-delete:not(:disabled):hover{background:#fff1f0}
+.em-contact-list .em-select-col{width:48px;min-width:48px;text-align:center}
+.em-contact-list .em-select-col input[type=checkbox]{appearance:auto;width:17px;height:17px;accent-color:#cc9729;cursor:pointer;margin:0;vertical-align:middle}
+.em-contact-list tbody tr.em-row-selected{background:#fff9ec}
+.em-contact-list tbody tr.em-row-selected:hover{background:#fff4d9}
+.em-bulk-confirm{z-index:20020}
+.em-bulk-confirm>section{max-width:470px}
+.em-bulk-confirm #em-bulk-confirm-error{font-size:12px;color:#ab3e3b;margin:12px 0 0}
+@media(max-width:720px){.em-bulk-toolbar{align-items:flex-start!important}.em-bulk-buttons{width:100%}.em-bulk-buttons button{flex:1 1 auto}.em-contact-list .em-table{overflow-x:auto}}
