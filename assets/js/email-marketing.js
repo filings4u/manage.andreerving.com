@@ -131,7 +131,7 @@ export function createEmailMarketing({db,root,notify,isCurrent}){
   const count=data.deliveries.filter(d=>d.campaign_id===c.id).length;
   return head("View campaign","Read the full email before editing or reviewing delivery activity.")+
   '<div class="em-actions"><button class="em-secondary" data-em-tab="'+campaignReturn+'">← Back to '+(campaignReturn==="drafts"?"Drafts":"Campaigns")+'</button>'+(c.status==="draft"?'<button class="em-primary" data-em-edit="'+c.id+'">Edit campaign</button>':'')+'<button class="em-secondary" data-em-report="'+c.id+'">View delivery</button></div>'+
-  '<section class="em-card em-saved-campaign-view"><div class="em-card-heading"><h2>'+esc(c.name)+'</h2><span class="em-chip">'+esc(c.status)+'</span></div><p><strong>Subject:</strong> '+esc(c.subject)+'</p><p><strong>Preview text:</strong> '+esc(c.preview_text)+'</p><p><strong>Recipients recorded:</strong> '+count+'</p><div class="em-saved-view-wrap"><iframe class="em-view-frame" id="em-view-frame" sandbox="" title="Full campaign email"></iframe></div></section>';
+  '<section class="em-card em-saved-campaign-view"><div class="em-card-heading"><h2>'+esc(c.name)+'</h2><span class="em-chip">'+esc(c.status)+'</span></div><p><strong>Subject:</strong> '+esc(c.subject)+'</p><p><strong>Preview text:</strong> '+esc(c.preview_text)+'</p><p><strong>Recipients recorded:</strong> '+count+'</p><div class="em-saved-view-wrap"><iframe class="em-view-frame" id="em-view-frame" sandbox="allow-same-origin" scrolling="no" title="Full campaign email"></iframe></div></section>';
  }
  function draw(){
   if(!isCurrent())return;
@@ -398,7 +398,37 @@ export function createEmailMarketing({db,root,notify,isCurrent}){
     };
    };
   }
-  const view=root.querySelector("#em-view-frame");if(view&&activeCampaign)view.srcdoc='<html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="background:#eef3f9;padding:24px 10px;margin:0;font:15px/1.65 Arial,sans-serif;color:#123153"><table role="presentation" width="100%" style="max-width:640px;background:#fff;margin:auto;border-collapse:collapse"><tr><td style="background:#10243f;border-bottom:5px solid #d09b2d;padding:25px"><img src="https://gnfyidajbectlppsekzj.supabase.co/storage/v1/object/public/Andre%20Erving%20Public/logos/logo2.png" alt="Andre Erving" style="max-width:100%;height:auto;width:245px"></td></tr><tr><td style="padding:24px">'+activeCampaign.body_html+'</td></tr><tr><td style="background:#f5f8fc;padding:22px;font:12px/1.7 Arial;color:#58718b">Andre Erving · Growth, Strategy &amp; Education<br>Marketing communication · <u>Unsubscribe</u><br>Questions? Visit andreerving.com/contact.html</td></tr></table></body></html>';
+  const view=root.querySelector("#em-view-frame");
+  if(view&&activeCampaign){
+    let heightObserver=null;
+    const resizeEmail=()=>{
+      if(!view.isConnected)return;
+      try{
+        const doc=view.contentDocument;
+        if(!doc?.body)return;
+        view.style.height="1px";
+        const measured=Math.max(doc.documentElement?.scrollHeight||0,doc.body.scrollHeight||0,doc.body.offsetHeight||0);
+        view.style.height=Math.min(30000,Math.max(450,measured+4))+"px";
+      }catch(error){console.warn("Could not size campaign preview",error)}
+    };
+    view.addEventListener("load",()=>{
+      resizeEmail();
+      try{
+        const doc=view.contentDocument;
+        if(!doc?.body)return;
+        doc.querySelectorAll("img").forEach(image=>{
+          if(!image.complete){image.addEventListener("load",resizeEmail,{once:true});image.addEventListener("error",resizeEmail,{once:true})}
+        });
+        if(typeof ResizeObserver!=="undefined"){
+          heightObserver?.disconnect();
+          heightObserver=new ResizeObserver(resizeEmail);
+          heightObserver.observe(doc.body);
+        }
+        doc.fonts?.ready.then(resizeEmail).catch(()=>{});
+      }catch(error){console.warn("Campaign preview resizing unavailable",error)}
+    },{once:true});
+    view.srcdoc='<html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="background:#eef3f9;padding:12px 8px;margin:0;font:15px/1.65 Arial,sans-serif;color:#123153"><table role="presentation" width="100%" style="max-width:640px;background:#fff;margin:auto;border-collapse:collapse"><tr><td style="background:#10243f;border-bottom:5px solid #d09b2d;padding:25px"><img src="https://gnfyidajbectlppsekzj.supabase.co/storage/v1/object/public/Andre%20Erving%20Public/logos/logo2.png" alt="Andre Erving" style="max-width:100%;height:auto;width:245px"></td></tr><tr><td style="padding:24px">'+activeCampaign.body_html+'</td></tr><tr><td style="background:#f5f8fc;padding:22px;font:12px/1.7 Arial;color:#58718b">Andre Erving · Growth, Strategy &amp; Education<br>Marketing communication · <u>Unsubscribe</u><br>Questions? Visit andreerving.com/contact.html</td></tr></table></body></html>';
+  }
   const deliveryFilter=root.querySelector("#em-delivery-filter");if(deliveryFilter)deliveryFilter.onchange=()=>{activeCampaign=data.campaigns.find(c=>c.id===deliveryFilter.value)||null;draw()};
   const paste=root.querySelector("#em-paste"),csv=root.querySelector("#em-csv");
   if(csv)csv.onchange=async()=>{const file=csv.files?.[0];if(!file)return;if(file.size>4_000_000){notice("CSV must be under 4 MB",true);return}paste.value=await file.text();notice("CSV loaded. Select Review import.")};
