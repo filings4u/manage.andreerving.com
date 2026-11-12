@@ -39,8 +39,8 @@ export function createCertificateManagement({db,root,notify,isCurrent,confirmAct
   const items=payload.certificates.slice().sort((a,b)=>new Date(b.issued_at)-new Date(a.issued_at));
   return caption("Issued certificates","View the exact student certificate, download a PDF, or revoke a certificate.")+
    '<div class="ae-cert-mgmt-stats">'+[["Total issued",items.filter(c=>!c.revoked_at).length],["Revoked",items.filter(c=>!!c.revoked_at).length],["Course templates",payload.templates.length]].map(([label,value])=>'<section><span>'+esc(label)+'</span><strong>'+value+'</strong></section>').join("")+'</div>'+
-   '<section class="ae-cert-mgmt-card"><div class="tablewrap"><table><thead><tr><th>Certificate number</th><th>Student</th><th>Course</th><th>Issued</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+
-   (items.map(c=>'<tr><td><strong>'+esc(c.certificate_number)+'</strong></td><td>'+esc(c.student_name)+'</td><td>'+esc(c.course_title)+'</td><td>'+niceDate(c.issued_at)+'</td><td>'+ (c.revoked_at?"Revoked":"Issued")+'</td><td><div class="ae-cert-controls"><button class="ae-cert-button" type="button" data-cert-view="'+c.id+'">View</button>'+(!c.revoked_at?'<button class="ae-cert-button" type="button" data-cert-delete="'+c.id+'">Delete</button>':'')+'</div></td></tr>').join("")||'<tr><td colspan="6">No certificates have been issued yet.</td></tr>')+'</tbody></table></div></section>';
+   '<section class="ae-cert-mgmt-card"><div class="tablewrap"><table><thead><tr><th>Certificate number</th><th>Student</th><th>Course</th><th>Issued</th><th>Status</th><th>Completion email</th><th>Actions</th></tr></thead><tbody>'+
+   (items.map(c=>'<tr><td><strong>'+esc(c.certificate_number)+'</strong></td><td>'+esc(c.student_name)+'</td><td>'+esc(c.course_title)+'</td><td>'+niceDate(c.issued_at)+'</td><td>'+ (c.revoked_at?"Revoked":"Issued")+'</td><td>'+(c.email_sent_at?'Sent':c.email_error?'Needs attention':'Pending')+'</td><td><div class="ae-cert-controls"><button class="ae-cert-button" type="button" data-cert-view="'+c.id+'">View</button>'+(!c.revoked_at&&!c.email_sent_at?'<button class="ae-cert-button" type="button" data-cert-email="'+c.id+'">Send email</button>':'')+(!c.revoked_at?'<button class="ae-cert-button" type="button" data-cert-delete="'+c.id+'">Delete</button>':'')+'</div></td></tr>').join("")||'<tr><td colspan="7">No certificates have been issued yet.</td></tr>')+'</tbody></table></div></section>';
  }
  function view(){
   const c=selectedCertificate;
@@ -75,6 +75,12 @@ export function createCertificateManagement({db,root,notify,isCurrent,confirmAct
     catch(error){notice(error.message,true);btn.disabled=false}
   };
   root.querySelectorAll("[data-cert-view]").forEach(b=>b.onclick=()=>{selectedCertificate=payload.certificates.find(c=>c.id===b.dataset.certView);page="view";draw()});
+  root.querySelectorAll("[data-cert-email]").forEach(b=>b.onclick=async()=>{
+    b.disabled=true;try{
+      const res=await api("resend_completion_email",{id:b.dataset.certEmail});
+      await refresh();notice("Completion email status: "+res.status+(res.note?" · "+res.note:""))
+    }catch(error){notice(error.message,true);b.disabled=false}
+  });
   root.querySelectorAll("[data-cert-delete]").forEach(b=>b.onclick=async()=>{const item=payload.certificates.find(c=>c.id===b.dataset.certDelete);if(!item)return;const ok=await confirmAction("Delete certificate","Revoke certificate "+item.certificate_number+"? The tracking number will remain in the audit trail.",{destructive:true,confirmText:"Revoke certificate"});if(!ok)return;
     try{await api("delete_certificate",{id:item.id});await refresh();notice("Certificate revoked")}catch(error){notice(error.message,true)}
   });
