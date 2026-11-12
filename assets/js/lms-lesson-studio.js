@@ -259,13 +259,13 @@ export function createLessonStudio({root,course,modules,lesson=null,lessons=[],m
    window.location.assign(url);
  };
  $("ae-open-preview").onclick=openStudentPreview;
- $("ae-studio-save").onclick=async()=>{
+ const saveLesson=async()=>{
    if(active==="text"&&!$("ae-rich")){
-     return notify("Lesson content is not ready. Refresh the editor before saving; your existing content is safe.",true);
+     notify("Lesson content is not ready. Refresh the editor before saving; your existing content is safe.",true);return false;
    }
-   capture();const title=$("ae-title").value.trim();if(!title)return notify("Enter a lesson title.",true);
-   if(mediaBusy)return notify("Finish uploading media before saving.",true);
-   if(active==="quiz"&&questions.some(q=>!q.prompt.trim()||q.options.some(v=>!v.trim())))return notify("Complete each quiz question and answer before saving.",true);
+   capture();const title=$("ae-title").value.trim();if(!title){notify("Enter a lesson title.",true);return false}
+   if(mediaBusy){notify("Finish uploading media before saving.",true);return false}
+   if(active==="quiz"&&questions.some(q=>!q.prompt.trim()||q.options.some(v=>!v.trim()))){notify("Complete each quiz question and answer before saving.",true);return false}
    const validURL=v=>{if(!v)return null;try{const u=new URL(v);if(u.protocol!=="https:")throw Error();return u.href}catch{throw new Error("Resource URL must use HTTPS.")}};
    const button=$("ae-studio-save");button.disabled=true;$("ae-studio-status").textContent="Saving...";
    try{
@@ -282,17 +282,11 @@ export function createLessonStudio({root,course,modules,lesson=null,lessons=[],m
        video_url:videoURL,resource_url:resourceURL,
        duration_minutes:Number($("ae-duration").value)||0,is_preview:$("ae-preview").checked,allow_download:$("ae-allow-download").checked};
      await onSave(payload);window.AEUnsaved?.clean();clearURL();if($("ae-studio-status"))$("ae-studio-status").textContent="Saved";
-   }catch(ex){if($("ae-studio-status"))$("ae-studio-status").textContent="Could not save";notify(ex.message||String(ex),true)}
+     return true;
+   }catch(ex){if($("ae-studio-status"))$("ae-studio-status").textContent="Could not save";notify(ex.message||String(ex),true);return false}
    finally{if(button.isConnected)button.disabled=false}
  };
+ $("ae-studio-save").onclick=saveLesson;
  render();
- window.AEUnsaved?.watch(root,{title:"course lesson",save:async()=>{
-  const button=$("ae-studio-save");if(!button)return false;button.click();
-  for(let i=0;i<110;i++){
-   await new Promise(r=>setTimeout(r,130));
-   if(!window.AEUnsaved?.isDirty())return true;
-   if($("ae-studio-status")?.textContent==="Could not save")return false;
-  }
-  return false;
- }});
+ window.AEUnsaved?.watch(root,{title:"course lesson",save:saveLesson});
 }
