@@ -51,4 +51,23 @@ async function verifiedWebhook(req:Request){
  }
  return result({received:true})
 }
-Deno.serve(async(req:Request)=>{const origin=req.headers.get("origin")||"";if(req.method==="OPTIONS")return result({},200,origin);if(!S)return result({error:"Service not configured"},503,origin);try{const url=new URL(req.url);if(req.method==="POST"&&url.searchParams.has("webhook"))return await verifiedWebhook(req);if(req.method==="POST"&&url.searchParams.has("unsubscribe"))return result(await unsubscribe(url.searchParams.get("unsubscribe")),200,origin);if(req.method!=="POST"||!ORIGINS.has(origin))return result({error:"Not available"},403,origin);const d=await req.json();if(d.action==="unsubscribe")return result(await unsubscribe(d.token),200,origin);const u=await admin(req);const actions:Record<string,(x:any)=>Promise<any>>={overview:()=>overview(),save_contact:()=>upsertContact(d),import_contacts:()=>importContacts(d),contact_status:()=>status(d),save_campaign:()=>saveCampaign(d,u),send_campaign:()=>sendCampaign(d)};if(!actions[d.action])throw Error("Unknown action");return result(await actions[d.action](d),200,origin)}catch(e){const message=String(e instanceof Error?e.message:e);console.error("Email Marketing",message);return result({error:message},/restricted|sign-in/i.test(message)?403:400,origin)}});
+async function uploadCampaignImage(req:Request){
+ await admin(req);
+ const form=await req.formData(),file=form.get("file");
+ if(!(file instanceof File))throw Error("Select an image to upload");
+ const types:Record<string,string>={"image/png":"png","image/jpeg":"jpg","image/webp":"webp","image/gif":"gif"};
+ const ext=types[file.type];
+ if(!ext)throw Error("Supported images are PNG, JPEG, WebP, and GIF");
+ if(file.size<1||file.size>3145728)throw Error("Image must be under 3 MB");
+ const bytes=new Uint8Array(await file.arrayBuffer());
+ const png=bytes.length>8&&[137,80,78,71,13,10,26,10].every((x,i)=>bytes[i]===x);
+ const jpg=bytes[0]===255&&bytes[1]===216&&bytes[2]===255;
+ const gif=bytes[0]===71&&bytes[1]===73&&bytes[2]===70&&bytes[3]===56;
+ const webp=bytes[0]===82&&bytes[1]===73&&bytes[2]===70&&bytes[3]===70&&bytes[8]===87&&bytes[9]===69&&bytes[10]===66&&bytes[11]===80;
+ if(!({"image/png":png,"image/jpeg":jpg,"image/webp":webp,"image/gif":gif}[file.type]))throw Error("Image file signature does not match its format");
+ const objectPath="campaigns/"+crypto.randomUUID()+"."+ext;
+ const store=await fetch(B+"/storage/v1/object/andre-email-campaign-media/"+objectPath,{method:"POST",headers:{Authorization:"Bearer "+S,apikey:S,"Content-Type":file.type,"Cache-Control":"public, max-age=31536000", "x-upsert":"false"},body:bytes});
+ if(!store.ok){console.error("Media upload failed",store.status);throw Error("Could not store the image")}
+ return {url:B+"/storage/v1/object/public/andre-email-campaign-media/"+objectPath};
+}
+Deno.serve(async(req:Request)=>{const origin=req.headers.get("origin")||"";if(req.method==="OPTIONS")return result({},200,origin);if(!S)return result({error:"Service not configured"},503,origin);try{const url=new URL(req.url);if(req.method==="POST"&&url.searchParams.has("webhook"))return await verifiedWebhook(req);if(req.method==="POST"&&url.searchParams.has("upload")){if(!ORIGINS.has(origin))return result({error:"Invalid origin"},403,origin);return result(await uploadCampaignImage(req),200,origin)}if(req.method==="POST"&&url.searchParams.has("unsubscribe"))return result(await unsubscribe(url.searchParams.get("unsubscribe")),200,origin);if(req.method!=="POST"||!ORIGINS.has(origin))return result({error:"Not available"},403,origin);const d=await req.json();if(d.action==="unsubscribe")return result(await unsubscribe(d.token),200,origin);const u=await admin(req);const actions:Record<string,(x:any)=>Promise<any>>={overview:()=>overview(),save_contact:()=>upsertContact(d),import_contacts:()=>importContacts(d),contact_status:()=>status(d),save_campaign:()=>saveCampaign(d,u),send_campaign:()=>sendCampaign(d)};if(!actions[d.action])throw Error("Unknown action");return result(await actions[d.action](d),200,origin)}catch(e){const message=String(e instanceof Error?e.message:e);console.error("Email Marketing",message);return result({error:message},/restricted|sign-in/i.test(message)?403:400,origin)}});
