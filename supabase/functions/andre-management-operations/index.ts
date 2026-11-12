@@ -370,6 +370,32 @@ async function customerDetail(input:Record<string,unknown>){
  return {profile:person,crmDetails:crmDetails[0]||null,orders,orderItems:lines,enrollments,documents,tickets,extensions,
   courses:catalog.map((c:any)=>({id:c.id,title:c.title,access_days:c.access_days}))};
 }
+async function customerCourseProgress(input:Record<string,unknown>){
+ const userId=String(input.userId||""),courseId=String(input.courseId||"");
+ if(!uuidPattern.test(userId)||!uuidPattern.test(courseId))throw Error("Valid customer and course IDs are required");
+ const enrollment=await rows("course_enrollments","?select=id,status,enrolled_at,expires_at,completed_at&user_id=eq."+userId+"&course_id=eq."+courseId+"&limit=5");
+ if(!enrollment.length)throw Error("This customer is not enrolled in the selected course");
+ const courses=await rows("courses","?select=id,title,status&id=eq."+courseId+"&limit=1");
+ const [mods,lessons,progress]=await Promise.all([
+  rows("published_course_modules","?select=id,title,sort_order&course_id=eq."+courseId+"&order=sort_order.asc,id.asc&limit=1000"),
+  rows("published_course_lessons","?select=id,module_id,title,lesson_type,sort_order&course_id=eq."+courseId+"&order=sort_order.asc,id.asc&limit=5000"),
+  rows("lesson_progress","?select=lesson_id,completed,completed_at,updated_at&course_id=eq."+courseId+"&user_id=eq."+userId+"&limit=5000")
+ ]);
+ const counts={lessons:lessons.length,completedLessons:0,quizzes:0,completedQuizzes:0};
+ const progressById=new Map(progress.map((item:any)=>[item.lesson_id,item]));
+ const sections=mods.map((module:any)=>{
+   const child=lessons.filter((lesson:any)=>lesson.module_id===module.id);
+   return {id:module.id,title:module.title,sortOrder:module.sort_order,lessonCount:child.length,completedCount:child.filter((lesson:any)=>progressById.get(lesson.id)?.completed===true).length,
+     lessons:child.map((lesson:any)=>{
+       const state=progressById.get(lesson.id);
+       const complete=state?.completed===true,isQuiz=lesson.lesson_type==="quiz";
+       if(complete)counts.completedLessons++;
+       if(isQuiz){counts.quizzes++;if(complete)counts.completedQuizzes++}
+       return {id:lesson.id,title:lesson.title,type:lesson.lesson_type,completed:complete,completedAt:complete?(state?.completed_at||null):null,sortOrder:lesson.sort_order};
+     })};
+ });
+ return {courseId,userId,courseTitle:courses[0]?.title||"Course",enrollment:enrollment[0],summary:{...counts,notCompleted:counts.lessons-counts.completedLessons,remainingQuizzes:counts.quizzes-counts.completedQuizzes,percentage:counts.lessons?Math.round(100*counts.completedLessons/counts.lessons):0},sections};
+}
 async function setExtensionPrice(input:Record<string,unknown>){
  const cid=String(input.courseId||""),amount=input.amount===null?null:Number(input.amount),enabled=Boolean(input.enabled);
  if(!uuidPattern.test(cid)||amount!==null&&(!Number.isFinite(amount)||amount<=0)||enabled&&amount===null)throw Error("Enter a valid course and price");
@@ -411,6 +437,7 @@ Deno.serve(async(request)=>{
    case "enroll":result=await enroll(input);break;
    case "change_enrollment":result=await modifyEnrollment(input);break;
    case "customer_detail":result=await customerDetail(input);break;
+   case "customer_course_progress":result=await customerCourseProgress(input);break;
    case "invitation_delivery":result=await invitationDelivery(input);break;
    case "extension_price":result=await setExtensionPrice(input);break;
    default:return reply({error:"Unknown management action"},400,origin);
