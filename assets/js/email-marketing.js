@@ -2,9 +2,9 @@ const ENDPOINT="https://gnfyidajbectlppsekzj.supabase.co/functions/v1/andre-emai
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmtDate=v=>v?new Date(v).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}):"—";
 const statuses={active:"Active",inactive:"Non active"};
-const nav=[["campaigns","Campaigns"],["create","Email creator"],["contacts","All contacts"],["import","Import contacts"],["delivery","Delivery insights"]];
+const nav=[["campaigns","Campaigns"],["drafts","Drafts"],["create","Email creator"],["contacts","All contacts"],["import","Import contacts"],["delivery","Delivery insights"]];
 export function createEmailMarketing({db,root,notify,isCurrent}){
- let data={contacts:[],campaigns:[],deliveries:[]},page="campaigns",activeCampaign=null,activeContact=null,mode="visual",filter="",importRows=[],busy=false,selectedContacts=new Set(),contactsPage=0;
+ let data={contacts:[],campaigns:[],deliveries:[]},page="campaigns",activeCampaign=null,activeContact=null,mode="visual",filter="",importRows=[],busy=false,selectedContacts=new Set(),contactsPage=0,draftSearch="",campaignReturn="campaigns";
  const notice=(text,error=false)=>{const e=root.querySelector("#em-status");if(e){e.textContent=text;e.classList.toggle("error",error)}else notify(text,error)};
  async function api(action,payload={}){
   const {data:{session}}=await db.auth.getSession();if(!session?.access_token)throw Error("Sign in to management again");
@@ -24,6 +24,14 @@ export function createEmailMarketing({db,root,notify,isCurrent}){
   '<section class="em-card"><div class="em-card-heading"><h2>Campaign library</h2><p>Open any campaign to view its content and delivery results.</p></div><div class="em-table"><table><thead><tr><th>Campaign</th><th>Subject</th><th>Status</th><th>Updated</th><th>Actions</th></tr></thead><tbody>'+
   (data.campaigns.map(c=>'<tr><td><strong>'+esc(c.name)+'</strong></td><td>'+esc(c.subject)+'</td><td><span class="em-chip">'+esc(c.status)+'</span></td><td>'+fmtDate(c.updated_at)+'</td><td><div class="em-actions"><button data-em-view="'+c.id+'">View</button>'+(c.status==="draft"?'<button data-em-edit="'+c.id+'">Edit</button>':'')+'<button data-em-report="'+c.id+'">Delivery</button></div></td></tr>').join("")||'<tr><td colspan="5">No campaigns yet. Create your first email with the Email Creator.</td></tr>')+
   '</tbody></table></div></section>';
+ }
+ function drafts(){
+  const all=data.campaigns.filter(c=>c.status==="draft");
+  const filtered=all.filter(c=>[c.name,c.subject,c.preview_text].some(v=>String(v||"").toLowerCase().includes(draftSearch.toLowerCase().trim())));
+  return head("Campaign drafts","Review, edit and organize saved email campaigns before sending.",'<button class="em-primary" data-em-new>Create new draft</button>')+
+    '<div class="em-draft-summary"><section><span>Saved drafts</span><strong>'+all.length+'</strong></section><section><span>Ready for review</span><strong>'+all.filter(c=>!!c.body_html&&!!c.subject).length+'</strong></section><section><span>Last updated</span><strong class="em-draft-updated">'+(all.length?fmtDate(all[0].updated_at):"—")+'</strong></section></div>'+
+    '<section class="em-card em-draft-library"><div class="em-card-heading"><div><h2>Saved drafts</h2><p>Only unsent drafts appear here. Sent campaigns remain in the Campaigns page.</p></div><label class="em-draft-search-label">Search drafts<input type="search" id="em-draft-search" placeholder="Find a campaign by name or subject" value="'+esc(draftSearch)+'"></label></div>'+
+    '<div class="em-draft-list">'+(filtered.map(c=>'<article class="em-draft-item"><div class="em-draft-info"><span class="em-chip">Draft · Not sent</span><h3>'+esc(c.name)+'</h3><p class="em-draft-subject"><strong>Subject:</strong> '+esc(c.subject)+'</p><p class="em-draft-preview">'+esc(c.preview_text||"No inbox preview text yet")+'</p><span class="em-draft-date">Last edited '+fmtDate(c.updated_at)+'</span></div><div class="em-draft-item-actions"><button class="em-secondary" type="button" data-em-view="'+c.id+'">View</button><button class="em-primary" type="button" data-em-edit="'+c.id+'">Continue editing</button><button class="em-secondary em-danger-outline" type="button" data-em-delete-draft="'+c.id+'">Delete</button></div></article>').join("")||'<div class="em-draft-empty"><h3>'+(all.length?"No drafts match your search":"No saved drafts yet")+'</h3><p>'+(all.length?"Try another search to find your saved campaign.":"Create your first campaign using Email Creator. Save it as a draft to find it here.")+'</p><button type="button" class="em-primary" '+(all.length?'id="em-reset-draft-search"':'data-em-new')+'>'+(all.length?'Clear search':'Create campaign')+'</button></div>')+'</div></section>';
  }
  function contacts(){
   const visible=data.contacts.filter(c=>[c.first_name,c.last_name,c.email,c.phone].some(t=>String(t||"").toLowerCase().includes(filter.toLowerCase())));
@@ -127,12 +135,12 @@ export function createEmailMarketing({db,root,notify,isCurrent}){
  }
  function draw(){
   if(!isCurrent())return;
-  let body=page==="campaigns"?campaigns():page==="contacts"?contacts():page==="contact-detail"?contactDetail(activeContact):page==="import"?importScreen():page==="create"?editor():page==="delivery"?delivery():page==="campaign-view"&&activeCampaign?campaignView(activeCampaign):campaigns();
+  let body=page==="campaigns"?campaigns():page==="drafts"?drafts():page==="contacts"?contacts():page==="contact-detail"?contactDetail(activeContact):page==="import"?importScreen():page==="create"?editor():page==="delivery"?delivery():page==="campaign-view"&&activeCampaign?campaignView(activeCampaign):campaigns();
   root.innerHTML=frame(body);
   root.querySelectorAll("[data-em-tab]").forEach(b=>b.onclick=()=>{page=b.dataset.emTab;activeContact=null;if(page!=="delivery")activeCampaign=null;draw()});
   root.querySelectorAll("[data-em-new]").forEach(b=>b.onclick=()=>{activeCampaign=null;page="create";draw()});
-  root.querySelectorAll("[data-em-edit]").forEach(b=>b.onclick=()=>{activeCampaign=data.campaigns.find(c=>c.id===b.dataset.emEdit);mode="visual";page="create";draw()});
-  root.querySelectorAll("[data-em-view]").forEach(b=>b.onclick=()=>{const c=data.campaigns.find(x=>x.id===b.dataset.emView);if(c){activeCampaign=c;page="campaign-view";draw()}});
+  root.querySelectorAll("[data-em-edit]").forEach(b=>b.onclick=()=>{campaignReturn=page==="drafts"?"drafts":"campaigns";activeCampaign=data.campaigns.find(c=>c.id===b.dataset.emEdit);mode="visual";page="create";draw()});
+  root.querySelectorAll("[data-em-view]").forEach(b=>b.onclick=()=>{const c=data.campaigns.find(x=>x.id===b.dataset.emView);if(c){campaignReturn=page==="drafts"?"drafts":page==="create"?campaignReturn:"campaigns";activeCampaign=c;page="campaign-view";draw()}});
   root.querySelectorAll("[data-em-report]").forEach(b=>b.onclick=()=>{activeCampaign=data.campaigns.find(c=>c.id===b.dataset.emReport);page="delivery";draw()});
   root.querySelectorAll("[data-em-add]").forEach(b=>b.onclick=()=>{activeContact=null;page="contact-detail";draw()});
   root.querySelectorAll("[data-em-contact]").forEach(b=>b.onclick=()=>{activeContact=data.contacts.find(c=>c.id===b.dataset.emContact);page="contact-detail";draw()});
@@ -214,6 +222,34 @@ export function createEmailMarketing({db,root,notify,isCurrent}){
       if(button)button.onclick=()=>void executeBulk(operation);
     }
   }
+  const draftInput=root.querySelector("#em-draft-search");
+  if(draftInput)draftInput.oninput=()=>{
+    draftSearch=draftInput.value;
+    const start=draftInput.selectionStart,end=draftInput.selectionEnd;
+    draw();
+    const focus=root.querySelector("#em-draft-search");
+    if(focus){focus.focus();try{focus.setSelectionRange(start,end)}catch{}}
+  };
+  root.querySelector("#em-reset-draft-search")?.addEventListener("click",()=>{draftSearch="";draw()});
+  root.querySelectorAll("[data-em-delete-draft]").forEach(button=>button.onclick=()=>{
+    const campaign=data.campaigns.find(c=>c.id===button.dataset.emDeleteDraft&&c.status==="draft");
+    if(!campaign)return;
+    const dialog=document.createElement("div");
+    dialog.className="em-modal";
+    dialog.innerHTML='<section role="dialog" aria-modal="true" aria-labelledby="em-delete-draft-title"><h2 id="em-delete-draft-title">Delete this draft?</h2><p><strong>'+esc(campaign.name)+'</strong></p><p>This permanently removes the saved draft. It does not affect contacts or sent campaigns.</p><div class="em-actions"><button type="button" class="em-primary em-danger-action" id="em-confirm-delete-draft">Delete draft</button><button type="button" class="em-secondary" id="em-cancel-delete-draft">Cancel</button></div><p id="em-delete-draft-error" role="alert"></p></section>';
+    root.append(dialog);
+    dialog.querySelector("#em-cancel-delete-draft").onclick=()=>dialog.remove();
+    dialog.querySelector("#em-confirm-delete-draft").onclick=async event=>{
+      const clicked=event.currentTarget;clicked.disabled=true;
+      try{
+        await api("delete_draft",{id:campaign.id});
+        await fetchData();
+        dialog.remove();
+        if(activeCampaign?.id===campaign.id)activeCampaign=null;
+        page="drafts";draw();notice("Draft deleted successfully.");
+      }catch(err){dialog.querySelector("#em-delete-draft-error").textContent=err.message||"Unable to delete draft";clicked.disabled=false}
+    };
+  });
   const search=root.querySelector("#em-search");
   if(search)search.oninput=()=>{filter=search.value;contactsPage=0;const pos=search.selectionStart;draw();const next=root.querySelector("#em-search");next.focus();next.setSelectionRange(pos,pos)};
   const cf=root.querySelector("#em-contact-form");if(cf)cf.onsubmit=async e=>{e.preventDefault();const v=Object.fromEntries(new FormData(cf));const button=cf.querySelector('[type="submit"]');button.disabled=true;try{await api("save_contact",{...v,consent:cf.elements.consent.checked});await fetchData();page="contacts";draw();notice("Contact saved")}catch(err){notice(err.message,true);button.disabled=false}};
