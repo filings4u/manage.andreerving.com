@@ -172,9 +172,13 @@
 .em-viewer-scroll{flex:1;min-height:0;overflow:auto;display:flex;justify-content:center;align-items:flex-start;padding:24px}
 .em-viewer-iframe{display:block;width:min(100%,850px);min-height:100%;height:100%;background:#fff;border:1px solid #d5e2ee;box-shadow:0 16px 45px #173d6225;border-radius:8px}
 .em-viewer-iframe.em-viewer-mobile{width:min(100%,390px);flex:none}
-.em-saved-campaign-view{padding:25px}
-.em-saved-view-wrap{display:flex;justify-content:center;background:#edf2f8;padding:20px;border-radius:10px;margin-top:18px}
-.em-saved-view-wrap iframe{display:block;width:min(100%,850px);height:85vh;min-height:700px;border:1px solid #dce5ef;border-radius:6px;box-shadow:0 6px 25px #163a5815;background:#fff}
+/* Saved email viewer: full-height document, no inner scrollbar */
+.em-saved-campaign-view{padding:clamp(16px,2vw,26px);min-width:0}
+.em-saved-campaign-view .em-card-heading{align-items:center}
+.em-saved-campaign-view>p{font-size:13px;line-height:1.6;margin:9px 0;overflow-wrap:anywhere}
+.em-saved-view-wrap{display:flex;justify-content:center;align-items:flex-start;background:#f0f4f9;padding:clamp(8px,1.5vw,16px);border:1px solid #e0e8f1;border-radius:10px;margin-top:18px;min-width:0;overflow:hidden}
+.em-saved-view-wrap .em-view-frame{display:block;flex:0 1 700px;max-width:100%;width:100%;height:450px;min-height:0;overflow:hidden;border:1px solid #dce5ef;border-radius:5px;box-shadow:0 8px 24px #173a5817;background:#fff}
+@media(max-width:650px){.em-saved-view-wrap{padding:6px}.em-saved-view-wrap .em-view-frame{border-radius:3px}.em-saved-campaign-view .em-card-heading h2{font-size:19px}}
 @media(max-width:1050px){.em-builder-workspace{grid-template-columns:225px minmax(0,1fr)!important}.em-builder-stage{padding:16px}}
 @media(max-width:780px){.em-builder-workspace{grid-template-columns:1fr!important}.em-builder-tools{padding:20px}.em-tool-group{padding:13px 0}.em-viewer-toolbar{padding:12px}.em-viewer-toolbar .em-actions{width:100%}.em-viewer-scroll{padding:12px}.em-builder-content{padding:8px 12px}}
 
