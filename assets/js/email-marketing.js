@@ -32,17 +32,21 @@ export function createEmailMarketing({db,root,notify,isCurrent}){
   (visible.map(c=>'<tr><td>'+esc(c.first_name)+'</td><td>'+esc(c.last_name)+'</td><td>'+esc(c.email)+'</td><td>'+esc(c.phone||"—")+'</td><td><span class="em-chip '+(c.status==="active"?"em-active":"")+'">'+esc(statuses[c.status]||c.status)+(c.unsubscribed_at?' · Unsubscribed':c.suppression_reason?' · Suppressed':'')+'</span></td><td><div class="em-actions"><button data-em-contact="'+c.id+'">View</button><button data-em-status="'+c.id+'" data-status="'+(c.status==="active"?"inactive":"active")+'" '+(c.unsubscribed_at||c.suppression_reason?'disabled title="This contact is suppressed"':'')+'>'+(c.status==="active"?"Deactivate":"Activate")+'</button></div></td></tr>').join("")||'<tr><td colspan="6">No contacts found.</td></tr>')+'</tbody></table></div></section>';
  }
  function contactDetail(c=null){
-  return head(c?"View marketing contact":"Add marketing contact","Manage contact information and consent. This does not modify Customer CRM.")+
-  '<button class="em-secondary" data-em-tab="contacts">← All contacts</button><section class="em-card"><form id="em-contact-form" class="em-form"><div class="em-form-grid">'+
-  '<label>First name<input name="firstName" maxlength="100" value="'+esc(c?.first_name||"")+'"></label>'+
-  '<label>Last name<input name="lastName" maxlength="100" value="'+esc(c?.last_name||"")+'"></label>'+
-  '<label>Email address<input type="email" name="email" required maxlength="254" value="'+esc(c?.email||"")+'"></label>'+
-  '<label>Phone<input name="phone" type="tel" maxlength="40" value="'+esc(c?.phone||"")+'"></label>'+
-  '<label>Status<select name="status"><option value="inactive" '+(c?.status!=="active"?"selected":"")+'>Non active</option><option value="active" '+(c?.status==="active"?"selected":"")+'>Active</option></select></label></div>'+
-  '<label class="em-check"><input name="consent" type="checkbox" '+(c?.consent_at?"checked":"")+'><span>I confirm this contact explicitly opted in to receive marketing emails.</span></label>'+
-  '<label>Consent source (required for new active contacts)<input name="consentSource" placeholder="e.g. Newsletter signup, date and source" maxlength="200" value="'+esc(c?.consent_source||"")+'"></label>'+
-  (c?.unsubscribed_at?'<p class="em-warning">This contact unsubscribed. They cannot be reactivated by an import or ordinary status edit.</p>':'')+
-  '<div class="em-actions"><button class="em-primary" type="submit">Save contact</button><button type="button" class="em-secondary" data-em-tab="contacts">Cancel</button></div></form></section>';
+  const locked=!!c?.unsubscribed_at||!!c?.suppression_reason;
+  return head(c?"Marketing contact profile":"Add marketing contact",c?"Review the contact record and manage marketing subscription status.":"Add someone to your separate email marketing list. This does not modify Customer CRM.")+
+  '<div class="em-contact-back"><button type="button" class="em-secondary" data-em-tab="contacts">← Back to all contacts</button></div>'+
+  '<section class="em-card em-contact-card"><div class="em-contact-heading"><div><span class="em-contact-kicker">CONTACT DETAILS</span><h2>'+(c?'Edit contact information':'New marketing contact')+'</h2><p>Keep contact information accurate. Marketing delivery requires confirmed consent.</p></div>'+(c?'<span class="em-chip '+(c.status==='active'?'em-active':'')+'">'+esc(c.status==='active'?'Active':'Non active')+'</span>':'')+'</div>'+
+  '<form id="em-contact-form" class="em-contact-form"><div class="em-form-grid">'+
+  '<label>First name<input name="firstName" maxlength="100" autocomplete="given-name" value="'+esc(c?.first_name||"")+'" placeholder="First name"></label>'+
+  '<label>Last name<input name="lastName" maxlength="100" autocomplete="family-name" value="'+esc(c?.last_name||"")+'" placeholder="Last name"></label>'+
+  '<label>Email address <span class="em-required">*</span><input type="email" name="email" required maxlength="254" autocomplete="email" value="'+esc(c?.email||"")+'" placeholder="name@example.com"></label>'+
+  '<label>Phone<input name="phone" type="tel" maxlength="40" autocomplete="tel" value="'+esc(c?.phone||"")+'" placeholder="(555) 123-4567"></label></div>'+
+  '<div class="em-contact-consent"><div class="em-contact-section-title"><h3>Subscription & consent</h3><p>Only contacts with confirmed permission can receive marketing campaigns.</p></div>'+
+  '<div class="em-form-grid em-contact-consent-grid"><label>Status<select name="status" '+(locked?'disabled':'')+'><option value="inactive" '+(c?.status!=="active"?"selected":"")+'>Non active</option><option value="active" '+(c?.status==="active"?"selected":"")+'>Active</option></select></label>'+
+  '<label>Consent source<input name="consentSource" maxlength="200" value="'+esc(c?.consent_source||"")+'" placeholder="e.g. Newsletter signup form, date"></label></div>'+
+  '<label class="em-contact-consent-check"><input name="consent" type="checkbox" '+(c?.consent_at?'checked ':'')+(locked?'disabled ':'')+'><span>I confirm this contact explicitly opted in to receive Andre Erving marketing emails.</span></label>'+
+  (locked?'<p class="em-warning">This contact is unsubscribed or suppressed. They cannot be reactivated through this form.</p>':'<p class="em-contact-hint">Active contacts must have confirmed permission and a documented consent source. Otherwise, select Non active.</p>')+
+  '</div><div class="em-contact-footer"><button class="em-primary" type="submit">Save contact</button><button type="button" class="em-secondary" data-em-tab="contacts">Cancel</button></div></form></section>';
  }
  function editor(){
   const c=activeCampaign||{};
