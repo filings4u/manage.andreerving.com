@@ -147,7 +147,7 @@ export function createEmailMarketing({db,root,notify,isCurrent}){
     spacer:()=>block('<div style="height:30px" aria-hidden="true"></div>',"padding:0 24px;"),
     list:()=>block('<ul style="font-size:16px;line-height:1.9;color:#506982"><li>First point</li><li>Second point</li><li>Third point</li></ul>')
    };
-   const getHTML=()=>mode==="html"?source.value:editorElement.innerHTML;
+   const getHTML=()=>{if(mode==="html")return source.value;const clone=editorElement.cloneNode(true);clone.querySelectorAll(".em-block-selected").forEach(x=>x.classList.remove("em-block-selected"));return clone.innerHTML};
    const brandedPreview=body=>{
     const content=String(body).replace(/\{\{\s*first_name\s*\}\}/gi,"Alex");
     return '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;background:#eef3f9;font-family:Arial,sans-serif;color:#123252"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef3f9"><tr><td align="center" style="padding:20px 8px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:640px;background:white;border-collapse:collapse"><tr><td style="background:#10243f;border-bottom:5px solid #d09b2d;padding:26px"><img src="'+logo+'" alt="Andre Erving" width="250" style="max-width:100%;height:auto"></td></tr><tr><td style="padding:12px 12px 20px;font-size:15px;line-height:1.6">'+content+'</td></tr><tr><td style="background:#f5f8fc;border-top:1px solid #dce7f1;padding:22px;font-size:12px;line-height:1.7;color:#58718b">Andre Erving · Growth, Strategy &amp; Education<br>Marketing communication · <u>Unsubscribe</u><br>support@andreerving.com</td></tr></table></td></tr></table></body></html>';
@@ -215,7 +215,7 @@ export function createEmailMarketing({db,root,notify,isCurrent}){
    };
    root.querySelector("#em-link").onclick=()=>addURL("link");
    root.querySelector("#em-image").onclick=()=>addURL("image");
-   root.querySelector("#em-personalize").onclick=()=>{if(mode==="html"){source.value+='{{first_name}}';refreshPreview()}else if(selected){selected.insertAdjacentText("beforeend"," {{first_name}}");refreshPreview()}else addBlock(block('<p>Hello {{first_name}},</p>'))};
+   root.querySelector("#em-personalize").onclick=()=>{if(mode==="html"){source.value+='{{first_name}}';refreshPreview()}else if(selected){selected.insertAdjacentHTML("beforeend"," {{first_name}}");refreshPreview()}else addBlock(block('<p>Hello {{first_name}},</p>'))};
    ["em-theme-background","em-theme-text","em-theme-accent"].forEach(id=>root.querySelector("#"+id).oninput=updateTheme);
    root.querySelectorAll("[data-em-device]").forEach(b=>b.onclick=()=>{
     device=b.dataset.emDevice;
@@ -223,6 +223,7 @@ export function createEmailMarketing({db,root,notify,isCurrent}){
     root.querySelector(".em-preview-viewport").classList.toggle("em-mobile",device==="mobile");
    });
    root.querySelector("#em-preview").onclick=()=>{refreshPreview();root.querySelector(".em-builder-preview").scrollIntoView({behavior:"smooth",block:"start"})};
+   if(mode==="html"){source.value=editorElement.innerHTML;editorElement.closest(".em-design-surface").hidden=true;source.hidden=false}
    refreshPreview();
    form.onsubmit=async event=>{
     event.preventDefault();const button=form.querySelector('[type="submit"]');button.disabled=true;
@@ -242,7 +243,7 @@ export function createEmailMarketing({db,root,notify,isCurrent}){
     };
    };
   }
-  const view=root.querySelector("#em-view-frame");if(view&&activeCampaign)view.srcdoc='<style>body{font:15px/1.65 Arial,sans-serif;padding:25px;color:#123153}img{max-width:100%}</style>'+activeCampaign.body_html;
+  const view=root.querySelector("#em-view-frame");if(view&&activeCampaign)view.srcdoc='<html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="background:#eef3f9;padding:24px 10px;margin:0;font:15px/1.65 Arial,sans-serif;color:#123153"><table role="presentation" width="100%" style="max-width:640px;background:#fff;margin:auto;border-collapse:collapse"><tr><td style="background:#10243f;border-bottom:5px solid #d09b2d;padding:25px"><img src="https://gnfyidajbectlppsekzj.supabase.co/storage/v1/object/public/Andre%20Erving%20Public/logos/logo2.png" alt="Andre Erving" style="max-width:100%;height:auto;width:245px"></td></tr><tr><td style="padding:24px">'+activeCampaign.body_html+'</td></tr><tr><td style="background:#f5f8fc;padding:22px;font:12px/1.7 Arial;color:#58718b">Andre Erving · Growth, Strategy &amp; Education<br>Marketing communication · <u>Unsubscribe</u><br>support@andreerving.com</td></tr></table></body></html>';
   const deliveryFilter=root.querySelector("#em-delivery-filter");if(deliveryFilter)deliveryFilter.onchange=()=>{activeCampaign=data.campaigns.find(c=>c.id===deliveryFilter.value)||null;draw()};
   const paste=root.querySelector("#em-paste"),csv=root.querySelector("#em-csv");
   if(csv)csv.onchange=async()=>{const file=csv.files?.[0];if(!file)return;if(file.size>4_000_000){notice("CSV must be under 4 MB",true);return}paste.value=await file.text();notice("CSV loaded. Select Review import.")};
