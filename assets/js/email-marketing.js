@@ -79,7 +79,7 @@ export function createEmailMarketing({db,root,notify,isCurrent}){
  const logo="https://gnfyidajbectlppsekzj.supabase.co/storage/v1/object/public/Andre%20Erving%20Public/logos/logo2.png";
  const templates=[["announcement","Announcement","News and updates"],["course","Course promotion","Highlight a course"],["newsletter","Newsletter","Editorial update"],["invitation","Invitation","Upcoming event"],["blank","Start blank","Design from scratch"]];
  const blocks=[["heading","Heading","H"],["paragraph","Text","¶"],["image","Image","▣"],["button","Button","↗"],["columns","2 columns","▥"],["divider","Divider","—"],["spacer","Spacer","↕"],["list","List","☷"]];
- return head(saved?"Edit campaign":"Create campaign","Build a branded, responsive email with templates, content blocks, formatting and a live preview.",'<div class="em-actions"><button class="em-secondary" data-em-tab="campaigns">All campaigns</button>'+(saved?'<button class="em-secondary" data-em-view="'+c.id+'">View saved email</button>':'')+'</div>')+
+ return head(saved?"Edit campaign":"Create campaign","Build a branded, responsive email with templates, content blocks, formatting and a live preview.",'<div class="em-actions"><button class="em-secondary" data-em-tab="'+campaignReturn+'">'+(campaignReturn==="drafts"?"Back to drafts":"All campaigns")+'</button>'+(saved?'<button class="em-secondary" data-em-view="'+c.id+'">View saved email</button>':'')+'</div>')+
  '<div class="em-campaign-steps"><span class="em-step-current">1 · Design</span><span>2 · Review</span><span>3 · Send</span></div>'+
  '<form id="em-campaign-form" class="em-builder-form">'+
  '<section class="em-card em-campaign-settings"><div class="em-card-heading"><div><h2>Campaign setup</h2><p>Set the details your recipients will see in their inbox.</p></div><span class="em-chip">'+esc(c.status||"Draft")+'</span></div>'+
@@ -130,7 +130,7 @@ export function createEmailMarketing({db,root,notify,isCurrent}){
  function campaignView(c){
   const count=data.deliveries.filter(d=>d.campaign_id===c.id).length;
   return head("View campaign","Read the full email before editing or reviewing delivery activity.")+
-  '<div class="em-actions"><button class="em-secondary" data-em-tab="campaigns">← Campaigns</button>'+(c.status==="draft"?'<button class="em-primary" data-em-edit="'+c.id+'">Edit campaign</button>':'')+'<button class="em-secondary" data-em-report="'+c.id+'">View delivery</button></div>'+
+  '<div class="em-actions"><button class="em-secondary" data-em-tab="'+campaignReturn+'">← Back to '+(campaignReturn==="drafts"?"Drafts":"Campaigns")+'</button>'+(c.status==="draft"?'<button class="em-primary" data-em-edit="'+c.id+'">Edit campaign</button>':'')+'<button class="em-secondary" data-em-report="'+c.id+'">View delivery</button></div>'+
   '<section class="em-card em-saved-campaign-view"><div class="em-card-heading"><h2>'+esc(c.name)+'</h2><span class="em-chip">'+esc(c.status)+'</span></div><p><strong>Subject:</strong> '+esc(c.subject)+'</p><p><strong>Preview text:</strong> '+esc(c.preview_text)+'</p><p><strong>Recipients recorded:</strong> '+count+'</p><div class="em-saved-view-wrap"><iframe class="em-view-frame" id="em-view-frame" sandbox="" title="Full campaign email"></iframe></div></section>';
  }
  function draw(){
@@ -138,8 +138,8 @@ export function createEmailMarketing({db,root,notify,isCurrent}){
   let body=page==="campaigns"?campaigns():page==="drafts"?drafts():page==="contacts"?contacts():page==="contact-detail"?contactDetail(activeContact):page==="import"?importScreen():page==="create"?editor():page==="delivery"?delivery():page==="campaign-view"&&activeCampaign?campaignView(activeCampaign):campaigns();
   root.innerHTML=frame(body);
   root.querySelectorAll("[data-em-tab]").forEach(b=>b.onclick=()=>{page=b.dataset.emTab;activeContact=null;if(page!=="delivery")activeCampaign=null;draw()});
-  root.querySelectorAll("[data-em-new]").forEach(b=>b.onclick=()=>{activeCampaign=null;page="create";draw()});
-  root.querySelectorAll("[data-em-edit]").forEach(b=>b.onclick=()=>{campaignReturn=page==="drafts"?"drafts":"campaigns";activeCampaign=data.campaigns.find(c=>c.id===b.dataset.emEdit);mode="visual";page="create";draw()});
+  root.querySelectorAll("[data-em-new]").forEach(b=>b.onclick=()=>{campaignReturn=page==="drafts"?"drafts":"campaigns";activeCampaign=null;page="create";draw()});
+  root.querySelectorAll("[data-em-edit]").forEach(b=>b.onclick=()=>{if(page!=="campaign-view")campaignReturn=page==="drafts"?"drafts":"campaigns";activeCampaign=data.campaigns.find(c=>c.id===b.dataset.emEdit);mode="visual";page="create";draw()});
   root.querySelectorAll("[data-em-view]").forEach(b=>b.onclick=()=>{const c=data.campaigns.find(x=>x.id===b.dataset.emView);if(c){campaignReturn=page==="drafts"?"drafts":page==="create"?campaignReturn:"campaigns";activeCampaign=c;page="campaign-view";draw()}});
   root.querySelectorAll("[data-em-report]").forEach(b=>b.onclick=()=>{activeCampaign=data.campaigns.find(c=>c.id===b.dataset.emReport);page="delivery";draw()});
   root.querySelectorAll("[data-em-add]").forEach(b=>b.onclick=()=>{activeContact=null;page="contact-detail";draw()});
