@@ -248,3 +248,16 @@
 .lms-content-heading .lms-content-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .lms-content-actions #lms-collapse-all,.lms-content-actions #lms-expand-all{white-space:nowrap;min-height:40px;padding:9px 13px}
 @media(max-width:700px){.lms-content-heading .lms-content-actions{width:100%;gap:8px}.lms-content-actions #lms-collapse-all,.lms-content-actions #lms-expand-all{flex:1 1 auto}}
+
+/* Per-course completion sequence controls */
+.ae-settings-progression{grid-column:1/-1;padding:24px}
+.ae-settings-progression h2{margin:9px 0 9px}
+.ae-progression-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin:19px 0 17px}
+.ae-progression-option{display:flex;align-items:flex-start;gap:13px;padding:19px;border:1px solid #d8e3ee;background:#f9fbfe;border-radius:11px;cursor:pointer;transition:border-color .15s,background .15s;min-width:0}
+.ae-progression-option:has(input:checked){border:2px solid #c59026;background:#fff9ed;padding:18px}
+.ae-progression-option input{flex:none;width:18px;height:18px;margin:2px 0 0;accent-color:#c49124}
+.ae-progression-option>span{display:grid;gap:7px;min-width:0}
+.ae-progression-option strong{font-size:14px;color:#173753}
+.ae-progression-option small{font-size:12px;font-weight:400;line-height:1.6;color:#678099}
+.ae-settings-progression .row-actions{margin:0 0 15px}
+@media(max-width:800px){.ae-progression-options{grid-template-columns:1fr}}
