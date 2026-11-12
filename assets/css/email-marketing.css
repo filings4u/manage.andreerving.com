@@ -202,3 +202,31 @@
 .em-contact-pagination .em-secondary:disabled{opacity:.45;cursor:not-allowed}
 .em-bulk-buttons #em-select-matching{color:#244e76}
 @media(max-width:640px){.em-contact-pagination{align-items:flex-start}.em-contact-pagination .em-actions{width:100%;justify-content:space-between}}
+
+/* Dedicated saved campaign Drafts page */
+.em-draft-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:0 0 19px}
+.em-draft-summary section{background:#fff;border:1px solid #dbe6f1;border-radius:12px;padding:21px;display:grid;gap:10px;min-width:0}
+.em-draft-summary span{font-size:12px;color:#70859d}
+.em-draft-summary strong{font-size:30px;color:#123453;font-variant-numeric:tabular-nums}
+.em-draft-summary .em-draft-updated{font-size:20px}
+.em-draft-library .em-card-heading{gap:15px;margin-bottom:16px}
+.em-draft-search-label{display:grid;gap:6px;font-size:11px;font-weight:750;color:#244661;min-width:240px}
+.em-draft-search-label input{border:1px solid #cfdeed;border-radius:9px;padding:12px 13px;font-size:12px;min-height:42px;min-width:0;width:100%;color:#173a5d}
+.em-draft-list{display:grid;gap:12px}
+.em-draft-item{display:flex;justify-content:space-between;align-items:center;gap:22px;padding:22px;border:1px solid #dbe6ef;border-radius:11px;background:#fbfdff;min-width:0}
+.em-draft-info{flex:1;min-width:0}
+.em-draft-info h3{color:#133754;font-size:19px;margin:12px 0 9px;line-height:1.35}
+.em-draft-info p{font-size:13px;color:#56708a;line-height:1.6;margin:6px 0;overflow-wrap:anywhere}
+.em-draft-info .em-draft-subject strong{color:#284d70}
+.em-draft-date{display:block;font-size:11px;color:#8094a8;margin-top:10px}
+.em-draft-item-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px}
+.em-draft-item-actions button{white-space:nowrap;min-height:39px}
+.em-draft-item-actions .em-danger-outline{color:#a03f3b;border-color:#e5bbb8}
+.em-draft-item-actions .em-danger-outline:hover{background:#fff1ef}
+.em-danger-action{background:#ac3e39;color:#fff}
+.em-danger-action:hover{background:#92322d}
+.em-draft-empty{text-align:center;padding:35px 20px}
+.em-draft-empty h3{font-size:19px;color:#183c5f}
+.em-draft-empty p{font-size:13px;color:#758aa1;line-height:1.6}
+@media(max-width:990px){.em-draft-item{align-items:flex-start;flex-direction:column}.em-draft-item-actions{justify-content:flex-start}}
+@media(max-width:660px){.em-draft-summary{grid-template-columns:1fr}.em-draft-search-label{min-width:100%;width:100%}.em-draft-item{padding:16px}.em-draft-item-actions{width:100%}.em-draft-item-actions button{flex:1 1 auto}}
