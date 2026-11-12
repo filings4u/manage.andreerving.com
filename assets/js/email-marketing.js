@@ -134,19 +134,37 @@ export function createEmailMarketing({db,root,notify,isCurrent}){
   if(page==="contacts"){
     const rendered=root.querySelector("#em-select-all");
     if(rendered)rendered.indeterminate=rendered.dataset.partial==="true";
-    const redrawContacts=()=>{if(page==="contacts")draw()};
+    const updateSelection=()=>{
+      const boxes=[...root.querySelectorAll("[data-em-select]")];
+      let checked=0;
+      for(const box of boxes){
+        box.checked=selectedContacts.has(box.dataset.emSelect);
+        box.closest("tr")?.classList.toggle("em-row-selected",box.checked);
+        if(box.checked)checked++;
+      }
+      if(rendered){
+        rendered.checked=!!boxes.length&&checked===boxes.length;
+        rendered.indeterminate=checked>0&&checked<boxes.length;
+      }
+      const count=root.querySelector("#em-selected-count");if(count)count.textContent=selectedContacts.size+" selected";
+      for(const id of ["em-bulk-active","em-bulk-inactive","em-bulk-delete","em-clear-selection"]){
+        const button=root.querySelector("#"+id);if(button)button.disabled=!selectedContacts.size;
+      }
+    };
     root.querySelectorAll("[data-em-select]").forEach(box=>box.onchange=()=>{
       if(box.checked)selectedContacts.add(box.dataset.emSelect);
       else selectedContacts.delete(box.dataset.emSelect);
-      redrawContacts();
+      updateSelection();
     });
     if(rendered)rendered.onchange=()=>{
-      const visible=data.contacts.filter(c=>[c.first_name,c.last_name,c.email,c.phone].some(t=>String(t||"").toLowerCase().includes(filter.toLowerCase())));
-      for(const c of visible)if(rendered.checked)selectedContacts.add(c.id);else selectedContacts.delete(c.id);
-      redrawContacts();
+      for(const box of root.querySelectorAll("[data-em-select]")){
+        if(rendered.checked)selectedContacts.add(box.dataset.emSelect);
+        else selectedContacts.delete(box.dataset.emSelect);
+      }
+      updateSelection();
     };
     const clear=root.querySelector("#em-clear-selection");
-    if(clear)clear.onclick=()=>{selectedContacts.clear();redrawContacts()};
+    if(clear)clear.onclick=()=>{selectedContacts.clear();updateSelection()};
     async function executeBulk(operation){
       const ids=[...selectedContacts];
       if(!ids.length)return;
