@@ -313,3 +313,35 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-ser
 .ae-aff-workspace .ae-aff-actions .btn{min-height:43px;margin:0}
 @media(max-width:1120px){.ae-aff-manage-grid{grid-template-columns:1fr}.ae-aff-partner-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:640px){.ae-aff-edit-grid,.ae-aff-partner-stats{grid-template-columns:1fr}.ae-aff-partner-toolbar .btn{flex:1 1 auto}.ae-aff-commission-form .ae-aff-edit-field{flex:1 1 120px}.ae-aff-commission-form .btn{flex:1 1 auto}.ae-aff-manage-side .ae-aff-actions>.btn{width:100%}.ae-aff-manage-grid{gap:12px}.ae-aff-partner-stats{gap:10px}}
+
+/* Customer CRM: enrolled course lesson and quiz progress */
+.ae-crm-course-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ae-crm-course-progress{margin-top:20px;padding:25px;border:1px solid #d6e2ef;background:#f9fbfe;border-radius:12px}
+.ae-crm-course-progress[hidden]{display:none}
+.ae-crm-progress-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:20px}
+.ae-crm-progress-head h3{color:#123456;font-size:22px;line-height:1.25;margin:6px 0}
+.ae-crm-progress-head .muted{margin:0}
+.ae-crm-progress-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.ae-crm-progress-stat{border:1px solid #dce7f1;background:#fff;border-radius:10px;padding:17px}
+.ae-crm-progress-stat span{display:block;color:#6d829d;font-size:11px;line-height:1.5}
+.ae-crm-progress-stat strong{display:block;margin-top:9px;font-size:23px;color:#153657;line-height:1.25;font-variant-numeric:tabular-nums}
+.ae-crm-progress-bar{height:10px;background:#e4ebf2;border-radius:100px;overflow:hidden;margin:20px 0}
+.ae-crm-progress-bar>span{display:block;height:100%;border-radius:100px;background:#c99529;transition:width .2s ease}
+.ae-crm-progress-sections{display:grid;gap:11px}
+.ae-crm-progress-section{border:1px solid #dce6ef;border-radius:9px;background:#fff;overflow:hidden}
+.ae-crm-progress-section summary{display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer;padding:16px 18px;color:#173754}
+.ae-crm-progress-section summary strong{font-size:14px}
+.ae-crm-progress-section summary small{color:#6b839e;font-size:11px}
+.ae-crm-progress-section[open] summary{border-bottom:1px solid #e3eaf2;background:#f5f8fc}
+.ae-crm-progress-lesson{display:flex;align-items:center;gap:12px;padding:13px 17px;border-bottom:1px solid #edf1f5;min-width:0}
+.ae-crm-progress-lesson:last-child{border-bottom:0}
+.ae-crm-progress-lesson>div{min-width:0;flex:1}
+.ae-crm-progress-lesson strong{display:block;color:#193b59;font-size:12px;line-height:1.5}
+.ae-crm-progress-lesson small{display:block;color:#7186a0;font-size:11px;line-height:1.6;margin-top:3px}
+.ae-crm-progress-state{flex:none;display:grid;place-items:center;width:29px;height:29px;border-radius:50%;background:#f0f3f7;color:#8192a7;font-size:15px}
+.ae-crm-progress-state.is-complete{color:#20804d;background:#e3f4e9}
+.ae-crm-progress-tag{font-size:10px;font-weight:750;background:#f0f3f7;border-radius:50px;padding:6px 9px;color:#627b97;white-space:nowrap}
+.ae-crm-progress-tag.is-complete{background:#e5f5ea;color:#21784a}
+.ae-crm-progress-note{font-size:11px;line-height:1.65;color:#7387a0;margin:17px 0 0}
+@media(max-width:1000px){.ae-crm-progress-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:570px){.ae-crm-course-progress{padding:16px}.ae-crm-progress-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.ae-crm-progress-stat{padding:12px}.ae-crm-progress-stat strong{font-size:20px}.ae-crm-progress-lesson{flex-wrap:wrap}.ae-crm-progress-tag{margin-left:40px}.ae-crm-progress-section summary{align-items:flex-start;flex-direction:column}}
