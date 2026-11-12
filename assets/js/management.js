@@ -1,4 +1,4 @@
-import {createCertificateManagement} from './certificate-management.js?v=20261112';
+import {createCertificateManagement} from './certificate-management.js?v=completion-automatic-20261112';
 import {createEmailMarketing} from './email-marketing.js?v=full-viewer-contact-form-20261112';
 import {createAffiliateManagement} from './affiliate-management.js?v=partner-management-record-20261111';
 import {createLiveTrainingManagement} from './live-training.js?v=manual-teams-only-20261109';
