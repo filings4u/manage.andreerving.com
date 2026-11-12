@@ -71,7 +71,7 @@ export function createEmailMarketing({db,root,notify,isCurrent}){
  '<div class="em-toolbar" role="toolbar" aria-label="Selected text formatting">'+[
  ["bold","Bold","B"],["italic","Italic","I"],["underline","Underline","U"],["formatBlock","Heading","H2"],["insertUnorderedList","Bullets","☷"],["insertOrderedList","Numbers","1."],["justifyCenter","Center","☰"]
  ].map(([cmd,title,label])=>'<button type="button" data-em-format="'+cmd+'" title="'+title+'">'+label+'</button>').join("")+
- '<button type="button" id="em-link">Link</button><button type="button" id="em-image">Image URL</button><button type="button" id="em-personalize">First name</button></div>'+
+ '<button type="button" id="em-link">Link</button><button type="button" id="em-image">Image URL</button><button type="button" id="em-upload-image">Upload image</button><input type="file" id="em-upload-file" accept="image/png,image/jpeg,image/webp,image/gif" hidden><button type="button" id="em-personalize">First name</button></div>'+
  '<div class="em-design-surface"><div class="em-brand-bar"><img src="'+logo+'" alt="Andre Erving logo"><span>BRANDED EMAIL</span></div>'+
  '<div class="em-builder-content" id="em-body" contenteditable="true" role="textbox" aria-label="Campaign email content" aria-multiline="true">'+(c.body_html||'<section class="em-email-block" style="padding:24px 24px 14px"><h1 style="font-size:30px;line-height:1.25;margin:0;color:#173754">Your campaign headline</h1><p style="font-size:16px;line-height:1.7;color:#516b84">Start writing your message here. Add sections or choose a template to build your email.</p></section>')+'</div>'+
  '<div class="em-canvas-footer">Andre Erving · Growth, Strategy &amp; Education<br><u>Unsubscribe from marketing emails</u></div></div>'+
@@ -215,6 +215,23 @@ export function createEmailMarketing({db,root,notify,isCurrent}){
    };
    root.querySelector("#em-link").onclick=()=>addURL("link");
    root.querySelector("#em-image").onclick=()=>addURL("image");
+   root.querySelector("#em-upload-image").onclick=()=>root.querySelector("#em-upload-file").click();
+   root.querySelector("#em-upload-file").onchange=async event=>{
+    const file=event.currentTarget.files?.[0];
+    if(!file)return;
+    if(!["image/png","image/jpeg","image/webp","image/gif"].includes(file.type)||file.size>3145728){notice("Choose a PNG, JPEG, WebP or GIF under 3 MB.",true);return}
+    const button=root.querySelector("#em-upload-image");button.disabled=true;
+    try{
+     const {data:{session}}=await db.auth.getSession();if(!session?.access_token)throw Error("Sign in again");
+     const body=new FormData();body.append("file",file);
+     const response=await fetch(ENDPOINT+"?upload=1",{method:"POST",headers:{Authorization:"Bearer "+session.access_token},body});
+     const result=await response.json().catch(()=>({}));
+     if(!response.ok||!result.url)throw Error(result.error||"Image upload failed");
+     addBlock(block('<img src="'+esc(result.url)+'" alt="Campaign image" style="display:block;max-width:100%;height:auto;margin:auto">'));
+     notice("Image uploaded and added to your email.");
+    }catch(err){notice(err.message||"Unable to upload image",true)}
+    finally{button.disabled=false;event.currentTarget.value=""}
+   };
    root.querySelector("#em-personalize").onclick=()=>{if(mode==="html"){source.value+='{{first_name}}';refreshPreview()}else if(selected){selected.insertAdjacentHTML("beforeend"," {{first_name}}");refreshPreview()}else addBlock(block('<p>Hello {{first_name}},</p>'))};
    ["em-theme-background","em-theme-text","em-theme-accent"].forEach(id=>root.querySelector("#"+id).oninput=updateTheme);
    root.querySelectorAll("[data-em-device]").forEach(b=>b.onclick=()=>{
