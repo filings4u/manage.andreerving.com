@@ -62,7 +62,7 @@ export function createEmailMarketing({db,root,notify,isCurrent}){
  '<label>Email subject <span class="em-required">*</span><input name="subject" required maxlength="250" value="'+esc(c.subject||"")+'" placeholder="A new opportunity from Andre Erving"></label>'+
  '<label>Inbox preview text<input name="previewText" maxlength="240" value="'+esc(c.preview_text||"")+'" placeholder="This short summary appears after the subject"></label>'+
  '<label>Sender name<input name="senderName" maxlength="120" value="'+esc(c.sender_name||"Andre Erving")+'"></label></div>'+
- '<div class="em-sender-row"><span>Sending address: <strong>support@andreerving.com</strong></span><span>Audience: <strong>'+data.contacts.filter(x=>x.status==="active"&&x.consent_at&&!x.unsubscribed_at&&!x.suppression_reason).length+' opted-in contacts</strong></span></div></section>'+
+ '<div class="em-sender-row"><span>Sender is configured securely for campaign delivery</span><span>Audience: <strong>'+data.contacts.filter(x=>x.status==="active"&&x.consent_at&&!x.unsubscribed_at&&!x.suppression_reason).length+' opted-in contacts</strong></span></div></section>'+
  '<section class="em-builder-workspace"><aside class="em-card em-builder-tools"><h2>Design tools</h2><p class="em-muted">Choose a template or add sections to your campaign.</p>'+
  '<div class="em-tool-group"><h3>Templates</h3><div class="em-template-list">'+templates.map(([key,label,caption])=>'<button type="button" class="em-template-option" data-em-template="'+key+'"><span class="em-template-thumb"><span></span><span></span><span></span></span><span><strong>'+label+'</strong><small>'+caption+'</small></span></button>').join("")+'</div></div>'+
  '<div class="em-tool-group"><h3>Content blocks</h3><div class="em-block-palette">'+blocks.map(([key,label,icon])=>'<button type="button" data-em-block="'+key+'"><span aria-hidden="true">'+icon+'</span>'+label+'</button>').join("")+'</div></div>'+
@@ -77,10 +77,8 @@ export function createEmailMarketing({db,root,notify,isCurrent}){
  '<div class="em-canvas-footer">Andre Erving · Growth, Strategy &amp; Education<br><u>Unsubscribe from marketing emails</u></div></div>'+
  '<textarea id="em-source" class="em-html-source" aria-label="Edit email HTML source" rows="18" hidden></textarea>'+
  '<div id="em-block-controls" class="em-selected-controls" hidden><span>Selected section</span><button type="button" data-em-move="up">Move up ↑</button><button type="button" data-em-move="down">Move down ↓</button><button type="button" id="em-remove-block">Remove section</button></div>'+
- '</section><aside class="em-card em-builder-preview"><div class="em-card-heading"><div><h2>Preview</h2><p>See the complete branded message.</p></div></div><div class="em-preview-modes"><button type="button" class="current" data-em-device="desktop">Desktop</button><button type="button" data-em-device="mobile">Mobile</button></div>'+
- '<div class="em-preview-viewport"><iframe id="em-iframe" sandbox="" title="Full branded campaign preview"></iframe></div>'+
- '<p class="em-muted">Preview includes the official logo, branded header and mandatory unsubscribe footer. Recipient names are personalized when sent.</p></aside></section>'+
- '<div class="em-campaign-footer"><div><strong>Save your work before sending.</strong><p>Marketing emails only go to eligible contacts who have recorded consent.</p></div><div class="em-actions"><button type="button" class="em-secondary" id="em-preview">Refresh preview</button><button type="submit" class="em-primary">Save draft</button><button type="button" class="em-send" id="em-send" '+(!saved?'disabled title="Save the draft first"':'')+'>Review & send</button></div></div></form>';
+ '</section></section>'+ 
+ '<div class="em-campaign-footer"><div><strong>Save your work before sending.</strong><p>Marketing emails only go to eligible contacts who have recorded consent.</p></div><div class="em-actions"><button type="button" class="em-secondary" id="em-preview">View full email</button><button type="submit" class="em-primary">Save draft</button><button type="button" class="em-send" id="em-send" '+(!saved?'disabled title="Save the draft first"':'')+'>Review & send</button></div></div></form>';
  }
  function importScreen(){
   return head("Import email contacts","Paste a list or upload a CSV file. Imports are separate from Customer CRM.")+
@@ -108,7 +106,7 @@ export function createEmailMarketing({db,root,notify,isCurrent}){
   const count=data.deliveries.filter(d=>d.campaign_id===c.id).length;
   return head("View campaign","Read the full email before editing or reviewing delivery activity.")+
   '<div class="em-actions"><button class="em-secondary" data-em-tab="campaigns">← Campaigns</button>'+(c.status==="draft"?'<button class="em-primary" data-em-edit="'+c.id+'">Edit campaign</button>':'')+'<button class="em-secondary" data-em-report="'+c.id+'">View delivery</button></div>'+
-  '<section class="em-card"><div class="em-card-heading"><h2>'+esc(c.name)+'</h2><span class="em-chip">'+esc(c.status)+'</span></div><p><strong>Subject:</strong> '+esc(c.subject)+'</p><p><strong>Preview text:</strong> '+esc(c.preview_text)+'</p><p><strong>Recipients recorded:</strong> '+count+'</p><iframe class="em-view-frame" id="em-view-frame" sandbox="" title="View campaign content"></iframe></section>';
+  '<section class="em-card em-saved-campaign-view"><div class="em-card-heading"><h2>'+esc(c.name)+'</h2><span class="em-chip">'+esc(c.status)+'</span></div><p><strong>Subject:</strong> '+esc(c.subject)+'</p><p><strong>Preview text:</strong> '+esc(c.preview_text)+'</p><p><strong>Recipients recorded:</strong> '+count+'</p><div class="em-saved-view-wrap"><iframe class="em-view-frame" id="em-view-frame" sandbox="" title="Full campaign email"></iframe></div></section>';
  }
  function draw(){
   if(!isCurrent())return;
@@ -150,7 +148,7 @@ export function createEmailMarketing({db,root,notify,isCurrent}){
    const getHTML=()=>{if(mode==="html")return source.value;const clone=editorElement.cloneNode(true);clone.querySelectorAll(".em-block-selected").forEach(x=>x.classList.remove("em-block-selected"));return clone.innerHTML};
    const brandedPreview=body=>{
     const content=String(body).replace(/\{\{\s*first_name\s*\}\}/gi,"Alex");
-    return '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;background:#eef3f9;font-family:Arial,sans-serif;color:#123252"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef3f9"><tr><td align="center" style="padding:20px 8px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:640px;background:white;border-collapse:collapse"><tr><td style="background:#10243f;border-bottom:5px solid #d09b2d;padding:26px"><img src="'+logo+'" alt="Andre Erving" width="250" style="max-width:100%;height:auto"></td></tr><tr><td style="padding:12px 12px 20px;font-size:15px;line-height:1.6">'+content+'</td></tr><tr><td style="background:#f5f8fc;border-top:1px solid #dce7f1;padding:22px;font-size:12px;line-height:1.7;color:#58718b">Andre Erving · Growth, Strategy &amp; Education<br>Marketing communication · <u>Unsubscribe</u><br>support@andreerving.com</td></tr></table></td></tr></table></body></html>';
+    return '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;background:#eef3f9;font-family:Arial,sans-serif;color:#123252"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef3f9"><tr><td align="center" style="padding:20px 8px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:640px;background:white;border-collapse:collapse"><tr><td style="background:#10243f;border-bottom:5px solid #d09b2d;padding:26px"><img src="'+logo+'" alt="Andre Erving" width="250" style="max-width:100%;height:auto"></td></tr><tr><td style="padding:12px 12px 20px;font-size:15px;line-height:1.6">'+content+'</td></tr><tr><td style="background:#f5f8fc;border-top:1px solid #dce7f1;padding:22px;font-size:12px;line-height:1.7;color:#58718b">Andre Erving · Growth, Strategy &amp; Education<br>Marketing communication · <u>Unsubscribe</u><br>Questions? Visit andreerving.com/contact.html</td></tr></table></td></tr></table></body></html>';
    };
    const refreshPreview=()=>{const frame=root.querySelector("#em-iframe");if(frame)frame.srcdoc=brandedPreview(getHTML())};
    const setSelected=node=>{
@@ -236,12 +234,20 @@ export function createEmailMarketing({db,root,notify,isCurrent}){
    };
    root.querySelector("#em-personalize").onclick=()=>{if(mode==="html"){source.value+='{{first_name}}';refreshPreview()}else if(selected){selected.insertAdjacentHTML("beforeend"," {{first_name}}");refreshPreview()}else addBlock(block('<p>Hello {{first_name}},</p>'))};
    ["em-theme-background","em-theme-text","em-theme-accent"].forEach(id=>root.querySelector("#"+id).oninput=updateTheme);
-   root.querySelectorAll("[data-em-device]").forEach(b=>b.onclick=()=>{
-    device=b.dataset.emDevice;
-    root.querySelectorAll("[data-em-device]").forEach(x=>x.classList.toggle("current",x===b));
-    root.querySelector(".em-preview-viewport").classList.toggle("em-mobile",device==="mobile");
-   });
-   root.querySelector("#em-preview").onclick=()=>{refreshPreview();root.querySelector(".em-builder-preview").scrollIntoView({behavior:"smooth",block:"start"})};
+   root.querySelector("#em-preview").onclick=()=>{
+     const overlay=document.createElement("div");overlay.className="em-fullscreen-viewer";
+     overlay.innerHTML='<div class="em-viewer-toolbar"><div><strong>Campaign viewer</strong><span>Full email · Branded preview</span></div><div class="em-actions"><button type="button" data-em-preview-device="desktop" class="current">Desktop</button><button type="button" data-em-preview-device="mobile">Mobile</button><button type="button" id="em-close-viewer" class="em-primary">Close viewer ✕</button></div></div><div class="em-viewer-scroll"><iframe sandbox="" title="Full sized email preview" class="em-viewer-iframe"></iframe></div>';
+     document.body.append(overlay);
+     overlay.querySelector("iframe").srcdoc=brandedPreview(getHTML());
+     const close=()=>{overlay.remove();document.removeEventListener("keydown",escClose)};
+     const escClose=e=>{if(e.key==="Escape")close()};
+     document.addEventListener("keydown",escClose);
+     overlay.querySelector("#em-close-viewer").onclick=close;
+     overlay.querySelectorAll("[data-em-preview-device]").forEach(button=>button.onclick=()=>{
+       overlay.querySelectorAll("[data-em-preview-device]").forEach(b=>b.classList.toggle("current",b===button));
+       overlay.querySelector(".em-viewer-iframe").classList.toggle("em-viewer-mobile",button.dataset.emPreviewDevice==="mobile");
+     });
+   };
    if(mode==="html"){source.value=editorElement.innerHTML;editorElement.closest(".em-design-surface").hidden=true;source.hidden=false}
    refreshPreview();
    form.onsubmit=async event=>{
@@ -253,7 +259,7 @@ export function createEmailMarketing({db,root,notify,isCurrent}){
     if(!activeCampaign?.id){notice("Save the campaign draft first.",true);return}
     if(getHTML()!==activeCampaign.body_html){notice("You have unsaved changes. Save draft before sending.",true);return}
     const dialog=document.createElement("div");dialog.className="em-modal";
-    dialog.innerHTML='<section role="dialog" aria-modal="true" aria-label="Confirm campaign send"><h2>Review your campaign before sending</h2><p><strong>Subject:</strong> '+esc(activeCampaign.subject)+'</p><p><strong>Sender:</strong> '+esc(activeCampaign.sender_name)+' &lt;support@andreerving.com&gt;</p><p><strong>Eligible audience:</strong> '+data.contacts.filter(c=>c.status==="active"&&c.consent_at&&!c.unsubscribed_at&&!c.suppression_reason).length+' contacts</p><p>Campaign sending is limited to 25 recipients per batch. Each recipient gets a branded unsubscribe link. This action sends real emails.</p><div class="em-actions"><button id="em-confirm-send" class="em-primary" type="button">Confirm send</button><button id="em-cancel-send" class="em-secondary" type="button">Cancel</button></div><p id="em-modal-status" role="status"></p></section>';
+    dialog.innerHTML='<section role="dialog" aria-modal="true" aria-label="Confirm campaign send"><h2>Review your campaign before sending</h2><p><strong>Subject:</strong> '+esc(activeCampaign.subject)+'</p><p><strong>Sender:</strong> '+esc(activeCampaign.sender_name)+' (verified sending address)</p><p><strong>Eligible audience:</strong> '+data.contacts.filter(c=>c.status==="active"&&c.consent_at&&!c.unsubscribed_at&&!c.suppression_reason).length+' contacts</p><p>Campaign sending is limited to 25 recipients per batch. Each recipient gets a branded unsubscribe link. This action sends real emails.</p><div class="em-actions"><button id="em-confirm-send" class="em-primary" type="button">Confirm send</button><button id="em-cancel-send" class="em-secondary" type="button">Cancel</button></div><p id="em-modal-status" role="status"></p></section>';
     root.append(dialog);dialog.querySelector("#em-cancel-send").onclick=()=>dialog.remove();
     dialog.querySelector("#em-confirm-send").onclick=async event=>{
      event.currentTarget.disabled=true;
@@ -262,7 +268,7 @@ export function createEmailMarketing({db,root,notify,isCurrent}){
     };
    };
   }
-  const view=root.querySelector("#em-view-frame");if(view&&activeCampaign)view.srcdoc='<html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="background:#eef3f9;padding:24px 10px;margin:0;font:15px/1.65 Arial,sans-serif;color:#123153"><table role="presentation" width="100%" style="max-width:640px;background:#fff;margin:auto;border-collapse:collapse"><tr><td style="background:#10243f;border-bottom:5px solid #d09b2d;padding:25px"><img src="https://gnfyidajbectlppsekzj.supabase.co/storage/v1/object/public/Andre%20Erving%20Public/logos/logo2.png" alt="Andre Erving" style="max-width:100%;height:auto;width:245px"></td></tr><tr><td style="padding:24px">'+activeCampaign.body_html+'</td></tr><tr><td style="background:#f5f8fc;padding:22px;font:12px/1.7 Arial;color:#58718b">Andre Erving · Growth, Strategy &amp; Education<br>Marketing communication · <u>Unsubscribe</u><br>support@andreerving.com</td></tr></table></body></html>';
+  const view=root.querySelector("#em-view-frame");if(view&&activeCampaign)view.srcdoc='<html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="background:#eef3f9;padding:24px 10px;margin:0;font:15px/1.65 Arial,sans-serif;color:#123153"><table role="presentation" width="100%" style="max-width:640px;background:#fff;margin:auto;border-collapse:collapse"><tr><td style="background:#10243f;border-bottom:5px solid #d09b2d;padding:25px"><img src="https://gnfyidajbectlppsekzj.supabase.co/storage/v1/object/public/Andre%20Erving%20Public/logos/logo2.png" alt="Andre Erving" style="max-width:100%;height:auto;width:245px"></td></tr><tr><td style="padding:24px">'+activeCampaign.body_html+'</td></tr><tr><td style="background:#f5f8fc;padding:22px;font:12px/1.7 Arial;color:#58718b">Andre Erving · Growth, Strategy &amp; Education<br>Marketing communication · <u>Unsubscribe</u><br>Questions? Visit andreerving.com/contact.html</td></tr></table></body></html>';
   const deliveryFilter=root.querySelector("#em-delivery-filter");if(deliveryFilter)deliveryFilter.onchange=()=>{activeCampaign=data.campaigns.find(c=>c.id===deliveryFilter.value)||null;draw()};
   const paste=root.querySelector("#em-paste"),csv=root.querySelector("#em-csv");
   if(csv)csv.onchange=async()=>{const file=csv.files?.[0];if(!file)return;if(file.size>4_000_000){notice("CSV must be under 4 MB",true);return}paste.value=await file.text();notice("CSV loaded. Select Review import.")};
