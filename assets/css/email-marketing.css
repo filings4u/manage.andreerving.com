@@ -46,3 +46,34 @@
 .em-shell :is(button,input,select,textarea):focus-visible{outline:3px solid #dba83b;outline-offset:2px}
 @media(max-width:1150px){.em-editor-grid{grid-template-columns:1fr}.em-preview-card{position:static}.em-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:650px){.em-stats,.em-form-grid{grid-template-columns:1fr}.em-head h1{font-size:26px}.em-card{padding:18px}.em-editor-actions{justify-content:stretch}.em-editor-actions button{flex:1 1 100%}.em-tabs button{flex:1 1 130px}.em-stat{padding:17px}}
+
+/* Dedicated Add / Edit Marketing Contact page */
+.em-contact-back{display:flex;align-items:center;margin:0 0 18px}
+.em-contact-back .em-secondary{display:inline-flex;align-items:center;justify-content:center;min-height:42px;margin:0}
+.em-contact-card{padding:0;overflow:hidden}
+.em-contact-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;flex-wrap:wrap;padding:26px 29px 22px;border-bottom:1px solid #e3eaf2}
+.em-contact-kicker{display:block;color:#a67924;font-size:10px;font-weight:800;letter-spacing:.12em;margin:0 0 7px}
+.em-contact-heading h2{margin:0 0 7px;font-size:21px;line-height:1.3;color:#133354}
+.em-contact-heading p{font-size:12px;line-height:1.65;color:#70859b;margin:0}
+.em-contact-form{display:block}
+.em-contact-form .em-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:21px 23px}
+.em-contact-form>.em-form-grid{padding:28px 29px}
+.em-contact-form label{display:flex;flex-direction:column;gap:9px;min-width:0;color:#1b3c5d;font-size:12px;font-weight:750;line-height:1.45}
+.em-contact-form label>input:not([type="checkbox"]),.em-contact-form label>select{width:100%;min-width:0;height:46px;background:#fff;border:1px solid #cbd8e7;border-radius:9px;color:#143857;padding:11px 13px;font-size:13px;font-weight:500;box-sizing:border-box}
+.em-contact-form input::placeholder{color:#9baac0}
+.em-contact-form input:focus-visible,.em-contact-form select:focus-visible{outline:2px solid #c18e25;outline-offset:2px;border-color:#ba8d33}
+.em-required{display:inline;color:#b27a1d}
+.em-contact-consent{border-top:1px solid #e4eaf2;background:#f8fafd;padding:24px 29px}
+.em-contact-section-title h3{font-size:17px;margin:0 0 5px;color:#173755}
+.em-contact-section-title p{font-size:12px;color:#698199;line-height:1.6;margin:0 0 20px}
+.em-contact-consent-grid{margin-bottom:19px}
+.em-contact-consent-check{display:flex!important;flex-direction:row!important;align-items:flex-start;gap:10px!important;font-size:12px!important;font-weight:600!important;line-height:1.6!important}
+.em-contact-consent-check input[type="checkbox"]{width:18px;height:18px;flex:0 0 18px;margin:2px 0 0;accent-color:#bd8b25}
+.em-contact-consent-check span{flex:1;min-width:0}
+.em-contact-hint{margin:11px 0 0 28px;color:#6d8299;font-size:11px;line-height:1.6}
+.em-contact-consent .em-warning{margin:16px 0 0}
+.em-contact-footer{display:flex;justify-content:flex-start;align-items:center;gap:12px;flex-wrap:wrap;border-top:1px solid #e1e9f1;padding:22px 29px 27px;background:#fff}
+.em-contact-footer .em-primary,.em-contact-footer .em-secondary{display:inline-flex;align-items:center;justify-content:center;min-width:135px;min-height:44px;margin:0;padding:11px 19px}
+.em-contact-footer .em-secondary{border:1px solid #cbd8e7}
+@media(max-width:700px){.em-contact-form .em-form-grid{grid-template-columns:1fr;gap:17px}.em-contact-heading,.em-contact-form>.em-form-grid,.em-contact-consent,.em-contact-footer{padding-left:19px;padding-right:19px}}
+@media(max-width:440px){.em-contact-footer .em-primary,.em-contact-footer .em-secondary{width:100%}.em-contact-heading{padding-top:22px}.em-contact-form>.em-form-grid{padding-top:22px}}
