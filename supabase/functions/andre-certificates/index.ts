@@ -53,6 +53,10 @@ async function saveTemplate(d:any,u:any){
 }
 async function issue(userId:string,courseId:string,staffId:string|null){
  if(!UUID.test(userId)||!UUID.test(courseId))throw Error("Select a valid student and course");
+ if(!staffId){
+   const revoked=await db("course_certificates","?select=id&user_id=eq."+userId+"&course_id=eq."+courseId+"&revoked_at=not.is.null&limit=1");
+   if(revoked.length)throw Error("This certificate was revoked by management. Contact support through the website for review.");
+ }
  const issued=await db("rpc/issue_course_completion_certificate","","POST",{p_user_id:userId,p_course_id:courseId,p_issued_by:staffId});
  const certificate=issued[0];
  if(!certificate)throw Error("The certificate was not issued");
