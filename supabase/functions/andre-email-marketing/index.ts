@@ -19,7 +19,7 @@ async function importContacts(d:any){
   first_name:val(r.firstName,100),
   last_name:val(r.lastName,100),
   phone:val(r.phone,40),
-  status:r.status==="active"?"active":"inactive"
+  status:"active"
  }));
  const imported=await sql("rpc/import_marketing_contacts_batch","","POST",{
   p_rows:normalizedRows,p_consent:!!d.consent,
