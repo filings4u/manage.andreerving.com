@@ -170,6 +170,8 @@ export function createEmailMarketing({db,root,notify,isCurrent}){
     const bg=root.querySelector("#em-theme-background").value,fg=root.querySelector("#em-theme-text").value,accent=root.querySelector("#em-theme-accent").value;
     editorElement.style.background=bg;editorElement.style.color=fg;
     root.querySelector(".em-design-surface").style.background=bg;
+    editorElement.querySelectorAll(".em-email-block").forEach(section=>{section.style.backgroundColor=bg;section.style.color=fg});
+    editorElement.querySelectorAll("h1,h2,h3,p,li").forEach(node=>node.style.color=fg);
     editorElement.querySelectorAll("a").forEach(a=>{if(a.getAttribute("style")?.includes("background"))a.style.backgroundColor=accent});
     refreshPreview()
    };
