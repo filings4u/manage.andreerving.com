@@ -39,7 +39,7 @@ export function createLMS({db,root,notify,safe,isCurrent}){
       list("courses"),list("course_modules"),list("course_lessons"),
       list("course_enrollments","id,user_id,course_id,order_id,status,enrolled_at,expires_at","enrolled_at"),
       list("customer_profiles","id,email,full_name","email"),
-      list("course_publications","course_id,published_at,revision,has_unpublished_changes","course_id")
+      list("course_publications","course_id,published_at,revision,has_unpublished_changes,published_completion_order","course_id")
     ]);
     if(!isCurrent())return;
     Object.assign(s,{courses:a,modules:b,lessons:c,enrollments:d,customers:e,publications:pubs});
