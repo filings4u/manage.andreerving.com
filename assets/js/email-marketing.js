@@ -23,9 +23,7 @@ export function createEmailMarketing({db,root,notify,isCurrent}){
   return head("Email campaigns","Create, design, preview and manage branded campaigns.",'<button class="em-primary" data-em-new>Create campaign</button>')+stats()+
   '<section class="em-card"><div class="em-card-heading"><h2>Campaign library</h2><p>Open any campaign to view its content and delivery results.</p></div><div class="em-table"><table><thead><tr><th>Campaign</th><th>Subject</th><th>Status</th><th>Updated</th><th>Actions</th></tr></thead><tbody>'+
   (data.campaigns.map(c=>'<tr><td><strong>'+esc(c.name)+'</strong></td><td>'+esc(c.subject)+'</td><td><span class="em-chip">'+esc(c.status)+'</span></td><td>'+fmtDate(c.updated_at)+'</td><td><div class="em-actions"><button data-em-view="'+c.id+'">View</button>'+(c.status==="draft"?'<button data-em-edit="'+c.id+'">Edit</button>':'')+'<button data-em-report="'+c.id+'">Delivery</button></div></td></tr>').join("")||'<tr><td colspan="5">No campaigns yet. Create your first email with the Email Creator.</td></tr>')+
-  '</tbody></table></div>'+
-  '<div class="em-contact-pagination"><span>Showing '+(visible.length?contactsPage*pageSize+1:0)+'–'+Math.min(visible.length,(contactsPage+1)*pageSize)+' of '+visible.length+' matching contacts</span>'+
-  '<div class="em-actions"><button type="button" id="em-page-prev" class="em-secondary" '+(!contactsPage?'disabled':'')+'>Previous</button><span>Page '+(contactsPage+1)+' of '+pageCount+'</span><button type="button" id="em-page-next" class="em-secondary" '+(contactsPage>=pageCount-1?'disabled':'')+'>Next</button></div></div></section>';
+  '</tbody></table></div></section>';
  }
  function contacts(){
   const visible=data.contacts.filter(c=>[c.first_name,c.last_name,c.email,c.phone].some(t=>String(t||"").toLowerCase().includes(filter.toLowerCase())));
@@ -46,7 +44,9 @@ export function createEmailMarketing({db,root,notify,isCurrent}){
   '<button type="button" class="em-secondary" id="em-clear-selection" '+(!selectedCount?'disabled':'')+'>Clear selection</button></div></div>'+
   '<div class="em-table"><table><thead><tr><th class="em-select-col"><input type="checkbox" id="em-select-all" aria-label="Select all contacts on this page" '+(allChecked?'checked':'')+' '+(partial?'data-partial="true"':'')+' '+(!visible.length?'disabled':'')+'></th><th>First name</th><th>Last name</th><th>Email</th><th>Phone</th><th>Active / Non active</th><th>Actions</th></tr></thead><tbody>'+
   (pageRows.map(c=>'<tr class="'+(selectedContacts.has(c.id)?'em-row-selected':'')+'"><td class="em-select-col"><input type="checkbox" data-em-select="'+c.id+'" aria-label="Select '+esc(c.email)+'" '+(selectedContacts.has(c.id)?'checked':'')+'></td><td>'+esc(c.first_name)+'</td><td>'+esc(c.last_name)+'</td><td>'+esc(c.email)+'</td><td>'+esc(c.phone||"—")+'</td><td><span class="em-chip '+(c.status==="active"?"em-active":"")+'">'+esc(statuses[c.status]||c.status)+(c.unsubscribed_at?' · Unsubscribed':c.suppression_reason?' · Suppressed':'')+'</span></td><td><div class="em-actions"><button data-em-contact="'+c.id+'">View</button><button data-em-status="'+c.id+'" data-status="'+(c.status==="active"?"inactive":"active")+'" '+(c.unsubscribed_at||c.suppression_reason?'disabled title="This contact is suppressed"':'')+'>'+(c.status==="active"?"Deactivate":"Activate")+'</button></div></td></tr>').join("")||'<tr><td colspan="7">No contacts found.</td></tr>')+
-  '</tbody></table></div></section>';
+  '</tbody></table></div>'+
+  '<div class="em-contact-pagination"><span>Showing '+(visible.length?contactsPage*pageSize+1:0)+'–'+Math.min(visible.length,(contactsPage+1)*pageSize)+' of '+visible.length+' matching contacts</span>'+
+  '<div class="em-actions"><button type="button" id="em-page-prev" class="em-secondary" '+(!contactsPage?'disabled':'')+'>Previous</button><span>Page '+(contactsPage+1)+' of '+pageCount+'</span><button type="button" id="em-page-next" class="em-secondary" '+(contactsPage>=pageCount-1?'disabled':'')+'>Next</button></div></div></section>';
  }
  function contactDetail(c=null){
   const locked=!!c?.unsubscribed_at||!!c?.suppression_reason;
