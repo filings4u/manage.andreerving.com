@@ -632,7 +632,7 @@ export function createLMS({db,root,notify,safe,isCurrent}){
       {name:"Essentials",summary:"Name, category and introduction",fields:["title","slug","category","short_description"],icon:"01"},
       {name:"Course content",summary:"Description and cover image",fields:["description","featured_image_url"],icon:"02"},
       {name:"Pricing & access",summary:"Price, checkout and access rules",fields:["price","compare_at_price","purchase_url","access_days"],icon:"03"},
-      {name:"Publish settings",summary:"Visibility, certificates and sorting",fields:["status","sort_order","certificate_enabled"],icon:"04"}
+      {name:"Publish settings",summary:"Visibility, certificates and sorting",fields:["status","sort_order","certificate_enabled","completion_order"],icon:"04"}
     ]:[
       {name:"Details",summary:"Complete the required information",fields:[],icon:"01"}
     ];
