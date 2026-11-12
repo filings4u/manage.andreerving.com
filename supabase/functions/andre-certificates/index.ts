@@ -9,7 +9,7 @@ const escape=(v:unknown)=>String(v??"").replace(/[&<>"']/g,k=>({"&":"&amp;","<":
 function reply(v:unknown,status=200,origin=""){return new Response(JSON.stringify(v),{status,headers:{"Content-Type":"application/json","Cache-Control":"no-store","Vary":"Origin",...(ORIGINS.has(origin)?{"Access-Control-Allow-Origin":origin}:{}),"Access-Control-Allow-Headers":"Authorization,Content-Type,apikey","Access-Control-Allow-Methods":"POST,OPTIONS"}})}
 async function db(table:string,query="",method="GET",body?:unknown,extra:Record<string,string>={}):Promise<any>{
  const response=await fetch(BASE+"/rest/v1/"+table+query,{method,headers:{apikey:SERVICE,Authorization:"Bearer "+SERVICE,"Content-Type":"application/json",...(method!=="GET"?{Prefer:"return=representation"}:{}),...extra},...(body===undefined?{}:{body:JSON.stringify(body)})});
- if(!response.ok){const details=await response.text();console.error("Certificate database",table,response.status,details.slice(0,400));throw Error("Certificate database request failed")}
+ if(!response.ok){const details=await response.text();console.error("Certificate database",table,response.status,details.slice(0,400));let message="Certificate database request failed";try{const parsed=JSON.parse(details);if(typeof parsed.message==="string"&&/All published lessons|Course certificates are not enabled|eligible course enrollment|must have a name|template is not configured|Course has no published lessons/i.test(parsed.message))message=parsed.message}catch{}throw Error(message)}
  return response.status===204?[]:response.json()
 }
 async function auth(req:Request){const token=(req.headers.get("authorization")||"").replace(/^Bearer\s+/i,"");
@@ -63,12 +63,12 @@ async function issue(userId:string,courseId:string,staffId:string|null){
  const delivery=await notifyCompletion(certificate);
  return {certificate,delivery};
 }
-async function notifyCompletion(cert:any){
- if(cert.email_sent_at)return {status:"already_sent"};
+async function notifyCompletion(cert:any,force=false){
+ if(cert.email_sent_at&&!force)return {status:"already_sent"};
  if(!RESEND)return {status:"unavailable",note:"Email sending is not configured. Certificate remains available in the student portal."};
  // Claim the delivery to avoid duplicate notifications for simultaneous requests.
  const cutoff=new Date(Date.now()-10*60*1000).toISOString();
- const claim=await db("course_certificates","?id=eq."+cert.id+"&email_sent_at=is.null&revoked_at=is.null&or=(email_claimed_at.is.null,email_claimed_at.lt."+cutoff+")","PATCH",{email_claimed_at:new Date().toISOString()});
+ const claim=await db("course_certificates","?id=eq."+cert.id+(force?"":"&email_sent_at=is.null")+"&revoked_at=is.null&or=(email_claimed_at.is.null,email_claimed_at.lt."+cutoff+")","PATCH",{email_claimed_at:new Date().toISOString()});
  if(!claim.length)return {status:"already_processing"};
  try{
   const people=await db("customer_profiles","?select=email&id=eq."+cert.user_id+"&limit=1");
@@ -77,7 +77,7 @@ async function notifyCompletion(cert:any){
   const portal="https://app.andreerving.com/#/certificates";
   const logo="https://gnfyidajbectlppsekzj.supabase.co/storage/v1/object/public/Andre%20Erving%20Public/logos/logo2.png";
   const html='<!doctype html><html><body style="margin:0;background:#f0f4f8;font-family:Arial,sans-serif;color:#133354"><table width="100%" cellpadding="0" cellspacing="0" role="presentation"><tr><td align="center" style="padding:30px 12px"><table role="presentation" cellpadding="0" cellspacing="0" style="max-width:620px;width:100%;background:#fff"><tr><td style="padding:27px;background:#10243f;border-bottom:5px solid #d39a28"><img src="'+logo+'" width="235" alt="Andre Erving" style="height:auto;max-width:100%"></td></tr><tr><td style="padding:35px"><p style="font-size:12px;letter-spacing:2px;color:#b98120;font-weight:bold">COURSE COMPLETED</p><h1 style="font-size:28px;color:#123454">Congratulations, '+escape(cert.student_name)+'!</h1><p style="font-size:16px;line-height:1.8">You successfully completed <strong>'+escape(cert.course_title)+'</strong>. Your personalized certificate of completion is now available in your student portal.</p><p style="font-size:13px;color:#637c96">Certificate number: <strong>'+escape(cert.certificate_number)+'</strong></p><p style="margin:32px 0"><a href="'+portal+'" style="display:inline-block;background:#d19b2b;color:#112b48;text-decoration:none;border-radius:8px;padding:16px 25px;font-weight:bold">View My Certificate</a></p><p style="font-size:13px;line-height:1.7;color:#647b92">Sign in to your student portal to view, print, or download your certificate.</p></td></tr><tr><td style="background:#f4f7fb;border-top:1px solid #dce5ef;padding:23px;font-size:12px;color:#5a728b;line-height:1.7">Andre Erving · Growth, Strategy &amp; Education<br><a href="https://andreerving.com/contact.html">Contact us</a></td></tr></table></td></tr></table></body></html>';
-  const sent=await fetch("https://api.resend.com/emails",{method:"POST",headers:{Authorization:"Bearer "+RESEND,"Content-Type":"application/json","Idempotency-Key":"course-certificate-"+cert.id},body:JSON.stringify({from:"Andre Erving <support@andreerving.com>",to:[to],subject:"Congratulations! Your "+cert.course_title+" certificate is ready",html})});
+  const sent=await fetch("https://api.resend.com/emails",{method:"POST",headers:{Authorization:"Bearer "+RESEND,"Content-Type":"application/json","Idempotency-Key":"course-certificate-"+cert.id+(force?"-replacement-"+crypto.randomUUID():"")},body:JSON.stringify({from:"Andre Erving <support@andreerving.com>",to:[to],subject:"Congratulations! Your "+cert.course_title+" certificate is ready",html})});
   const result=await sent.json().catch(()=>({}));
   if(!sent.ok||!result.id)throw Error("Provider did not accept completion email");
   await db("course_certificates","?id=eq."+cert.id,"PATCH",{email_sent_at:new Date().toISOString(),email_error:null,email_claimed_at:null});
@@ -132,7 +132,7 @@ Deno.serve(async(req:Request)=>{
   if(action==="delete_certificate")return reply(await revoke(d,u),200,origin);
   if(action==="resend_completion_email"){
     const cert=(await db("course_certificates","?select=*&id=eq."+val(d.id,45)+"&revoked_at=is.null&limit=1"))[0];
-    if(!cert)throw Error("Certificate not found");return reply(await notifyCompletion(cert),200,origin);
+    if(!cert)throw Error("Certificate not found");return reply(await notifyCompletion(cert,true),200,origin);
   }
   return reply({error:"Unknown certificate action"},400,origin);
  }catch(e){
