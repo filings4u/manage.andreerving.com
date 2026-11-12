@@ -265,11 +265,11 @@ export function createLMS({db,root,notify,safe,isCurrent}){
 
   function renderCurriculum(modules,lessons){
     const ordered=[...modules].sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
-    return '<section class="lms-builder-panel" id="lms-content-builder"><div class="lms-content-heading"><div><h2>Content</h2><p>Manage chapters here, or open the full visual LMS lesson editor to create and edit multimedia lessons.</p></div><div class="lms-content-actions"><button type="button" class="lms-gold-action" id="lms-open-visual-editor">✎ &nbsp; Open Visual LMS Editor</button><button type="button" class="lms-outline-add" id="lms-add-module">＋ Add section</button></div></div>'+
+    return '<section class="lms-builder-panel" id="lms-content-builder"><div class="lms-content-heading"><div><h2>Content</h2><p>Manage chapters here, or open the full visual LMS lesson editor to create and edit multimedia lessons.</p></div><div class="lms-content-actions"><button type="button" class="lms-outline-add" id="lms-collapse-all">Collapse all</button><button type="button" class="lms-outline-add" id="lms-expand-all">Expand all</button><button type="button" class="lms-gold-action" id="lms-open-visual-editor">✎ &nbsp; Open Visual LMS Editor</button><button type="button" class="lms-outline-add" id="lms-add-module">＋ Add section</button></div></div>'+
       '<div class="lms-section-stack" id="lms-section-stack">'+(ordered.length?ordered.map((m,i)=>{
         const own=lessons.filter(l=>l.module_id===m.id).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
         const folded=s.collapsed?.has(m.id);
-        return '<article class="lms-builder-section" data-module="'+esc(m.id)+'" data-drop-module="'+esc(m.id)+'">'+
+        return '<article class="lms-builder-section" draggable="true" title="Drag section to reorder" data-module="'+esc(m.id)+'" data-drop-module="'+esc(m.id)+'">'+
           '<header class="lms-builder-section-header"><span draggable="true" class="lms-drag-handle" data-drag-module="'+esc(m.id)+'" tabindex="0" title="Drag section to reorder" aria-label="Drag section">⠿</span>'+
           '<button type="button" class="lms-collapse" data-toggle-module="'+esc(m.id)+'" aria-expanded="'+(!folded)+'">'+'<svg class="ae-ui-chevron '+(folded?'is-collapsed':'')+'" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>'+
           '<button type="button" class="lms-section-name" data-edit-module="'+esc(m.id)+'">'+esc(m.title)+'</button>'+
@@ -278,7 +278,7 @@ export function createLMS({db,root,notify,safe,isCurrent}){
           '<div class="lms-section-popover" data-section-menu="'+esc(m.id)+'" hidden><button type="button" data-edit-module="'+esc(m.id)+'">Edit section</button><button type="button" data-duplicate-module="'+esc(m.id)+'">Duplicate section</button><button type="button" data-delete-module="'+esc(m.id)+'">Delete section</button></div>'+
           '<button type="button" class="lms-collapse-end" data-toggle-module="'+esc(m.id)+'" title="Expand or collapse">'+'<svg class="ae-ui-chevron '+(folded?'is-collapsed':'')+'" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button></header>'+
           '<div class="lms-builder-section-content" '+(folded?'hidden':'')+'><div class="lms-lesson-dropzone" data-lessons-for="'+esc(m.id)+'">'+
-          (own.map(l=>'<div class="lms-step" data-lesson="'+esc(l.id)+'" data-drop-lesson="'+esc(l.id)+'" data-in-module="'+esc(m.id)+'">'+
+          (own.map(l=>'<div class="lms-step" draggable="true" title="Drag lesson to reorder or move between sections" data-lesson="'+esc(l.id)+'" data-drop-lesson="'+esc(l.id)+'" data-in-module="'+esc(m.id)+'">'+
             '<span class="lms-lesson-drag lms-drag-handle" draggable="true" data-drag-lesson="'+esc(l.id)+'" tabindex="0" title="Drag to reorder or move to another section" aria-label="Drag lesson">⠿</span>'+
             '<span class="lms-step-type-icon" aria-hidden="true">'+typeSymbol(l.lesson_type)+'</span>'+
             '<button type="button" class="lms-step-name" data-edit-lesson="'+esc(l.id)+'">'+esc(l.title)+'</button>'+
@@ -333,6 +333,8 @@ export function createLMS({db,root,notify,safe,isCurrent}){
       notify("Add a chapter to begin creating lessons.");addSectionInline();
     });
     by("lms-add-module")?.addEventListener("click",()=>addSectionInline());
+    by("lms-collapse-all")?.addEventListener("click",()=>{related("modules").forEach(m=>s.collapsed.add(m.id));render()});
+    by("lms-expand-all")?.addEventListener("click",()=>{related("modules").forEach(m=>s.collapsed.delete(m.id));render()});
     all("[data-edit-module]").forEach(b=>b.onclick=()=>editSectionInline(b.dataset.editModule));
     all("[data-edit-lesson]").forEach(b=>b.onclick=()=>openLessonForm(s.lessons.find(l=>l.id===b.dataset.editLesson)));
     all("[data-delete-module]").forEach(b=>b.onclick=()=>deleteRecord("course_modules",b.dataset.deleteModule));
@@ -511,50 +513,75 @@ export function createLMS({db,root,notify,safe,isCurrent}){
   }
   function wireDragAndDrop(){
     const holder=by("lms-section-stack");if(!holder)return;
-    holder.querySelectorAll('[data-drag-module],[data-drag-lesson]').forEach(handle=>{
-      handle.addEventListener("dragstart",event=>{
-        const id=handle.dataset.dragModule||handle.dataset.dragLesson;
-        const kind=handle.dataset.dragModule?"module":"lesson";
+    const cleanup=()=>{
+      holder.querySelectorAll(".lms-drag-over,.lms-drop-before,.lms-drop-after,.lms-dragging").forEach(el=>el.classList.remove("lms-drag-over","lms-drop-before","lms-drop-after","lms-dragging"));
+      s.drag=null;
+    };
+    // The whole section or lesson row is draggable. Buttons remain independently clickable.
+    holder.querySelectorAll(".lms-builder-section,.lms-step").forEach(row=>{
+      const handle=row.matches(".lms-step")?row.querySelector("[data-drag-lesson]"):row.querySelector("header [data-drag-module]");
+      if(!handle)return;
+      row.addEventListener("dragstart",event=>{
+        if(event.target.closest("button,input,textarea,select,a,[contenteditable]")&&!event.target.closest("[data-drag-module],[data-drag-lesson]")){event.preventDefault();return}
+        event.stopPropagation();
+        const kind=row.matches(".lms-step")?"lesson":"module";
+        const id=kind==="lesson"?row.dataset.lesson:row.dataset.module;
         s.drag={kind,id};
         event.dataTransfer.effectAllowed="move";
         event.dataTransfer.setData("text/plain",kind+":"+id);
-        handle.closest(".lms-builder-section,.lms-step")?.classList.add("lms-dragging");
+        row.classList.add("lms-dragging");
       });
-      handle.addEventListener("dragend",()=>{holder.querySelectorAll(".lms-drag-over,.lms-dragging").forEach(el=>el.classList.remove("lms-drag-over","lms-dragging"));s.drag=null});
+      row.addEventListener("dragend",cleanup);
       handle.addEventListener("keydown",event=>{
         if(!["ArrowUp","ArrowDown"].includes(event.key))return;
         event.preventDefault();
-        const dir=event.key==="ArrowUp"?-1:1;
-        move(handle.dataset.dragModule?"course_modules":"course_lessons",handle.dataset.dragModule||handle.dataset.dragLesson,dir);
+        move(row.matches(".lms-step")?"course_lessons":"course_modules",row.matches(".lms-step")?row.dataset.lesson:row.dataset.module,event.key==="ArrowUp"?-1:1);
       });
     });
-    const dragover=e=>{
+    let dropTarget=null,after=false;
+    holder.addEventListener("dragover",event=>{
       if(!s.drag)return;
-      const module=e.target.closest("[data-module]"),step=e.target.closest("[data-lesson]");
-      if(s.drag.kind==="module"&&!module)return;
-      if(s.drag.kind==="lesson"&&!module)return;
-      e.preventDefault();e.dataTransfer.dropEffect="move";
-      holder.querySelectorAll(".lms-drag-over").forEach(el=>el.classList.remove("lms-drag-over"));
-      (s.drag.kind==="module"?module:(step||module.querySelector("[data-lessons-for]")))?.classList.add("lms-drag-over");
-    };
-    holder.addEventListener("dragover",dragover);
-    holder.addEventListener("drop",async e=>{
+      const target=event.target.closest(s.drag.kind==="module"?".lms-builder-section":".lms-step,.lms-lesson-dropzone,.lms-builder-section-header");
+      if(!target||!holder.contains(target))return;
+      const module=target.closest(".lms-builder-section");
+      if(!module)return;
+      event.preventDefault();event.stopPropagation();event.dataTransfer.dropEffect="move";
+      dropTarget=target;const rect=target.getBoundingClientRect();
+      after=event.clientY>rect.top+rect.height/2;
+      holder.querySelectorAll(".lms-drag-over,.lms-drop-before,.lms-drop-after").forEach(el=>el.classList.remove("lms-drag-over","lms-drop-before","lms-drop-after"));
+      target.classList.add(s.drag.kind==="module"?(after?"lms-drop-after":"lms-drop-before"):"lms-drag-over");
+      if(s.drag.kind==="lesson"&&target.matches(".lms-step"))target.classList.add(after?"lms-drop-after":"lms-drop-before");
+    });
+    holder.addEventListener("drop",async event=>{
       if(!s.drag)return;
-      const drag={...s.drag},module=e.target.closest("[data-module]"),step=e.target.closest("[data-lesson]");
-      if(!module)return;e.preventDefault();
+      event.preventDefault();event.stopPropagation();
+      const drag={...s.drag},target=dropTarget;
+      const module=target?.closest(".lms-builder-section");
+      const insertAfter=after;
+      cleanup();dropTarget=null;
+      if(!module||s.reordering)return;
       if(drag.kind==="module"){
-        const ids=[...holder.querySelectorAll("[data-module]")].map(el=>el.dataset.module).filter(id=>id!==drag.id);
+        const ids=[...holder.querySelectorAll(":scope > .lms-builder-section")].map(el=>el.dataset.module).filter(id=>id!==drag.id);
         const index=ids.indexOf(module.dataset.module);
-        if(index<0)return;const rect=module.getBoundingClientRect(),after=e.clientY>rect.top+rect.height/2;
-        ids.splice(index+(after?1:0),0,drag.id);
-        await persistOrder("course_modules",ids);
+        if(index<0)return;
+        ids.splice(index+(insertAfter?1:0),0,drag.id);
+        const previous=related("modules").slice().sort((a,b)=>(a.sort_order||0)-(b.sort_order||0)).map(m=>m.id);
+        if(ids.join(",")!==previous.join(","))await persistOrder("course_modules",ids);
       }else{
-        const targetModule=module.dataset.module,ordered=[...module.querySelectorAll("[data-lesson]")].map(el=>el.dataset.lesson).filter(id=>id!==drag.id);
-        let position=ordered.length;
-        if(step){const at=ordered.indexOf(step.dataset.lesson);if(at>=0)position=at+(e.clientY>step.getBoundingClientRect().top+step.getBoundingClientRect().height/2?1:0)}
-        ordered.splice(position,0,drag.id);
-        await persistOrder("course_lessons",ordered,targetModule);
+        const targetModule=module.dataset.module;
+        const steps=[...module.querySelectorAll(".lms-lesson-dropzone > .lms-step")];
+        const ids=steps.map(el=>el.dataset.lesson).filter(id=>id!==drag.id);
+        const step=target?.matches(".lms-step")?target:null;
+        let index=ids.length;
+        if(step){const at=ids.indexOf(step.dataset.lesson);if(at!==-1)index=at+(insertAfter?1:0)}
+        ids.splice(index,0,drag.id);
+        const old=s.lessons.find(l=>l.id===drag.id);
+        const previous=steps.map(el=>el.dataset.lesson);
+        if(old?.module_id!==targetModule||ids.join(",")!==previous.join(","))await persistOrder("course_lessons",ids,targetModule);
       }
+    });
+    holder.addEventListener("dragleave",e=>{
+      if(!holder.contains(e.relatedTarget))holder.querySelectorAll(".lms-drag-over,.lms-drop-before,.lms-drop-after").forEach(el=>el.classList.remove("lms-drag-over","lms-drop-before","lms-drop-after"));
     });
   }
   function route(){
