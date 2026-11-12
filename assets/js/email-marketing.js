@@ -4,7 +4,7 @@ const fmtDate=v=>v?new Date(v).toLocaleDateString("en-US",{month:"short",day:"nu
 const statuses={active:"Active",inactive:"Non active"};
 const nav=[["campaigns","Campaigns"],["create","Email creator"],["contacts","All contacts"],["import","Import contacts"],["delivery","Delivery insights"]];
 export function createEmailMarketing({db,root,notify,isCurrent}){
- let data={contacts:[],campaigns:[],deliveries:[]},page="campaigns",activeCampaign=null,activeContact=null,mode="visual",filter="",importRows=[],busy=false;
+ let data={contacts:[],campaigns:[],deliveries:[]},page="campaigns",activeCampaign=null,activeContact=null,mode="visual",filter="",importRows=[],busy=false,selectedContacts=new Set();
  const notice=(text,error=false)=>{const e=root.querySelector("#em-status");if(e){e.textContent=text;e.classList.toggle("error",error)}else notify(text,error)};
  async function api(action,payload={}){
   const {data:{session}}=await db.auth.getSession();if(!session?.access_token)throw Error("Sign in to management again");
@@ -27,9 +27,20 @@ export function createEmailMarketing({db,root,notify,isCurrent}){
  }
  function contacts(){
   const visible=data.contacts.filter(c=>[c.first_name,c.last_name,c.email,c.phone].some(t=>String(t||"").toLowerCase().includes(filter.toLowerCase())));
+  const visibleSelected=visible.filter(c=>selectedContacts.has(c.id)).length;
+  const selectedCount=selectedContacts.size;
+  const allChecked=visible.length>0&&visibleSelected===visible.length;
+  const partial=visibleSelected>0&&!allChecked;
   return head("Email marketing contacts","A separate marketing list, independent of Customer CRM.",'<button class="em-primary" data-em-add>Add contact</button>')+stats()+
-  '<section class="em-card"><div class="em-card-heading"><h2>All contacts</h2><input type="search" id="em-search" placeholder="Search name, email or phone" value="'+esc(filter)+'" aria-label="Search contacts"></div><div class="em-table"><table><thead><tr><th>First name</th><th>Last name</th><th>Email</th><th>Phone</th><th>Active / Non active</th><th>Actions</th></tr></thead><tbody>'+
-  (visible.map(c=>'<tr><td>'+esc(c.first_name)+'</td><td>'+esc(c.last_name)+'</td><td>'+esc(c.email)+'</td><td>'+esc(c.phone||"—")+'</td><td><span class="em-chip '+(c.status==="active"?"em-active":"")+'">'+esc(statuses[c.status]||c.status)+(c.unsubscribed_at?' · Unsubscribed':c.suppression_reason?' · Suppressed':'')+'</span></td><td><div class="em-actions"><button data-em-contact="'+c.id+'">View</button><button data-em-status="'+c.id+'" data-status="'+(c.status==="active"?"inactive":"active")+'" '+(c.unsubscribed_at||c.suppression_reason?'disabled title="This contact is suppressed"':'')+'>'+(c.status==="active"?"Deactivate":"Activate")+'</button></div></td></tr>').join("")||'<tr><td colspan="6">No contacts found.</td></tr>')+'</tbody></table></div></section>';
+  '<section class="em-card em-contact-list"><div class="em-card-heading"><h2>All contacts</h2><input type="search" id="em-search" placeholder="Search name, email or phone" value="'+esc(filter)+'" aria-label="Search contacts"></div>'+
+  '<div class="em-bulk-toolbar" aria-live="polite"><div class="em-bulk-selection"><strong id="em-selected-count">'+selectedCount+' selected</strong><span>'+visible.length+' matching contacts</span></div><div class="em-bulk-buttons">'+
+  '<button type="button" class="em-secondary" id="em-bulk-active" '+(!selectedCount?'disabled':'')+'>Activate</button>'+
+  '<button type="button" class="em-secondary" id="em-bulk-inactive" '+(!selectedCount?'disabled':'')+'>Deactivate</button>'+
+  '<button type="button" class="em-secondary em-bulk-delete" id="em-bulk-delete" '+(!selectedCount?'disabled':'')+'>Delete selected</button>'+
+  '<button type="button" class="em-secondary" id="em-clear-selection" '+(!selectedCount?'disabled':'')+'>Clear selection</button></div></div>'+
+  '<div class="em-table"><table><thead><tr><th class="em-select-col"><input type="checkbox" id="em-select-all" aria-label="Select all matching contacts" '+(allChecked?'checked':'')+' '+(partial?'data-partial="true"':'')+' '+(!visible.length?'disabled':'')+'></th><th>First name</th><th>Last name</th><th>Email</th><th>Phone</th><th>Active / Non active</th><th>Actions</th></tr></thead><tbody>'+
+  (visible.map(c=>'<tr class="'+(selectedContacts.has(c.id)?'em-row-selected':'')+'"><td class="em-select-col"><input type="checkbox" data-em-select="'+c.id+'" aria-label="Select '+esc(c.email)+'" '+(selectedContacts.has(c.id)?'checked':'')+'></td><td>'+esc(c.first_name)+'</td><td>'+esc(c.last_name)+'</td><td>'+esc(c.email)+'</td><td>'+esc(c.phone||"—")+'</td><td><span class="em-chip '+(c.status==="active"?"em-active":"")+'">'+esc(statuses[c.status]||c.status)+(c.unsubscribed_at?' · Unsubscribed':c.suppression_reason?' · Suppressed':'')+'</span></td><td><div class="em-actions"><button data-em-contact="'+c.id+'">View</button><button data-em-status="'+c.id+'" data-status="'+(c.status==="active"?"inactive":"active")+'" '+(c.unsubscribed_at||c.suppression_reason?'disabled title="This contact is suppressed"':'')+'>'+(c.status==="active"?"Deactivate":"Activate")+'</button></div></td></tr>').join("")||'<tr><td colspan="7">No contacts found.</td></tr>')+
+  '</tbody></table></div></section>';
  }
  function contactDetail(c=null){
   const locked=!!c?.unsubscribed_at||!!c?.suppression_reason;
@@ -120,6 +131,56 @@ export function createEmailMarketing({db,root,notify,isCurrent}){
   root.querySelectorAll("[data-em-add]").forEach(b=>b.onclick=()=>{activeContact=null;page="contact-detail";draw()});
   root.querySelectorAll("[data-em-contact]").forEach(b=>b.onclick=()=>{activeContact=data.contacts.find(c=>c.id===b.dataset.emContact);page="contact-detail";draw()});
   root.querySelectorAll("[data-em-status]").forEach(b=>b.onclick=async()=>{b.disabled=true;try{await api("contact_status",{id:b.dataset.emStatus,status:b.dataset.status});await refresh();notice("Contact status updated")}catch(e){notice(e.message,true);b.disabled=false}});
+  if(page==="contacts"){
+    const rendered=root.querySelector("#em-select-all");
+    if(rendered)rendered.indeterminate=rendered.dataset.partial==="true";
+    const redrawContacts=()=>{if(page==="contacts")draw()};
+    root.querySelectorAll("[data-em-select]").forEach(box=>box.onchange=()=>{
+      if(box.checked)selectedContacts.add(box.dataset.emSelect);
+      else selectedContacts.delete(box.dataset.emSelect);
+      redrawContacts();
+    });
+    if(rendered)rendered.onchange=()=>{
+      const visible=data.contacts.filter(c=>[c.first_name,c.last_name,c.email,c.phone].some(t=>String(t||"").toLowerCase().includes(filter.toLowerCase())));
+      for(const c of visible)if(rendered.checked)selectedContacts.add(c.id);else selectedContacts.delete(c.id);
+      redrawContacts();
+    };
+    const clear=root.querySelector("#em-clear-selection");
+    if(clear)clear.onclick=()=>{selectedContacts.clear();redrawContacts()};
+    async function executeBulk(operation){
+      const ids=[...selectedContacts];
+      if(!ids.length)return;
+      const labels={active:"Activate",inactive:"Deactivate",delete:"Delete"};
+      const label=labels[operation];
+      const confirmation=document.createElement("div");
+      confirmation.className="em-modal em-bulk-confirm";
+      confirmation.innerHTML='<section role="dialog" aria-modal="true" aria-labelledby="em-bulk-confirm-title"><h2 id="em-bulk-confirm-title">'+label+' '+ids.length+' contacts?</h2>'+
+        '<p>'+(operation==="delete"?'This permanently deletes the selected marketing contact records that are not protected by unsubscribe, suppression, or delivery history. This cannot be undone.':'This changes the selected contact records to '+(operation==="active"?"Active":"Non active")+'. Active records still need separately documented consent to receive campaigns.')+'</p>'+
+        '<p class="em-muted">Unsubscribed and suppressed contacts remain protected. The final result will show how many records were updated or skipped.</p>'+
+        '<div class="em-actions"><button type="button" class="em-primary" id="em-bulk-confirm-action">'+label+' selected</button><button type="button" class="em-secondary" id="em-bulk-confirm-cancel">Cancel</button></div><p id="em-bulk-confirm-error" role="alert"></p></section>';
+      root.append(confirmation);
+      confirmation.querySelector("#em-bulk-confirm-cancel").onclick=()=>confirmation.remove();
+      confirmation.querySelector("#em-bulk-confirm-action").onclick=async event=>{
+        const button=event.currentTarget;button.disabled=true;
+        try{
+          const result=await api("bulk_contacts",{ids,operation});
+          confirmation.remove();
+          await fetchData();
+          selectedContacts.clear();
+          draw();
+          notice((result.changed||0)+" contacts "+(operation==="delete"?"deleted":operation==="active"?"activated":"deactivated")+". "+(result.skipped||0)+" skipped.");
+        }catch(error){
+          const box=confirmation.querySelector("#em-bulk-confirm-error");
+          if(box)box.textContent=error.message||"Could not update selected contacts";
+          button.disabled=false;
+        }
+      };
+    }
+    for(const [id,operation] of [["em-bulk-active","active"],["em-bulk-inactive","inactive"],["em-bulk-delete","delete"]]){
+      const button=root.querySelector("#"+id);
+      if(button)button.onclick=()=>void executeBulk(operation);
+    }
+  }
   const search=root.querySelector("#em-search");
   if(search)search.oninput=()=>{filter=search.value;const pos=search.selectionStart;draw();const next=root.querySelector("#em-search");next.focus();next.setSelectionRange(pos,pos)};
   const cf=root.querySelector("#em-contact-form");if(cf)cf.onsubmit=async e=>{e.preventDefault();const v=Object.fromEntries(new FormData(cf));const button=cf.querySelector('[type="submit"]');button.disabled=true;try{await api("save_contact",{...v,consent:cf.elements.consent.checked});await fetchData();page="contacts";draw();notice("Contact saved")}catch(err){notice(err.message,true);button.disabled=false}};
