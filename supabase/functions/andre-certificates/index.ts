@@ -94,12 +94,34 @@ async function revoke(d:any,u:any){
  if(!rows.length)throw Error("Certificate already deleted or not found");
  return {revoked:true,number:rows[0].certificate_number};
 }
+async function automaticCompletionNotification(req:Request){
+ const supplied=req.headers.get("x-ae-certificate-key")||"";
+ if(!supplied||supplied.length>200)return {error:"Unauthorized certificate notification",status:403};
+ const rows=await db("rpc/certificate_notification_key","","POST",{});
+ const secret=typeof rows==="string"?rows:rows?.key||"";
+ const x=new TextEncoder().encode(supplied),y=new TextEncoder().encode(secret);
+ if(!secret||x.length!==y.length)return {error:"Unauthorized certificate notification",status:403};
+ let difference=0;for(let i=0;i<x.length;i++)difference|=x[i]^y[i];
+ if(difference!==0)return {error:"Unauthorized certificate notification",status:403};
+ const input=await req.json();
+ const id=val(input?.certificateId,45);
+ if(!UUID.test(id))return {error:"Invalid certificate number",status:400};
+ const certificate=(await db("course_certificates","?select=*&id=eq."+id+"&revoked_at=is.null&limit=1"))[0];
+ if(!certificate)return {error:"Certificate not found",status:404};
+ return {response:await notifyCompletion(certificate),status:200};
+}
 Deno.serve(async(req:Request)=>{
  const origin=req.headers.get("origin")||"";
  if(req.method==="OPTIONS")return reply({},200,origin);
- if(!ORIGINS.has(origin)||req.method!=="POST")return reply({error:"Invalid origin"},403,origin);
+ if(req.method!=="POST")return reply({error:"Unsupported method"},405,origin);
  if(!SERVICE)return reply({error:"Certificate service unavailable"},503,origin);
  try{
+  const url=new URL(req.url);
+  if(url.searchParams.has("completion_notification")){
+    const response=await automaticCompletionNotification(req);
+    return reply(response.response||{error:response.error},response.status,origin);
+  }
+  if(!ORIGINS.has(origin))return reply({error:"Invalid origin"},403,origin);
   const u=await auth(req),d=await req.json(),action=val(d.action,55);
   if(action==="my_certificates")return reply(await listStudent(u.id),200,origin);
   if(action==="issue_mine")return reply(await issue(u.id,val(d.courseId,45),null),200,origin);
