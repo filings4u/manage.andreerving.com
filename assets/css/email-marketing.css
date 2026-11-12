@@ -195,3 +195,10 @@
 .em-bulk-confirm>section{max-width:470px}
 .em-bulk-confirm #em-bulk-confirm-error{font-size:12px;color:#ab3e3b;margin:12px 0 0}
 @media(max-width:720px){.em-bulk-toolbar{align-items:flex-start!important}.em-bulk-buttons{width:100%}.em-bulk-buttons button{flex:1 1 auto}.em-contact-list .em-table{overflow-x:auto}}
+
+.em-contact-pagination{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;padding:17px 6px 4px;color:#6b829d;font-size:12px}
+.em-contact-pagination .em-actions{align-items:center;gap:12px}
+.em-contact-pagination .em-secondary{font-size:12px;min-height:34px;padding:7px 12px}
+.em-contact-pagination .em-secondary:disabled{opacity:.45;cursor:not-allowed}
+.em-bulk-buttons #em-select-matching{color:#244e76}
+@media(max-width:640px){.em-contact-pagination{align-items:flex-start}.em-contact-pagination .em-actions{width:100%;justify-content:space-between}}
