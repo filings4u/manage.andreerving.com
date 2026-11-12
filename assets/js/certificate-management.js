@@ -28,7 +28,7 @@ export function createCertificateManagement({db,root,notify,isCurrent,confirmAct
    '<section class="ae-cert-mgmt-card ae-cert-preview-card"><h2>Student certificate preview</h2><p class="muted">This is the same certificate design the student will see.</p><div id="ae-cert-template-preview">'+certificateMarkup({...item,course_title:courseName(selectedCourse),student_name:"Student Full Name"},true)+'</div><div class="ae-cert-controls"><button class="ae-cert-button" id="ae-cert-template-print" type="button">Download sample PDF</button></div></section></div>';
  }
  function issue(){
-  const options=payload.enrollments.filter((e,i,a)=>a.findIndex(x=>x.user_id===e.user_id&&x.course_id===e.course_id)===i&&payload.courses.some(c=>c.id===e.course_id&&c.certificate_enabled&&c.status==="published"));
+  const options=payload.enrollments.filter((e,i,a)=>["active","completed"].includes(e.status)&&a.findIndex(x=>x.user_id===e.user_id&&x.course_id===e.course_id)===i&&payload.courses.some(c=>c.id===e.course_id&&c.certificate_enabled&&c.status==="published"));
   return caption("Create and issue certificate","A certificate can only be issued after every published lesson and quiz has been completed.")+
    '<section class="ae-cert-mgmt-card"><h2>Select an enrolled student</h2><form class="ae-cert-mgmt-form" id="ae-cert-issue-form">'+
    '<label>Student and course<select name="choice" required><option value="">Select an enrollment</option>'+options.map(e=>'<option value="'+e.user_id+'|'+e.course_id+'">'+esc(customerName(e.user_id))+' — '+esc(courseName(e.course_id))+'</option>').join("")+'</select></label>'+
