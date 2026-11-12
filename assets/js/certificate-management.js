@@ -28,12 +28,12 @@ export function createCertificateManagement({db,root,notify,isCurrent,confirmAct
    '<section class="ae-cert-mgmt-card ae-cert-preview-card"><h2>Student certificate preview</h2><p class="muted">This is the same certificate design the student will see.</p><div id="ae-cert-template-preview">'+certificateMarkup({...item,course_title:courseName(selectedCourse),student_name:"Student Full Name"},true)+'</div><div class="ae-cert-controls"><button class="ae-cert-button" id="ae-cert-template-print" type="button">Download sample PDF</button></div></section></div>';
  }
  function issue(){
-  const options=payload.enrollments.filter((e,i,a)=>["active","completed"].includes(e.status)&&a.findIndex(x=>x.user_id===e.user_id&&x.course_id===e.course_id)===i&&payload.courses.some(c=>c.id===e.course_id&&c.certificate_enabled&&c.status==="published"));
-  return caption("Create and issue certificate","A certificate can only be issued after every published lesson and quiz has been completed.")+
-   '<section class="ae-cert-mgmt-card"><h2>Select an enrolled student</h2><form class="ae-cert-mgmt-form" id="ae-cert-issue-form">'+
-   '<label>Student and course<select name="choice" required><option value="">Select an enrollment</option>'+options.map(e=>'<option value="'+e.user_id+'|'+e.course_id+'">'+esc(customerName(e.user_id))+' — '+esc(courseName(e.course_id))+'</option>').join("")+'</select></label>'+
-   '<p class="muted">Each certificate receives a unique, permanent tracking number. Issuing the same completed course again will return its existing active certificate instead of creating a duplicate.</p>'+
-   '<div class="ae-cert-controls"><button type="submit" class="ae-cert-button primary">Verify completion & issue certificate</button></div></form></section>';
+  const total=payload.enrollments.filter((e,i,a)=>["active","completed"].includes(e.status)&&a.findIndex(x=>x.user_id===e.user_id&&x.course_id===e.course_id)===i).length;
+  return caption("Automatic certificate issuance","Certificates are issued automatically when students complete every published lesson and quiz.")+
+    '<section class="ae-cert-mgmt-card"><h2>Issuance is automatic</h2><p>Students receive their course certificate when their final required lesson or quiz is marked complete. There is no manual issuance step.</p>'+
+    '<p><strong>'+total+'</strong> eligible enrollment records are being tracked. The system checks the published curriculum, creates a unique certificate number, and makes the document available in the student portal.</p>'+
+    '<p class="muted">After issuing a certificate, the system sends the branded course completion email. You can view issued certificates and email delivery status under <strong>Issued certificates</strong>.</p>'+
+    '<div class="ae-cert-controls"><button type="button" class="ae-cert-button primary" data-cert-tab="issued">View issued certificates</button></div></section>';
  }
  function issued(){
   const items=payload.certificates.slice().sort((a,b)=>new Date(b.issued_at)-new Date(a.issued_at));
@@ -67,13 +67,8 @@ export function createCertificateManagement({db,root,notify,isCurrent,confirmAct
       try{const fields=Object.fromEntries(new FormData(form));await api("save_template",{courseId:selectedCourse,heading:fields.heading,subtitle:fields.subtitle,completionText:fields.completion_text,instructorName:fields.instructor_name,instructorTitle:fields.instructor_title,accentColor:fields.accent_color});await refresh();notice("Certificate template saved")}
       catch(error){notice(error.message,true);button.disabled=false}
     };
-    root.querySelector("#ae-cert-template-print").onclick=async e=>{e.currentTarget.disabled=true;try{await downloadCertificate(root.querySelector("#ae-cert-template-preview .ae-certificate"),"Certificate-Template-"+courseName(selectedCourse));notice("Sample PDF downloaded")}catch(error){notice(error.message,true)}finally{e.currentTarget.disabled=false}};
+    root.querySelector("#ae-cert-template-print").onclick=async e=>{const button=e.currentTarget;button.disabled=true;try{await downloadCertificate(root.querySelector("#ae-cert-template-preview .ae-certificate"),"Certificate-Template-"+courseName(selectedCourse));notice("Sample PDF downloaded")}catch(error){notice(error.message,true)}finally{button.disabled=false}};
   }
-  const issueForm=root.querySelector("#ae-cert-issue-form");
-  if(issueForm)issueForm.onsubmit=async e=>{e.preventDefault();const [userId,courseId]=issueForm.elements.choice.value.split("|");const btn=issueForm.querySelector("button[type=submit]");btn.disabled=true;
-    try{const res=await api("issue_certificate",{userId,courseId});await refresh();selectedCertificate=payload.certificates.find(c=>c.id===res.certificate.id)||res.certificate;page="view";draw();notice("Certificate "+res.certificate.certificate_number+" issued. Email: "+res.delivery.status)}
-    catch(error){notice(error.message,true);btn.disabled=false}
-  };
   root.querySelectorAll("[data-cert-view]").forEach(b=>b.onclick=()=>{selectedCertificate=payload.certificates.find(c=>c.id===b.dataset.certView);page="view";draw()});
   root.querySelectorAll("[data-cert-email]").forEach(b=>b.onclick=async()=>{
     b.disabled=true;try{
