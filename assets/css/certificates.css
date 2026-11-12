@@ -29,3 +29,38 @@
 .ae-cert-button:focus-visible{outline:3px solid #c99425;outline-offset:2px}
 @media(max-width:650px){.ae-certificate-border{border-width:7px;outline-width:3px;outline-offset:-11px}.ae-certificate-brand img{padding:4px 5px}.ae-certificate-inner{border-width:1px}}
 @media print{@page{size:A4 landscape;margin:0}body>*:not(.ae-certificate-print){display:none!important}.ae-certificate{box-shadow:none;width:297mm;height:210mm;max-width:none}.ae-certificate-print{display:block!important}}
+
+/* Certificate management workspace */
+.ae-cert-mgmt{display:grid;gap:20px;max-width:1580px;margin:0 auto;min-width:0}
+.ae-cert-tabs{display:flex;gap:10px;border-bottom:1px solid #dbe5ef;padding-bottom:18px;flex-wrap:wrap}
+.ae-cert-tabs .ae-cert-button{min-height:44px}
+.ae-cert-tabs .ae-cert-button.active{background:#16385f;border-color:#16385f;color:#fff}
+.ae-cert-mgmt-head{display:flex;justify-content:space-between;gap:18px;align-items:center;flex-wrap:wrap}
+.ae-cert-mgmt-head h1{font-size:29px;color:#102f52;margin:8px 0;line-height:1.2}
+.ae-cert-mgmt-head p{font-size:13px;color:#71859e;margin:0}
+.ae-cert-mgmt-card{background:#fff;padding:26px;border:1px solid #dae5ef;border-radius:13px;min-width:0}
+.ae-cert-mgmt-card h2{font-size:20px;color:#153456;margin:0 0 9px}
+.ae-cert-mgmt-card .muted{line-height:1.7;font-size:12px}
+.ae-cert-mgmt-row{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.ae-cert-mgmt-row label{flex:1;max-width:540px}
+.ae-cert-mgmt-state{border-radius:100px;background:#eaf3eb;color:#36744d;padding:8px 12px;font-size:11px;font-weight:750}
+.ae-cert-mgmt-form{display:grid;gap:17px;margin-top:20px}
+.ae-cert-mgmt-form label,.ae-cert-mgmt-row label{display:grid;gap:8px;color:#28486a;font-size:12px;font-weight:750}
+.ae-cert-mgmt-form input,.ae-cert-mgmt-form select,.ae-cert-mgmt-row select{padding:12px 13px;border:1px solid #ccd9e8;border-radius:9px;font-size:13px;color:#173757;max-width:100%;background:#fff;min-height:46px}
+.ae-cert-mgmt-form input[type=color]{padding:4px;width:105px;height:45px;cursor:pointer}
+.ae-cert-mgmt-editor{display:grid;grid-template-columns:minmax(280px,.65fr) minmax(0,1.45fr);gap:17px;align-items:start}
+.ae-cert-preview-card{min-width:0}
+.ae-cert-preview-card>.ae-cert-controls{justify-content:flex-end}
+.ae-cert-mgmt-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.ae-cert-mgmt-stats section{border:1px solid #dce6f1;background:#fff;border-radius:10px;padding:20px}
+.ae-cert-mgmt-stats span{display:block;color:#6d839c;font-size:12px}
+.ae-cert-mgmt-stats strong{display:block;color:#153653;font-size:28px;margin-top:9px}
+.ae-cert-mgmt-card .tablewrap{overflow-x:auto}
+.ae-cert-mgmt-card table{min-width:760px}
+.ae-cert-mgmt-card .ae-cert-controls{margin:0;gap:6px}
+.ae-cert-mgmt-card .ae-cert-controls button{padding:8px 11px}
+.ae-cert-mgmt-view{background:#e7edf4;border-radius:12px;padding:20px}
+.ae-cert-mgmt #ae-cert-status{color:#376447;font-size:12px;font-weight:700}
+.ae-cert-mgmt #ae-cert-status.error{color:#b04441}
+@media(max-width:1100px){.ae-cert-mgmt-editor{grid-template-columns:1fr}}
+@media(max-width:620px){.ae-cert-mgmt-card{padding:16px}.ae-cert-mgmt-stats{grid-template-columns:1fr}.ae-cert-mgmt-view{padding:8px}.ae-cert-tabs .ae-cert-button{flex:1 1 auto}}
