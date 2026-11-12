@@ -139,9 +139,9 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
    '<div class="ae-crm-overview">'+
    [['Customer email',p.email],['Phone',p.phone||"Not provided"],['Purchases',orders.length],['Courses',items.length]].map(x=>'<section class="ae-crm-stat"><span>'+escapeHtml(x[0])+'</span><strong>'+escapeHtml(x[1])+'</strong></section>').join("")+'</div>'+
    '<section class="panel ae-mgmt-panel"><div class="ae-mgmt-panel-heading"><div><h2>Account invitation &amp; email delivery</h2><p class="muted">Resend delivery events and invitation history for this customer.</p></div><button class="btn secondary" id="crm-refresh-invite" type="button">Refresh delivery status</button></div><div id="crm-invite-delivery" role="status" aria-live="polite"><p class="muted">Checking Resend…</p></div></section>'+
-   '<section class="panel ae-mgmt-panel"><h2>Courses and access</h2><div class="tablewrap"><table><thead><tr><th>Course</th><th>Status</th><th>Enrolled</th><th>Expires</th><th>Manage</th></tr></thead><tbody>'+
-   items.map(e=>'<tr><td>'+escapeHtml(courses.get(e.course_id)?.title||e.course_id)+'</td><td>'+escapeHtml(e.status)+'</td><td>'+formatDate(e.enrolled_at)+'</td><td>'+formatDate(e.expires_at)+'</td><td><button class="ae-inline-btn" data-access="'+escapeHtml(e.id)+'">Change access</button></td></tr>').join("")+
-   '</tbody></table></div></section>'+
+   '<section class="panel ae-mgmt-panel"><h2>Courses and learning progress</h2><p class="muted">View completed lessons, quizzes, and lessons remaining for each course.</p><div class="tablewrap"><table><thead><tr><th>Course</th><th>Status</th><th>Enrolled</th><th>Expires</th><th>Actions</th></tr></thead><tbody>'+
+   items.map(e=>'<tr><td>'+escapeHtml(courses.get(e.course_id)?.title||e.course_id)+'</td><td>'+escapeHtml(e.status)+'</td><td>'+formatDate(e.enrolled_at)+'</td><td>'+formatDate(e.expires_at)+'</td><td><div class="ae-crm-course-actions"><button type="button" class="ae-inline-btn" data-course-progress="'+escapeHtml(e.course_id)+'">View progress</button><button type="button" class="ae-inline-btn" data-access="'+escapeHtml(e.id)+'">Change access</button></div></td></tr>').join("")+
+   '</tbody></table></div><div id="crm-course-progress" class="ae-crm-course-progress" hidden></div></section>'+
    '<section class="panel ae-mgmt-panel"><h2>Purchase and billing history</h2><p class="muted">Only recorded order details are displayed. Card numbers and payment credentials are never stored in this portal.</p>'+
    '<div class="tablewrap"><table><thead><tr><th>Order</th><th>Date</th><th>Products or services</th><th>Total</th><th>Payment reference</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+
    orders.map(o=>'<tr><td><strong>'+escapeHtml(o.order_number)+'</strong></td><td>'+formatDate(o.created_at)+'</td><td>'+escapeHtml(rows.filter(x=>x.order_id===o.id).map(x=>x.item_name).join(", ")||"Not recorded")+'</td><td>'+money(o.total)+'</td><td>'+escapeHtml(o.external_payment_id||'Not available')+'</td><td>'+escapeHtml(o.status)+'</td><td><button class="ae-inline-btn" type="button" data-profile-invoice="'+escapeHtml(o.id)+'">View Invoice / Order</button></td></tr>').join("")+'</tbody></table></div></section>'+
@@ -185,6 +185,58 @@ export function createManagementOperations({db,root,notify,head,isCurrent,naviga
   };
   root.querySelectorAll("[data-profile-invoice]").forEach(btn=>btn.onclick=async()=>{await navigateTo("orders");await invoiceViewer(btn.dataset.profileInvoice)});
   root.querySelectorAll("[data-access]").forEach(b=>b.onclick=()=>changeAccess(b.dataset.access,uid,items,courses));
+
+  const progressBox=root.querySelector("#crm-course-progress");
+  let openCourse=null;
+  const progressStats=(s)=>[
+    ["Overall",String(s.percentage||0)+"%"],["Lessons completed",(s.completedLessons||0)+" / "+(s.lessons||0)],
+    ["Lessons remaining",String(s.notCompleted||0)],["Quizzes completed",(s.completedQuizzes||0)+" / "+(s.quizzes||0)]
+  ];
+  function renderCustomerProgress(report){
+    const sum=report.summary||{};
+    const stats=progressStats(sum).map(([label,count])=>'<div class="ae-crm-progress-stat"><span>'+escapeHtml(label)+'</span><strong>'+escapeHtml(count)+'</strong></div>').join("");
+    const groups=(report.sections||[]).map((m,index)=>{
+      const lessons=(m.lessons||[]).map(l=>{
+        const kind=l.type==="quiz"?"Quiz":l.type==="video"?"Video":l.type==="download"?"Resource":"Lesson";
+        const status=l.completed?"Completed":"Not completed";
+        const date=l.completed&&l.completedAt?" · "+formatDate(l.completedAt):"";
+        return '<div class="ae-crm-progress-lesson"><span class="ae-crm-progress-state '+(l.completed?"is-complete":"")+'">'+(l.completed?"✓":"○")+'</span><div><strong>'+escapeHtml(l.title)+'</strong><small>'+kind+' · '+status+date+'</small></div><span class="ae-crm-progress-tag '+(l.completed?"is-complete":"")+'">'+status+'</span></div>';
+      }).join("");
+      return '<details class="ae-crm-progress-section" '+(index===0?"open":"")+'><summary><strong>'+escapeHtml(m.title)+'</strong><small>'+m.completedCount+' of '+m.lessonCount+' completed</small></summary>'+ (lessons||'<p class="muted">No published lessons.</p>')+'</details>';
+    }).join("");
+    progressBox.innerHTML='<div class="ae-crm-progress-head"><div><span class="ae-mini-eyebrow">LEARNING PROGRESS</span><h3>'+escapeHtml(report.courseTitle)+'</h3><p class="muted">Current published curriculum · Read-only progress</p></div><div class="ae-crm-course-actions"><button type="button" class="ae-inline-btn" id="crm-progress-refresh">Refresh</button><button type="button" class="ae-inline-btn" id="crm-progress-close">Close</button></div></div>'+
+      '<div class="ae-crm-progress-stats">'+stats+'</div><div class="ae-crm-progress-bar" role="progressbar" aria-label="Lesson completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Number(sum.percentage||0)+'"><span style="width:'+Math.max(0,Math.min(100,Number(sum.percentage)||0))+'%"></span></div>'+
+      '<div class="ae-crm-progress-sections">'+(groups||'<p class="muted">No published curriculum available.</p>')+'</div>'+
+      '<p class="ae-crm-progress-note">Quiz completion is tracked, but individual quiz scores and attempts are not recorded by the current LMS.</p>';
+    progressBox.querySelector("#crm-progress-refresh").onclick=()=>loadProgress(openCourse);
+    progressBox.querySelector("#crm-progress-close").onclick=closeProgress;
+  }
+  function closeProgress(){
+    openCourse=null;progressBox.hidden=true;progressBox.innerHTML="";
+    root.querySelectorAll("[data-course-progress]").forEach(b=>{b.textContent="View progress";b.setAttribute("aria-expanded","false")});
+  }
+  async function loadProgress(courseId){
+    if(!validUUID(courseId)||selectedCustomer!==uid)return;
+    openCourse=courseId;progressBox.hidden=false;
+    root.querySelectorAll("[data-course-progress]").forEach(b=>{const selected=b.dataset.courseProgress===courseId;b.textContent=selected?"Viewing progress":"View progress";b.setAttribute("aria-expanded",String(selected))});
+    progressBox.innerHTML='<p role="status" class="muted">Loading course progress…</p>';
+    try{
+      const info=await api("customer_course_progress",{userId:uid,courseId});
+      if(selectedCustomer!==uid||openCourse!==courseId||!progressBox.isConnected)return;
+      renderCustomerProgress(info);
+    }catch(error){
+      if(openCourse!==courseId||!progressBox.isConnected)return;
+      progressBox.innerHTML='<p role="alert">Unable to load progress: '+escapeHtml(error.message||"Please retry")+'</p><button class="ae-inline-btn" id="crm-progress-retry" type="button">Retry</button>';
+      progressBox.querySelector("#crm-progress-retry").onclick=()=>loadProgress(courseId);
+    }
+  }
+  root.querySelectorAll("[data-course-progress]").forEach(b=>b.onclick=()=>{
+    const courseId=b.dataset.courseProgress;
+    if(openCourse===courseId&&!progressBox.hidden){closeProgress();return}
+    void loadProgress(courseId);
+    progressBox.scrollIntoView({block:"nearest",behavior:"smooth"});
+  });
+
  }
  async function enrollments(prefill=""){
   const [people,catalog,enrolled]=await Promise.all([api("list_customers"),api("list_courses"),api("list_enrollments")]);
