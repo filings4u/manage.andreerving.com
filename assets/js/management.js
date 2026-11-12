@@ -1,3 +1,4 @@
+import {createCertificateManagement} from './certificate-management.js?v=20261112';
 import {createEmailMarketing} from './email-marketing.js?v=full-viewer-contact-form-20261112';
 import {createAffiliateManagement} from './affiliate-management.js?v=partner-management-record-20261111';
 import {createLiveTrainingManagement} from './live-training.js?v=manual-teams-only-20261109';
@@ -34,7 +35,7 @@ let user=null,section='overview',rows=[],editing=null,search='',listPage=1,looku
 const navGroups=[
 {name:'Website',items:[['blog_posts','Blog & articles','✎'],['podcast_episodes','Podcasts','♫'],['site_pages','CMS pages','▤'],['site_prices','Pricing','$'],['ebook_documents','eBook documents','▣'],['course_extensions','Course extensions','◷'],['website_inquiries','Inquiries','✉'],['newsletter_signups','Newsletter','◎']]},
 {name:'Customer portal',items:[['customer_profiles','Customer CRM','♙'],['affiliates','Affiliate Program','◇'],['email_marketing','Email Marketing','✉'],['orders','Orders & invites','▥'],['course_enrollments','Enrollments','✓'],['customer_documents','Private files','▢'],['support_tickets','Support inbox','✉']]},
-{name:'Learning management',items:[['courses','Courses & programs','◈'],['video_library','Video Library','▷'],['live_training','Live Training Sessions','◷']]}
+{name:'Learning management',items:[['courses','Courses & programs','◈'],['video_library','Video Library','▷'],['live_training','Live Training Sessions','◷',['certificates','Certificates','▣']]]}
 ];
 function menuButton([key,label,icon]){return '<a class="nav-btn" href="'+(key==="courses"?"#/lms/courses":"#/admin/"+encodeURIComponent(key))+'" data-section="'+key+'"><span class="ae-nav-icon" aria-hidden="true">'+icon+'</span><span class="ae-nav-text">'+safe(label)+'</span></a>';}
 const toast=(message,error=false)=>{document.querySelector('.toast')?.remove();const d=document.createElement('div');d.className='toast ae-toast'+(error?' ae-toast-error':'');d.setAttribute('role','status');d.innerHTML='<div class="ae-toast-icon">AE</div><div><strong>'+ (error?'Action needs attention':'Andre Erving Management')+'</strong><p></p></div><button type="button" aria-label="Dismiss notification">×</button>';d.querySelector('p').textContent=String(message);d.querySelector('button').onclick=()=>d.remove();document.body.append(d);setTimeout(()=>d.remove(),5000)};
@@ -79,9 +80,10 @@ document.querySelectorAll('[data-section]').forEach(b=>b.classList.toggle('activ
 const w=document.querySelector('#workspace');if(!w)return;
 if(!adminOps)adminOps=createManagementOperations({db,root:w,notify:toast,head,isCurrent:name=>section===name,navigateTo:name=>navigate(name)});
 w.classList.toggle('ae-ebook-workspace',k==='ebook_documents');
-w.classList.toggle('ae-operations-workspace',['customer_profiles','orders','course_enrollments','course_extensions','affiliates','email_marketing'].includes(k));
+w.classList.toggle('ae-operations-workspace',['customer_profiles','orders','course_enrollments','course_extensions','affiliates','email_marketing','certificates'].includes(k));
 w.closest('.main')?.scrollTo({top:0,behavior:'instant'});
 w.innerHTML='<p class="muted">Loading…</p>';
+if(k==='certificates'){const certificates=createCertificateManagement({db,root:w,notify:toast,isCurrent:()=>section==='certificates',confirmAction:brandedConfirm});return certificates.start()}
 if(k==='email_marketing'){const marketing=createEmailMarketing({db,root:w,notify:toast,isCurrent:()=>section==='email_marketing'});return marketing.start()}
 if(k==='affiliates'){const affiliates=createAffiliateManagement({db,root:w,notify:toast,isCurrent:()=>section==='affiliates'});return affiliates.start()}
 if(k==='live_training'){const studio=createLiveTrainingManagement({db,root:w,notify:toast,isCurrent:()=>section==='live_training'});return studio.start()}
