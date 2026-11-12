@@ -234,3 +234,17 @@
 .ae-settings-warning{border-radius:9px;padding:13px 15px;background:#fff8e9;border:1px solid #f0deb5;color:#936d29;font-size:11px;line-height:1.6;margin:17px 0 21px}
 .ae-settings-danger .btn.danger{border-color:#dfb6b9}
 @media(max-width:760px){.ae-course-summary-hero,.ae-settings-intro{flex-direction:column;align-items:flex-start;padding:21px 17px}.ae-course-operations,.ae-settings-layout{grid-template-columns:1fr}.ae-settings-facts>div{align-items:flex-start;flex-direction:column;gap:4px}}
+
+/* LMS curriculum: full-row drag/drop and bulk folding */
+.lms-builder-section-header,.lms-step{cursor:grab}
+.lms-builder-section-header:active,.lms-step:active{cursor:grabbing}
+.lms-builder-section-header button,.lms-step button,.lms-section-popover{cursor:pointer}
+.lms-builder-section.lms-dragging,.lms-step.lms-dragging{opacity:.46;filter:saturate(.8)}
+.lms-builder-section.lms-drop-before{box-shadow:inset 0 4px 0 #cc9626}
+.lms-builder-section.lms-drop-after{box-shadow:inset 0 -4px 0 #cc9626}
+.lms-step.lms-drop-before{box-shadow:inset 0 3px 0 #cf992b}
+.lms-step.lms-drop-after{box-shadow:inset 0 -3px 0 #cf992b}
+.lms-step.lms-drag-over,.lms-lesson-dropzone.lms-drag-over,.lms-builder-section-header.lms-drag-over{background:#fff8e9;outline:2px dashed #cb972a;outline-offset:-2px}
+.lms-content-heading .lms-content-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.lms-content-actions #lms-collapse-all,.lms-content-actions #lms-expand-all{white-space:nowrap;min-height:40px;padding:9px 13px}
+@media(max-width:700px){.lms-content-heading .lms-content-actions{width:100%;gap:8px}.lms-content-actions #lms-collapse-all,.lms-content-actions #lms-expand-all{flex:1 1 auto}}
