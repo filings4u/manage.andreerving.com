@@ -130,7 +130,7 @@ export function createEmailMarketing({db,root,notify,isCurrent}){
  function campaignView(c){
   const count=data.deliveries.filter(d=>d.campaign_id===c.id).length;
   return head("View campaign","Read the full email before editing or reviewing delivery activity.")+
-  '<div class="em-actions"><button class="em-secondary" data-em-tab="'+campaignReturn+'">← Back to '+(campaignReturn==="drafts"?"Drafts":"Campaigns")+'</button>'+(c.status==="draft"?'<button class="em-primary" data-em-edit="'+c.id+'">Edit campaign</button>':'')+'<button class="em-secondary" data-em-report="'+c.id+'">View delivery</button></div>'+
+  '<div class="em-actions"><button class="em-secondary" data-em-tab="'+campaignReturn+'">← Back to '+(campaignReturn==="drafts"?"Drafts":"Campaigns")+'</button>'+(c.status==="draft"?'<button class="em-primary" data-em-edit="'+c.id+'">Edit campaign</button>':'')+(c.status!=="draft"||count>0?'<button class="em-secondary" data-em-report="'+c.id+'">View delivery</button>':'')+'</div>'+
   '<section class="em-card em-saved-campaign-view"><div class="em-card-heading"><h2>'+esc(c.name)+'</h2><span class="em-chip">'+esc(c.status)+'</span></div><p><strong>Subject:</strong> '+esc(c.subject)+'</p><p><strong>Preview text:</strong> '+esc(c.preview_text)+'</p><p><strong>Recipients recorded:</strong> '+count+'</p><div class="em-saved-view-wrap"><iframe class="em-view-frame" id="em-view-frame" sandbox="allow-same-origin" scrolling="no" title="Full campaign email"></iframe></div></section>';
  }
  function draw(){
