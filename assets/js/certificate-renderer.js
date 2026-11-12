@@ -21,7 +21,7 @@ export function certificateMarkup(c,preview=false){
  '<div class="ae-certificate-bottom"><div class="ae-certificate-detail"><span>'+txt(date(completed))+'</span><small>DATE COMPLETED</small></div>'+
  '<div class="ae-certificate-signature"><strong>'+txt(c.instructor_name||c.instructorName||"Andre Erving")+'</strong><span></span><small>'+txt(c.instructor_title||c.instructorTitle||"Instructor")+'</small></div>'+
  '<div class="ae-certificate-detail"><span>'+txt(number)+'</span><small>CERTIFICATE NUMBER</small></div></div>'+
- '<footer><span>© '+new Date().getFullYear()+' Andre Erving, LLC</span><span>'+(preview?'TEMPLATE PREVIEW':'ISSUED '+txt(date(issued)).toUpperCase())+'</span></footer>'+
+ '<footer><span>© '+(issued?new Date(issued).getFullYear():new Date().getFullYear())+' Andre Erving, LLC</span><span>'+(preview?'TEMPLATE PREVIEW':'ISSUED '+txt(date(issued)).toUpperCase())+'</span></footer>'+
  '</div></div></article>';
 }
 export async function downloadCertificate(element,fileName){
