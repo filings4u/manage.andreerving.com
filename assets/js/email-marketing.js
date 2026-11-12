@@ -49,23 +49,38 @@ export function createEmailMarketing({db,root,notify,isCurrent}){
   '</div><div class="em-contact-footer"><button class="em-primary" type="submit">Save contact</button><button type="button" class="em-secondary" data-em-tab="contacts">Cancel</button></div></form></section>';
  }
  function editor(){
-  const c=activeCampaign||{};
-  return head(c.id?"Edit email campaign":"Create email campaign","A full writing workspace with formatting, images, links, HTML and live preview.",'<button class="em-secondary" data-em-view="'+(c.id||"")+'" '+(!c.id?'disabled':'')+'>View campaign</button>')+
-  '<div class="em-editor-grid"><section class="em-card em-compose"><div class="em-card-heading"><h2>Campaign details</h2><span class="em-chip">'+esc(c.status||"Draft")+'</span></div>'+
-  '<form id="em-campaign-form" class="em-form">'+
-  '<label>Campaign name<input name="name" required maxlength="200" value="'+esc(c.name||"")+'" placeholder="November course announcement"></label>'+
-  '<label>Subject line<input name="subject" required maxlength="250" value="'+esc(c.subject||"")+'" placeholder="A new resource from Andre Erving"></label>'+
-  '<label>Preview text<input name="previewText" maxlength="240" value="'+esc(c.preview_text||"")+'" placeholder="A short line visible in the inbox"></label>'+
-  '<label>From name<input name="senderName" maxlength="120" value="'+esc(c.sender_name||"Andre Erving")+'"></label>'+
-  '<div class="em-card-heading"><h2>Email content</h2><div class="em-actions"><button type="button" id="em-visual" class="em-secondary">Visual</button><button type="button" id="em-html-mode" class="em-secondary">HTML</button></div></div>'+
-  '<div class="em-toolbar" role="toolbar" aria-label="Text formatting">'+[
-    ["bold","Bold","B"],["italic","Italic","I"],["underline","Underline","U"],["formatBlock","Heading","H2"],["insertUnorderedList","Bulleted list","☷"],["insertOrderedList","Numbered list","1."],["justifyCenter","Center","☰"]
-  ].map(([cmd,title,label])=>'<button type="button" data-em-format="'+cmd+'" title="'+title+'">'+label+'</button>').join("")+
-  '<button type="button" id="em-link" title="Add link">Link</button><button type="button" id="em-image" title="Add hosted image">Image</button><button type="button" id="em-divider" title="Add divider">Line</button><button type="button" id="em-personalize" title="Insert first name">First name</button></div>'+
-  '<div class="em-editor" id="em-body" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Email body">'+(c.body_html||"<h2>Your headline</h2><p>Write your message here.</p>")+'</div>'+
-  '<textarea id="em-source" aria-label="Edit HTML source" rows="16" hidden></textarea>'+
-  '<div class="em-editor-actions"><button type="button" class="em-secondary" id="em-preview">Preview</button><button type="submit" class="em-primary">Save draft</button><button type="button" class="em-send" id="em-send" '+(!c.id?'disabled title="Save first"':'')+'>Send campaign</button></div></form></section>'+
-  '<aside class="em-card em-preview-card"><div class="em-card-heading"><h2>Live email preview</h2><span>640px width</span></div><iframe id="em-iframe" sandbox="" title="Email preview"></iframe><p class="em-muted">Delivered emails include a branded header and unsubscribe link. This preview shows your message content.</p></aside></div>';
+ const c=activeCampaign||{};
+ const saved=!!c.id;
+ const logo="https://gnfyidajbectlppsekzj.supabase.co/storage/v1/object/public/Andre%20Erving%20Public/logos/logo2.png";
+ const templates=[["announcement","Announcement","News and updates"],["course","Course promotion","Highlight a course"],["newsletter","Newsletter","Editorial update"],["invitation","Invitation","Upcoming event"],["blank","Start blank","Design from scratch"]];
+ const blocks=[["heading","Heading","H"],["paragraph","Text","¶"],["image","Image","▣"],["button","Button","↗"],["columns","2 columns","▥"],["divider","Divider","—"],["spacer","Spacer","↕"],["list","List","☷"]];
+ return head(saved?"Edit campaign":"Create campaign","Build a branded, responsive email with templates, content blocks, formatting and a live preview.",'<div class="em-actions"><button class="em-secondary" data-em-tab="campaigns">All campaigns</button>'+(saved?'<button class="em-secondary" data-em-view="'+c.id+'">View saved email</button>':'')+'</div>')+
+ '<div class="em-campaign-steps"><span class="em-step-current">1 · Design</span><span>2 · Review</span><span>3 · Send</span></div>'+
+ '<form id="em-campaign-form" class="em-builder-form">'+
+ '<section class="em-card em-campaign-settings"><div class="em-card-heading"><div><h2>Campaign setup</h2><p>Set the details your recipients will see in their inbox.</p></div><span class="em-chip">'+esc(c.status||"Draft")+'</span></div>'+
+ '<div class="em-campaign-settings-grid"><label>Campaign name <span class="em-required">*</span><input name="name" required maxlength="200" value="'+esc(c.name||"")+'" placeholder="November training announcement"></label>'+
+ '<label>Email subject <span class="em-required">*</span><input name="subject" required maxlength="250" value="'+esc(c.subject||"")+'" placeholder="A new opportunity from Andre Erving"></label>'+
+ '<label>Inbox preview text<input name="previewText" maxlength="240" value="'+esc(c.preview_text||"")+'" placeholder="This short summary appears after the subject"></label>'+
+ '<label>Sender name<input name="senderName" maxlength="120" value="'+esc(c.sender_name||"Andre Erving")+'"></label></div>'+
+ '<div class="em-sender-row"><span>Sending address: <strong>support@andreerving.com</strong></span><span>Audience: <strong>'+data.contacts.filter(x=>x.status==="active"&&x.consent_at&&!x.unsubscribed_at&&!x.suppression_reason).length+' opted-in contacts</strong></span></div></section>'+
+ '<section class="em-builder-workspace"><aside class="em-card em-builder-tools"><h2>Design tools</h2><p class="em-muted">Choose a template or add sections to your campaign.</p>'+
+ '<div class="em-tool-group"><h3>Templates</h3><div class="em-template-list">'+templates.map(([key,label,caption])=>'<button type="button" class="em-template-option" data-em-template="'+key+'"><span class="em-template-thumb"><span></span><span></span><span></span></span><span><strong>'+label+'</strong><small>'+caption+'</small></span></button>').join("")+'</div></div>'+
+ '<div class="em-tool-group"><h3>Content blocks</h3><div class="em-block-palette">'+blocks.map(([key,label,icon])=>'<button type="button" data-em-block="'+key+'"><span aria-hidden="true">'+icon+'</span>'+label+'</button>').join("")+'</div></div>'+
+ '<div class="em-tool-group"><h3>Theme</h3><label>Background color<input id="em-theme-background" type="color" value="#ffffff"></label><label>Text color<input id="em-theme-text" type="color" value="#173754"></label><label>Accent color<input id="em-theme-accent" type="color" value="#cf992b"></label></div></aside>'+
+ '<section class="em-card em-builder-stage"><div class="em-builder-stage-head"><div><h2>Email design</h2><p>Click a section to edit it; use the controls to reorder or remove it.</p></div><div class="em-actions"><button type="button" id="em-visual" class="em-secondary">Design</button><button type="button" id="em-html-mode" class="em-secondary">HTML</button></div></div>'+
+ '<div class="em-toolbar" role="toolbar" aria-label="Selected text formatting">'+[
+ ["bold","Bold","B"],["italic","Italic","I"],["underline","Underline","U"],["formatBlock","Heading","H2"],["insertUnorderedList","Bullets","☷"],["insertOrderedList","Numbers","1."],["justifyCenter","Center","☰"]
+ ].map(([cmd,title,label])=>'<button type="button" data-em-format="'+cmd+'" title="'+title+'">'+label+'</button>').join("")+
+ '<button type="button" id="em-link">Link</button><button type="button" id="em-image">Image URL</button><button type="button" id="em-personalize">First name</button></div>'+
+ '<div class="em-design-surface"><div class="em-brand-bar"><img src="'+logo+'" alt="Andre Erving logo"><span>BRANDED EMAIL</span></div>'+
+ '<div class="em-builder-content" id="em-body" contenteditable="true" role="textbox" aria-label="Campaign email content" aria-multiline="true">'+(c.body_html||'<section class="em-email-block" style="padding:24px 24px 14px"><h1 style="font-size:30px;line-height:1.25;margin:0;color:#173754">Your campaign headline</h1><p style="font-size:16px;line-height:1.7;color:#516b84">Start writing your message here. Add sections or choose a template to build your email.</p></section>')+'</div>'+
+ '<div class="em-canvas-footer">Andre Erving · Growth, Strategy &amp; Education<br><u>Unsubscribe from marketing emails</u></div></div>'+
+ '<textarea id="em-source" class="em-html-source" aria-label="Edit email HTML source" rows="18" hidden></textarea>'+
+ '<div id="em-block-controls" class="em-selected-controls" hidden><span>Selected section</span><button type="button" data-em-move="up">Move up ↑</button><button type="button" data-em-move="down">Move down ↓</button><button type="button" id="em-remove-block">Remove section</button></div>'+
+ '</section><aside class="em-card em-builder-preview"><div class="em-card-heading"><div><h2>Preview</h2><p>See the complete branded message.</p></div></div><div class="em-preview-modes"><button type="button" class="current" data-em-device="desktop">Desktop</button><button type="button" data-em-device="mobile">Mobile</button></div>'+
+ '<div class="em-preview-viewport"><iframe id="em-iframe" sandbox="" title="Full branded campaign preview"></iframe></div>'+
+ '<p class="em-muted">Preview includes the official logo, branded header and mandatory unsubscribe footer. Recipient names are personalized when sent.</p></aside></section>'+
+ '<div class="em-campaign-footer"><div><strong>Save your work before sending.</strong><p>Marketing emails only go to eligible contacts who have recorded consent.</p></div><div class="em-actions"><button type="button" class="em-secondary" id="em-preview">Refresh preview</button><button type="submit" class="em-primary">Save draft</button><button type="button" class="em-send" id="em-send" '+(!saved?'disabled title="Save the draft first"':'')+'>Review & send</button></div></div></form>';
  }
  function importScreen(){
   return head("Import email contacts","Paste a list or upload a CSV file. Imports are separate from Customer CRM.")+
