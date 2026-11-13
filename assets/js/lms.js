@@ -34,16 +34,44 @@ export function createLMS({db,root,notify,safe,isCurrent}){
     }
     throw Error("LMS catalog exceeds the current 20,000-record safety limit. Narrow or paginate the query.");
   }
+  // Keep the course catalog lightweight: full lesson articles are fetched only
+  // when their course is opened. Never pull every course's HTML on navigation.
+  const lessonSummaryColumns="id,course_id,module_id,title,lesson_type,video_url,resource_url,duration_minutes,sort_order,is_preview,allow_download";
+  const loadedCourseLessons=new Set();
+  let initialLoad=true,courseLoadToken=0;
+  async function loadCourseLessons(courseId,{force=false}={}){
+    if(!courseId||(!force&&loadedCourseLessons.has(courseId)))return;
+    const token=++courseLoadToken;
+    const {data,error}=await db.from("course_lessons").select("*").eq("course_id",courseId).order("sort_order").limit(5000);
+    if(error)throw error;
+    if(!isCurrent()||s.courseId!==courseId||token!==courseLoadToken)return;
+    s.lessons=s.lessons.filter(l=>l.course_id!==courseId).concat(data||[]);
+    loadedCourseLessons.add(courseId);
+  }
+  async function openSelectedCourse(courseId){
+    s.courseId=courseId;s.tab="curriculum";
+    openRoute("course/"+courseId+"/curriculum");
+    root.innerHTML='<div class="lms-heading"><h1>Opening course…</h1><p class="muted">Loading this course’s lessons.</p></div>';
+    try{await loadCourseLessons(courseId);if(isCurrent()&&s.courseId===courseId)render()}
+    catch(error){if(isCurrent()&&s.courseId===courseId)root.innerHTML='<div class="notice error">Unable to load course lessons: '+esc(error.message)+'</div>'}
+  }
   async function refresh(){try{
-    const [a,b,c,d,e,pubs]=await Promise.all([
-      list("courses"),list("course_modules"),list("course_lessons"),
+    const [a,b,c,d,pubs]=await Promise.all([
+      list("courses"),list("course_modules"),list("course_lessons",lessonSummaryColumns),
       list("course_enrollments","id,user_id,course_id,order_id,status,enrolled_at,expires_at","enrolled_at"),
-      list("customer_profiles","id,email,full_name","email"),
       list("course_publications","course_id,published_at,revision,has_unpublished_changes,published_completion_order","course_id")
     ]);
     if(!isCurrent())return;
-    Object.assign(s,{courses:a,modules:b,lessons:c,enrollments:d,customers:e,publications:pubs});
+    // Preserve the currently selected course's full articles only until its
+    // fresh, course-scoped result arrives. Other courses hold metadata only.
+    const active=s.courseId;
+    Object.assign(s,{courses:a,modules:b,lessons:c,enrollments:d,publications:pubs});
+    loadedCourseLessons.clear();
+    if(initialLoad){initialLoad=false;route()}
     if(s.courseId&&!a.some(x=>x.id===s.courseId)){s.courseId=null;s.tab="overview"}
+    if(s.courseId)await loadCourseLessons(s.courseId,{force:true});
+    if(!isCurrent())return;
+    if(s.pendingLessonRoute){const {id,moduleId}=s.pendingLessonRoute;s.pendingLessonRoute=null;const lesson=s.lessons.find(x=>x.id===id);if(lesson)openLessonForm(lesson,moduleId);}
     s.progressCache.clear();
     render();
   }catch(e){if(isCurrent())root.innerHTML='<div class="notice error">Unable to load LMS data: '+esc(e.message)+'</div>';}}
@@ -73,7 +101,7 @@ export function createLMS({db,root,notify,safe,isCurrent}){
     by("lms-new").onclick=()=>openCourseForm();
     by("lms-category-filter").onchange=e=>{s.categoryFilter=e.target.value;renderLibrary()};
     by("lms-search").oninput=e=>{s.term=e.target.value;const pos=e.target.selectionStart;renderLibrary();const n=by("lms-search");n.focus();n.setSelectionRange(pos,pos)};
-    all("[data-open-course]").forEach(b=>b.onclick=()=>{s.courseId=b.dataset.openCourse;s.tab="curriculum";openRoute("course/"+s.courseId+"/curriculum");render()});
+    all("[data-open-course]").forEach(b=>b.onclick=()=>void openSelectedCourse(b.dataset.openCourse));
   }
   function renderStudio(){
     const c=current();if(!c)return renderLibrary();
@@ -606,7 +634,7 @@ export function createLMS({db,root,notify,safe,isCurrent}){
       const type=parts[2],id=parts[3],parent=parts[4];
       if(type==="course"){const record=s.courses.find(x=>x.id===id);s.courseId=record?.id||null;openCourseForm(record||null)}
       else if(type==="module"){const record=s.modules.find(x=>x.id===id);s.courseId=record?.course_id||parent||null;if(s.courses.some(x=>x.id===s.courseId))openModuleForm(record||null)}
-      else if(type==="lesson"){const record=s.lessons.find(x=>x.id===id);s.courseId=record?.course_id||parent||null;if(s.courses.some(x=>x.id===s.courseId))openLessonForm(record||null,parts[5]||null)}
+      else if(type==="lesson"){const record=s.lessons.find(x=>x.id===id);s.courseId=record?.course_id||parent||null;s.pendingLessonRoute={id,moduleId:parts[5]||null}}
       else if(type==="enrollment"){const record=s.enrollments.find(x=>x.id===id);s.courseId=record?.course_id||parent||null;if(s.courses.some(x=>x.id===s.courseId))openEnrollment(record||null)}
     }
     else {s.courseId=null;s.tab="overview"}
@@ -1006,5 +1034,5 @@ export function createLMS({db,root,notify,safe,isCurrent}){
     for(let i=0;i<newOrder.length;i++){const r=await db.from(table).update({sort_order:(i+1)*10}).eq("id",newOrder[i].id);if(r.error){warn(r.error);return}}
     await refresh();
   }
-  return {start:async()=>{await refresh();route();render()}};
+  return {start:async()=>{await refresh()}};
 }
