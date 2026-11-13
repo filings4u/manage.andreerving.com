@@ -48,6 +48,18 @@ export function createLMS({db,root,notify,safe,isCurrent}){
     s.lessons=s.lessons.filter(l=>l.course_id!==courseId).concat(data||[]);
     loadedCourseLessons.add(courseId);
   }
+  let customersLoading=false,customersLoaded=false;
+  async function loadStudentsOnDemand(){
+    if(customersLoaded||customersLoading)return;
+    customersLoading=true;
+    try{
+      const data=await list("customer_profiles","id,email,full_name","email");
+      if(!isCurrent())return;
+      s.customers=data;customersLoaded=true;
+      if(s.tab==="students"&&s.courseId)render();
+    }catch(error){if(isCurrent())warn(error)}
+    finally{customersLoading=false}
+  }
   async function openSelectedCourse(courseId){
     s.courseId=courseId;s.tab="curriculum";
     openRoute("course/"+courseId+"/curriculum");
@@ -127,7 +139,7 @@ export function createLMS({db,root,notify,safe,isCurrent}){
     if(s.tab==="overview")body.innerHTML=renderOverview(c,modules,lessons,enrollments);
     if(s.tab==="curriculum")body.innerHTML=renderCurriculum(modules,lessons);
     if(s.tab==="documents"){body.innerHTML=renderDocumentsShell();void loadDocumentLibrary()}
-    if(s.tab==="students"){body.innerHTML=renderStudents(enrollments);if(!s.progressCache.has(s.courseId))void loadCourseProgress(s.courseId)}
+    if(s.tab==="students"){body.innerHTML=renderStudents(enrollments);if(!customersLoaded)void loadStudentsOnDemand();if(!s.progressCache.has(s.courseId))void loadCourseProgress(s.courseId)}
     if(s.tab==="settings")body.innerHTML=renderSettings(c,enrollments);
     if(s.tab==="preview")body.innerHTML=renderPreview(c,modules,lessons);
     wireTab();
