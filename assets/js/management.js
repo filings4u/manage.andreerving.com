@@ -1,12 +1,5 @@
-import {createCertificateManagement} from './certificate-management.js?v=manual-resend-20261112';
-import {createEmailMarketing} from './email-marketing.js?v=standard-email-images-20261112';
-import {createAffiliateManagement} from './affiliate-management.js?v=partner-management-record-20261111';
-import {createLiveTrainingManagement} from './live-training.js?v=manual-teams-only-20261109';
-import {createLMS} from './lms.js?v=lightweight-lms-20261112';
-import {createVideoLibrary} from './video-library.js?v=multi-course-paged-20261108';
 import {createManagementOperations} from './management-operations.js?v=customer-course-progress-20261112';
 import {createBlogStudio,cleanBlogHTML} from './blog-studio.js?v=unsaved-20261107';
-import {createPodcastStudio} from './podcast-studio.js?v=upload-unsaved-20261107';
 import {createUnsavedGuard} from './unsaved-guard.js?v=20261107';
 import {showInquiry,downloadInquiryPDF} from './inquiry-workspace.js?v=branded-pdf-notification-20261109';
 import{createClient}from'https://esm.sh/@supabase/supabase-js@2.58.0';
@@ -83,14 +76,15 @@ w.classList.toggle('ae-ebook-workspace',k==='ebook_documents');
 w.classList.toggle('ae-operations-workspace',['customer_profiles','orders','course_enrollments','course_extensions','affiliates','email_marketing','certificates'].includes(k));
 w.closest('.main')?.scrollTo({top:0,behavior:'instant'});
 w.innerHTML='<p class="muted">Loading…</p>';
-if(k==='certificates'){const certificates=createCertificateManagement({db,root:w,notify:toast,isCurrent:()=>section==='certificates',confirmAction:brandedConfirm});return certificates.start()}
-if(k==='email_marketing'){const marketing=createEmailMarketing({db,root:w,notify:toast,isCurrent:()=>section==='email_marketing'});return marketing.start()}
-if(k==='affiliates'){const affiliates=createAffiliateManagement({db,root:w,notify:toast,isCurrent:()=>section==='affiliates'});return affiliates.start()}
-if(k==='live_training'){const studio=createLiveTrainingManagement({db,root:w,notify:toast,isCurrent:()=>section==='live_training'});return studio.start()}
-if(k==='video_library'){const library=createVideoLibrary({db,root:w,notify:toast,safe,isCurrent:()=>section==='video_library'});return library.start()}
-if(k==='courses'||k==='course_modules'||k==='course_lessons'){section='courses';const studio=createLMS({db,root:w,notify:toast,safe,isCurrent:()=>section==='courses'});return studio.start()}
+if(k==='certificates'){const {createCertificateManagement}=await import('./certificate-management.js?v=manual-resend-20261112');if(section!==k)return;const certificates=createCertificateManagement({db,root:w,notify:toast,isCurrent:()=>section==='certificates',confirmAction:brandedConfirm});return certificates.start()}
+if(k==='email_marketing'){const {createEmailMarketing}=await import('./email-marketing.js?v=standard-email-images-20261112');if(section!==k)return;const marketing=createEmailMarketing({db,root:w,notify:toast,isCurrent:()=>section==='email_marketing'});return marketing.start()}
+if(k==='affiliates'){const {createAffiliateManagement}=await import('./affiliate-management.js?v=partner-management-record-20261111');if(section!==k)return;const affiliates=createAffiliateManagement({db,root:w,notify:toast,isCurrent:()=>section==='affiliates'});return affiliates.start()}
+if(k==='live_training'){const {createLiveTrainingManagement}=await import('./live-training.js?v=manual-teams-only-20261109');if(section!==k)return;const studio=createLiveTrainingManagement({db,root:w,notify:toast,isCurrent:()=>section==='live_training'});return studio.start()}
+if(k==='video_library'){const {createVideoLibrary}=await import('./video-library.js?v=multi-course-paged-20261108');if(section!==k)return;const library=createVideoLibrary({db,root:w,notify:toast,safe,isCurrent:()=>section==='video_library'});return library.start()}
+if(k==='courses'||k==='course_modules'||k==='course_lessons'){section='courses';const {createLMS}=await import('./lms.js?v=lightweight-lms-20261112');if(section!=='courses')return;const studio=createLMS({db,root:w,notify:toast,safe,isCurrent:()=>section==='courses'});return studio.start()}
 if(k==='overview')return overview();
 if(k==='podcast_episodes'){
+ const {createPodcastStudio}=await import('./podcast-studio.js?v=upload-unsaved-20261107');if(section!==k)return;
  const studio=createPodcastStudio({db,root:w,notify:toast,isCurrent:name=>section===name});return studio.start();
 }
 if(k==='blog_posts'){
