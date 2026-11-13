@@ -115,11 +115,11 @@ else{const match=rows.find(r=>r.id===editorMatch[3]);if(match)await openEditor(m
 }
 function head(title,subtitle,action=''){return '<div class="head"><div><div class="eyebrow">ANDRE ERVING / MANAGEMENT</div><h1>'+safe(title)+'</h1><div class="muted">'+safe(subtitle)+'</div></div>'+action+'</div>'}
 async function count(table){const {count,error}=await db.from(table).select('*',{count:'exact',head:true});return error?'—':count??0}
+let overviewCountCache=null;
 async function overview(){
-const result=await Promise.allSettled(['courses','blog_posts','customer_profiles','orders','course_enrollments','customer_documents'].map(count));
-if(section!=='overview')return;
-const vals=result.map(x=>x.status==='fulfilled'?x.value:'—');
-const stats=[['Courses',vals[0]],['Blog posts',vals[1]],['Customers',vals[2]],['Orders',vals[3]]];
+const tables=['courses','blog_posts','customer_profiles','orders','course_enrollments','customer_documents'];
+const vals=overviewCountCache||['…','…','…','…','…','…'];
+const stats=[['Courses',vals[0],0],['Blog posts',vals[1],1],['Customers',vals[2],2],['Orders',vals[3],3]];
 const destinations=[
 {title:'Main website',url:'https://andreerving.com',repo:'https://github.com/filings4u/andreerving',description:'Content, public pricing, posts and customer inquiries.',actions:[['blog_posts','Manage blog'],['site_pages','CMS pages'],['site_prices','Pricing'],['website_inquiries','Inquiries']]},
 {title:'Customer portal',url:'https://app.andreerving.com/',repo:'https://github.com/filings4u/app.andreerving.com',description:'Customer accounts, purchases, learning access and private documents.',actions:[['customer_profiles','Customers'],['orders','Orders'],['course_enrollments','Enrollments'],['customer_documents','Documents']]}
@@ -128,10 +128,20 @@ const cards=destinations.map(d=>'<section class="panel destination"><div class="
 const w=document.querySelector('#workspace');if(!w)return;
 w.innerHTML=head('Workspace overview','Your main website and customer portal, in one operational view.')+
 '<div class="workspace-intro"><div><div class="eyebrow">ANDRE ERVING · MANAGEMENT</div><h2>Manage your entire experience.</h2><p>Publish content, manage learning, and review customer operations from one place.</p></div><span class="system-pill">Supabase CMS connected</span></div>'+
-'<div class="stats">'+stats.map(([label,value])=>'<div class="stat"><label>'+safe(label)+'</label><strong>'+safe(value)+'</strong><small>Records visible to staff</small></div>').join('')+'</div>'+
+'<div class="stats">'+stats.map(([label,value,i])=>'<div class="stat"><label>'+safe(label)+'</label><strong data-overview-count="'+i+'">'+safe(value)+'</strong><small>Records visible to staff</small></div>').join('')+'</div>'+
 '<div class="destination-grid">'+cards+'</div>'+
-'<section class="panel"><h2>Operations snapshot</h2><div class="activity-grid"><div><strong>'+safe(vals[4])+'</strong><span>Inquiries</span></div><div><strong>'+safe(vals[5])+'</strong><span>Enrollments</span></div><div><strong>'+safe(vals[6])+'</strong><span>Documents</span></div></div></section>';
+'<section class="panel"><h2>Operations snapshot</h2><div class="activity-grid"><div><strong data-overview-count="3">'+safe(vals[3])+'</strong><span>Orders</span></div><div><strong data-overview-count="4">'+safe(vals[4])+'</strong><span>Enrollments</span></div><div><strong data-overview-count="5">'+safe(vals[5])+'</strong><span>Documents</span></div></div></section>';
 w.querySelectorAll('[data-jump]').forEach(b=>b.onclick=()=>navigate(b.dataset.jump));
+// Display the page immediately; load counts without blocking navigation.
+void Promise.allSettled(tables.map(count)).then(results=>{
+ const updated=results.map(x=>x.status==='fulfilled'?x.value:'—');
+ overviewCountCache=updated;
+ if(section!=='overview'||!w.isConnected)return;
+ w.querySelectorAll('[data-overview-count]').forEach(el=>{
+  const index=Number(el.dataset.overviewCount);
+  if(Number.isInteger(index)&&index>=0&&index<updated.length)el.textContent=String(updated[index]);
+ });
+});
 }
 function format(v){if(v==null)return '—';if(typeof v==='boolean')return v?'Yes':'No';if(typeof v==='string'&&/^\d{4}-\d\d-\d\dT/.test(v))return new Date(v).toLocaleDateString();return safe(v)}
 async function loadTable(){const c=configs[section];
